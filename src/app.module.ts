@@ -6,7 +6,7 @@ import configuration from './config/configuration';
 import { configValidationSchema } from './config/config-validation-schema';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './modules/user/user.module';
-import { UserRepository } from './modules/user/repository/user.repository';
+import { CacheModule } from './cache/cache.module';
 
 @Module({
   imports: [
@@ -38,8 +38,9 @@ import { UserRepository } from './modules/user/repository/user.repository';
       }),
     }),
     UserModule,
+    CacheModule,
   ],
   controllers: [AppController],
-  providers: [AppService, UserRepository],
+  providers: [AppService],
 })
 export class AppModule {}

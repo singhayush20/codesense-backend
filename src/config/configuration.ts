@@ -10,6 +10,12 @@ export default () => ({
     name: process.env.DB_NAME,
     password: process.env.DB_PASSWORD,
   },
+  cache: {
+    redis: {
+      host: process.env.REDIS_HOST ?? 'localhost',
+      port: parseInt(process.env.REDIS_PORT ?? '6379',10)
+    }
+  },
   security: {
     jwtSecretKey: process.env.JWT_SECRET_KEY,
   },
