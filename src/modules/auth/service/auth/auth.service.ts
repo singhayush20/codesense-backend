@@ -152,20 +152,16 @@ export class AuthService {
     email: string,
     name: string,
   ): Promise<User> {
-    try {
-      return await this.userService.findUserByEmail(email);
-    } catch (error: any) {
-      // Only create user if NOT_FOUND
-      if (error.code !== 'USER_NOT_FOUND') {
-        throw error;
-      }
-
-      return this.userService.createUser(
-        email,
-        name,
-        this.generateRandomPassword(),
-      );
+    const user = await this.userService.findUserByEmail(email);
+    if (user !== null) {
+      return user;
     }
+
+    return this.userService.createUser(
+      email,
+      name,
+      this.generateRandomPassword(),
+    );
   }
 
   private validateUserState(user: User) {

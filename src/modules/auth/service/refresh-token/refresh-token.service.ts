@@ -77,7 +77,9 @@ export class RefreshTokenService {
   async revokeSession(refreshToken: string) {
     if (!refreshToken) return;
 
-    const token = await this.refreshTokenRepository.findByTokenHash(this.hashToken(refreshToken));
+    const token = await this.refreshTokenRepository.findByTokenHash(
+      this.hashToken(refreshToken),
+    );
 
     if (token) {
       await this.refreshTokenRepository.revokeSession(
@@ -87,9 +89,53 @@ export class RefreshTokenService {
     }
   }
 
+  async validateRefreshToken(refreshToken: string) {
+    const token = await this.findToken(refreshToken);
+
+    if (!token) {
+      throw new AppException(ExceptionCodes.REFREH_TOKEN_NOT_PRESENT,'Invalid refresh token',HttpStatus.UNAUTHORIZED);
+    }
+
+    // Expiry check
+    if (token.expiresAt < new Date()) {
+      throw new AppException(
+        ExceptionCodes.REFRESH_TOKEN_EXPIRED,
+        'Refresh token expired',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    // Reuse detection (VERY IMPORTANT)
+    if (token.usedAt) {
+      // token already used → possible replay attack
+      await this.revokeSession(token.sessionId);
+
+      throw new AppException(
+        ExceptionCodes.REFRESH_TOKEN_REUSED,
+        'Refresh token already used',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    // Revoked check
+    if (token.revokedAt) {
+      throw new AppException(
+        ExceptionCodes.REFRESH_TOKEN_REVOKED,
+        'Refresh token revoked',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    return token;
+  }
+
   private async findToken(rawToken: string) {
     if (!rawToken) {
-      throw new AppException(ExceptionCodes.INVALID_REFRESH_TOKEN,'Refresh token required', HttpStatus.UNAUTHORIZED);
+      throw new AppException(
+        ExceptionCodes.INVALID_REFRESH_TOKEN,
+        'Refresh token required',
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     const token = await this.refreshTokenRepository.findByTokenHash(
@@ -97,11 +143,11 @@ export class RefreshTokenService {
     );
 
     if (!token) {
-        throw new AppException(
-          ExceptionCodes.INVALID_REFRESH_TOKEN,
-          'Invalid refresh token',
-          HttpStatus.UNAUTHORIZED,
-        );
+      throw new AppException(
+        ExceptionCodes.INVALID_REFRESH_TOKEN,
+        'Invalid refresh token',
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     return token;

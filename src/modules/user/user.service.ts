@@ -18,17 +18,11 @@ export class UserService {
     private readonly userRoleRepository: Repository<UserRole>,
   ) {}
  
-  async findUserByEmail(email: string): Promise<User> {
+  async findUserByEmail(email: string): Promise<User|null> {
     const user = await this.userRepository.findOne({
         where: { email },
         relations: ['userRoles','userRoles.role']
     });
-
-    if(!user) {
-        throw new NotFoundException(
-            `User not found with email: ${email}`
-        );
-    }
 
     return user;
   }

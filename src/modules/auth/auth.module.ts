@@ -8,6 +8,7 @@ import { UserModule } from '../user/user.module';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { RefreshTokenRepository } from './repository/refresh-token.repository';
+import { JwtStrategy } from './strategy/jwt.strategy';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { RefreshTokenRepository } from './repository/refresh-token.repository';
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
+        defaultStrategy: 'jwt',
         secret: config.get<string>('security.jwtSecretKey')!,
         signOptions: {
           expiresIn: '1h',
@@ -23,7 +25,7 @@ import { RefreshTokenRepository } from './repository/refresh-token.repository';
     }),
     UserModule,
   ],
-  providers: [AuthService, RefreshTokenService, RefreshTokenRepository],
+  providers: [AuthService, RefreshTokenService, RefreshTokenRepository, JwtStrategy],
   controllers: [AuthController],
 })
 export class AuthModule {}
