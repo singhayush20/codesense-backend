@@ -42,20 +42,3 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     });
   }
 }
-
-export function mapStatus(code: string): HttpStatus {
-  switch (code) {
-    case ExceptionCodes.USER_NOT_FOUND:
-    case ExceptionCodes.ROLES_NOT_FOUND:
-      return HttpStatus.NOT_FOUND;
-
-    case ExceptionCodes.INVALID_JWT:
-    case ExceptionCodes.INVALID_REFRESH_TOKEN:
-    case ExceptionCodes.REFRESH_TOKEN_REUSED:
-    case ExceptionCodes.USER_ACCOUNT_DISABLED:
-      return HttpStatus.UNAUTHORIZED;
-
-    default:
-      return HttpStatus.INTERNAL_SERVER_ERROR;
-  }
-}

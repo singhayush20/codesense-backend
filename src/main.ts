@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { BadRequestException, HttpStatus, ValidationPipe } from '@nestjs/common';
+import { BadRequestException, HttpStatus, ValidationPipe, VersioningType } from '@nestjs/common';
 import { GlobalExceptionFilter } from './exception-handling/global-exception-filter';
 import { AppException } from './exception-handling/app-exception.exception';
 import { ExceptionCodes } from './exception-handling/exception-codes';
@@ -29,6 +29,11 @@ async function bootstrap() {
       },
     }),
   );
+
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: '1',
+  });
 
   app.useGlobalFilters(new GlobalExceptionFilter());
   

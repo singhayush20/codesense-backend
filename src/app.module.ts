@@ -7,6 +7,7 @@ import { configValidationSchema } from './config/config-validation-schema';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './modules/user/user.module';
 import { CacheModule } from './cache/cache.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { CacheModule } from './cache/cache.module';
     }),
     UserModule,
     CacheModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
