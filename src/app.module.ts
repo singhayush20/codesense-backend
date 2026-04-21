@@ -8,6 +8,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './modules/user/user.module';
 import { CacheModule } from './cache/cache.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { GithubIntegrationModule } from './modules/github-integration/github-integration.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { AuthModule } from './modules/auth/auth.module';
     UserModule,
     CacheModule,
     AuthModule,
+    GithubIntegrationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

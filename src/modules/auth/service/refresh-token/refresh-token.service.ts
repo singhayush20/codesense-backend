@@ -2,6 +2,7 @@ import {
   HttpStatus,
   Injectable,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import { RefreshTokenIssueDto } from 'src/modules/auth/dto/refresh-token-issue.dto';
 import { RefreshTokenRotationDto } from 'src/modules/auth/dto/refresh-token-rotation.dto';
@@ -17,6 +18,7 @@ export class RefreshTokenService {
 
   constructor(
     private readonly refreshTokenRepository: RefreshTokenRepository,
+    private readonly configService: ConfigService,
   ) {}
 
   async issue(
@@ -159,8 +161,10 @@ export class RefreshTokenService {
     issuedAt: Date,
   ): Promise<CreatedRefreshToken> {
     const rawToken = this.generateToken();
-
-    const expiresAt = new Date(issuedAt.getTime() + 30 * 60 * 60 * 1000);
+    const tokenExpiresInMs =
+      this.configService.get<number>('tokens.refreshTokenExpiresIn') ??
+      7 * 24 * 60 * 60 * 1000; // 7 days;
+    const expiresAt = new Date(issuedAt.getTime() + tokenExpiresInMs);
 
     const entity = await this.refreshTokenRepository.save({
       user,

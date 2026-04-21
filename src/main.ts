@@ -5,9 +5,13 @@ import { GlobalExceptionFilter } from './exception-handling/global-exception-fil
 import { AppException } from './exception-handling/app-exception.exception';
 import { ExceptionCodes } from './exception-handling/exception-codes';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Enable cookie parsing
+  app.use(cookieParser());
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -53,6 +57,8 @@ async function bootstrap() {
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, documentFactory);
+
+  app.setGlobalPrefix('api')
   
   await app.listen(process.env.PORT ?? 3000);
 }

@@ -73,7 +73,7 @@ export class AuthService {
       this.validateUserState(user);
 
       // 5. Generate access token
-      const expiresInSeconds = 3600;
+      const expiresInSeconds = this.config.get<number>('tokens.accessTokenExpiresInSeconds') ?? 3600;
 
       const accessToken = this.jwtService.sign(
         { sub: user.email },
@@ -126,7 +126,8 @@ export class AuthService {
       throw error;
     }
 
-    const expiresInSeconds = 3600;
+    const expiresInSeconds =
+      this.config.get<number>('tokens.accessTokenExpiresInSeconds') ?? 3600;
 
     const accessToken = this.jwtService.sign(
       { sub: rotation.user.email },
