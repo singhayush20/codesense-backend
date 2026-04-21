@@ -1,5 +1,5 @@
 import { User } from '../../user/entity/user.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('auth_refresh_tokens')
 export class RefreshToken {
@@ -7,6 +7,7 @@ export class RefreshToken {
   id!: number;
 
   @ManyToOne(() => User, { nullable: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' })
   user!: User;
 
   @Column({ name: 'session_id', nullable: false })

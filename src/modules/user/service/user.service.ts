@@ -1,10 +1,10 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
-import { Role } from './entity/role.entity';
-import { UserRole } from './entity/user-role.entity';
-import { User } from './entity/user.entity';
-import { RoleTypes } from './enums/role-types.enums';
+import { Role } from '../entity/role.entity';
+import { UserRole } from '../entity/user-role.entity';
+import { User } from '../entity/user.entity';
+import { RoleTypes } from '../enums/role-types.enums';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -18,17 +18,11 @@ export class UserService {
     private readonly userRoleRepository: Repository<UserRole>,
   ) {}
  
-  async findUserByEmail(email: string): Promise<User> {
+  async findUserByEmail(email: string): Promise<User|null> {
     const user = await this.userRepository.findOne({
         where: { email },
         relations: ['userRoles','userRoles.role']
     });
-
-    if(!user) {
-        throw new NotFoundException(
-            `User not found with email: ${email}`
-        );
-    }
 
     return user;
   }

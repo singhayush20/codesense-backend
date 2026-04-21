@@ -10,12 +10,12 @@ import {
 import { ConfigService } from '@nestjs/config';
 import type { Request, Response } from 'express';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { AuthSuccessResponseDto } from '../dto/auth-success-response.dto';
+import { AuthTokenResponseDto } from '../dto/auth-token-response.dto';
+import { JwtAuthGuard } from '../guards/jwt.guard';
+import { RefreshTokenGuard } from '../guards/refresh-token.guard';
+import { AuthService } from '../service/auth/auth.service';
 
-import { AuthService } from './service/auth/auth.service';
-import { AuthTokenResponseDto } from './dto/auth-token-response.dto';
-import { AuthSuccessResponseDto } from './dto/auth-success-response.dto';
-import { RefreshTokenGuard } from './guards/refresh-token.guard';
-import { JwtAuthGuard } from './guards/jwt.guard';
 
 @Controller('auth')
 export class AuthController {

@@ -4,13 +4,13 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
-import { RefreshTokenIssueDto } from 'src/modules/auth/dto/refresh-token-issue.dto';
-import { RefreshTokenRotationDto } from 'src/modules/auth/dto/refresh-token-rotation.dto';
-import { RefreshToken } from 'src/modules/auth/entity/refresh-token.entity';
-import { RefreshTokenRepository } from 'src/modules/auth/repository/refresh-token.repository';
-import { AppException } from 'src/exception-handling/app-exception.exception';
-import { ExceptionCodes } from 'src/exception-handling/exception-codes';
-import { User } from 'src/modules/user/entity/user.entity';
+import { AppException } from '../../../../exception-handling/app-exception.exception';
+import { ExceptionCodes } from '../../../../exception-handling/exception-codes';
+import { User } from '../../../user/entity/user.entity';
+import { RefreshTokenIssueDto } from '../../dto/refresh-token-issue.dto';
+import { RefreshTokenRotationDto } from '../../dto/refresh-token-rotation.dto';
+import { RefreshToken } from '../../entity/refresh-token.entity';
+import { RefreshTokenRepository } from '../../repository/refresh-token.repository';
 
 @Injectable()
 export class RefreshTokenService {

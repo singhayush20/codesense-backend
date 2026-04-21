@@ -1,14 +1,14 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { UserService } from 'src/modules/user/user.service';
 import axios from 'axios';
 import { randomBytes, randomUUID } from 'crypto';
 import { AuthTokenResponseDto } from '../../dto/auth-token-response.dto';
-import { User } from 'src/modules/user/entity/user.entity';
 import { RefreshTokenService } from '../refresh-token/refresh-token.service';
-import { ExceptionCodes } from 'src/exception-handling/exception-codes';
-import { AppException } from 'src/exception-handling/app-exception.exception';
+import { AppException } from '../../../../exception-handling/app-exception.exception';
+import { ExceptionCodes } from '../../../../exception-handling/exception-codes';
+import { User } from '../../../user/entity/user.entity';
+import { UserService } from '../../../user/service/user.service';
 
 @Injectable()
 export class AuthService {
