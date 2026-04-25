@@ -76,7 +76,10 @@ export class AuthService {
       const expiresInSeconds = this.config.get<number>('tokens.accessTokenExpiresInSeconds') ?? 3600;
 
       const accessToken = this.jwtService.sign(
-        { sub: user.email },
+        {
+          sub: user.userId,
+          email: user.email,
+        },
         { expiresIn: expiresInSeconds },
       );
 

@@ -18,9 +18,6 @@ import { AuthController } from './controller/auth.controller';
       useFactory: (config: ConfigService) => ({
         defaultStrategy: 'jwt',
         secret: config.get<string>('security.jwtSecretKey')!,
-        signOptions: {
-          expiresIn: '1h',
-        },
       }),
     }),
     UserModule,

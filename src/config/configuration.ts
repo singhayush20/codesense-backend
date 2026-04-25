@@ -48,5 +48,11 @@ export default () => {
       accessTokenExpiresInSeconds: 3600, // 1 hour
       refreshTokenExpiresIn: 7 * 24 * 60 * 60 * 1000, // 7 days
     },
+    github: {
+      appName: process.env.GITHUB_APP_NAME,
+      privateKey: process.env.GITHUB_APP_PRIVATE_KEY,
+      webhookSecret: process.env.GITHUB_WEBHOOK_SECRET,
+      appId: process.env.GITHUB_APP_ID,
+    },
   };
 };
