@@ -133,7 +133,7 @@ export class AuthService {
       this.config.get<number>('tokens.accessTokenExpiresInSeconds') ?? 3600;
 
     const accessToken = this.jwtService.sign(
-      { sub: rotation.user.email },
+      { sub: rotation.user.userId, email: rotation.user.email },
       { expiresIn: expiresInSeconds },
     );
 

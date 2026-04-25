@@ -15,6 +15,8 @@ import { GithubInstallationResponse } from '../dtos/github-installation-response
 import { ConfigService } from '@nestjs/config';
 import { JwtUser } from '../../auth/decorator/current-user.decorator';
 import { UserService } from '../../user/service/user.service';
+import { GithubAppAuthService } from './github-app-auth.service';
+import { mapGithubAccountType } from '../enums/github-account-types.enum';
 
 @Injectable()
 export class GithubInstallationService {
@@ -25,12 +27,12 @@ export class GithubInstallationService {
     private githubAccountRepository: Repository<GithubAccount>,
     private userService: UserService,
     private http: HttpService,
-    private tokenService: GithubInstallationTokenService,
     private readonly configService: ConfigService,
+    private readonly authService: GithubAppAuthService,
   ) {}
 
   getGithubInstallationUrl(): string {
-    const githubAppName = this.configService.get<string>('github.app.name');
+    const githubAppName = this.configService.get<string>('github.appName');
 
     if (githubAppName)
       return `https://github.com/apps/${githubAppName}/installations/new`;
@@ -56,9 +58,9 @@ export class GithubInstallationService {
       );
     }
 
-    const token = await this.tokenService.getToken(installationId);
+    const appJwt = this.authService.generateAppJwt();
 
-    const data = await this.getAccountDetails(token);
+    const data = await this.getAccountDetails(installationId, appJwt);
 
     await this.githubAccountRepository.upsert(
       {
@@ -66,7 +68,7 @@ export class GithubInstallationService {
         user,
         githubAccountId: data.account.id.toString(),
         loginId: data.account.login,
-        accountType: data.account.type,
+        accountType: mapGithubAccountType(data.account.type),
       },
       ['installationId'],
     );
@@ -104,15 +106,16 @@ export class GithubInstallationService {
   }
 
   private async getAccountDetails(
-    token: string,
-  ): Promise<GithubInstallationResponse> {
+    installationId: string,
+    appJwt: string,
+  ): Promise<any> {
     try {
       const response = await firstValueFrom(
-        this.http.get<GithubInstallationResponse>(
-          'https://api.github.com/installation',
+        this.http.get(
+          `https://api.github.com/app/installations/${installationId}`,
           {
             headers: {
-              Authorization: `Bearer ${token}`,
+              Authorization: `Bearer ${appJwt}`,
               Accept: 'application/vnd.github+json',
             },
           },

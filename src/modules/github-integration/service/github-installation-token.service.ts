@@ -1,51 +1,81 @@
-import { HttpService } from "@nestjs/axios";
-import { GithubAppAuthService } from "./github-app-auth.service";
-import { Injectable } from "@nestjs/common";
-import { firstValueFrom } from "rxjs";
-import { CacheService } from "../../../cache/cache.service";
+import { HttpService } from '@nestjs/axios';
+import { Injectable, HttpStatus, Logger } from '@nestjs/common';
+import { firstValueFrom } from 'rxjs';
 
-/**
- * This class is the "worker" It uses the JWT from the first
- * GithubAppAuthService to get a real API token that can
- * actually modify repositories.
- */
+import { GithubAppAuthService } from './github-app-auth.service';
+import { CacheService } from '../../../cache/cache.service';
+import { AppException } from '../../../exception-handling/app-exception.exception';
+import { ExceptionCodes } from '../../../exception-handling/exception-codes';
+
+interface GithubInstallationTokenResponse {
+  token: string;
+  expires_at: string;
+}
+
 @Injectable()
 export class GithubInstallationTokenService {
-    constructor(
-        private readonly authService: GithubAppAuthService,
-        private readonly http: HttpService,
-        private cacheService: CacheService,
-    ){}
+  private readonly logger = new Logger(GithubInstallationTokenService.name);
 
-    async getToken(installationId: string): Promise<string> {
-      const cacheKey = `gh:inst:${installationId}`;
+  constructor(
+    private readonly authService: GithubAppAuthService,
+    private readonly http: HttpService,
+    private readonly cacheService: CacheService,
+  ) {}
 
-      const cached = await this.cacheService.get<string>(cacheKey);
+  async getToken(installationId: string): Promise<string> {
+    const cacheKey = `gh:inst:${installationId}`;
 
-      if (cached) {
-        return cached;
-      }
+    // Check cache
+    const cached = await this.cacheService.get<string>(cacheKey);
+    if (cached) {
+      return cached;
+    }
 
-      const jwt = this.authService.generateAppJwt();
+    const appJwt = this.authService.generateAppJwt();
 
+    this.logger.debug('Generating installation token with appJwt: %s', appJwt);
+
+    let responseData: GithubInstallationTokenResponse;
+
+    try {
       const response = await firstValueFrom(
-        this.http.post(
+        this.http.post<GithubInstallationTokenResponse>(
           `https://api.github.com/app/installations/${installationId}/access_tokens`,
           {},
           {
             headers: {
-              Authorization: `Bearer ${jwt}`,
+              Authorization: `Bearer ${appJwt}`, // MUST be JWT
               Accept: 'application/vnd.github+json',
             },
           },
         ),
       );
 
-      const token = response.data.token;
+      responseData = response.data;
+    } catch (error) {
+      this.logger.error('Failed to generate installation token', error);
 
-      // GitHub installation tokens are valid for 1 hour, it’s much faster to reuse a cached one than to request a new one on every API call.
-      await this.cacheService.set(cacheKey, token, 3000);
-
-      return token;
+      throw new AppException(
+        ExceptionCodes.GITHUB_API_ERROR,
+        'Failed to generate GitHub installation token',
+        HttpStatus.BAD_GATEWAY,
+      );
     }
+
+    this.logger.debug(`Generated installation token response: ${responseData}`);
+    
+    const token = responseData.token;
+
+    // Calculate TTL dynamically (IMPORTANT)
+    const expiresAt = new Date(responseData.expires_at).getTime();
+    const now = Date.now();
+
+    // subtract buffer (1 min)
+    const ttlSeconds = Math.max(Math.floor((expiresAt - now) / 1000) - 60, 0);
+
+    // Cache safely
+    await this.cacheService.set(cacheKey, token, ttlSeconds);
+
+    return token;
+  }
 }

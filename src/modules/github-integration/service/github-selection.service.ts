@@ -47,7 +47,7 @@ export class GithubSelectionService {
 
     // Validate all repos exist
     if (repos.length !== repoIds.length) {
-      throw new NotFoundException('Some repositories not found');
+      throw new AppException(ExceptionCodes.REPO_NOT_FOUND,'Some repositories not found',HttpStatus.NOT_FOUND);
     }
 
     // Ownership validation
