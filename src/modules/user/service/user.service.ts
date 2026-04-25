@@ -17,11 +17,17 @@ export class UserService {
     @InjectRepository(UserRole)
     private readonly userRoleRepository: Repository<UserRole>,
   ) {}
- 
-  async findUserByEmail(email: string): Promise<User|null> {
+
+  async findUserById(userId: string): Promise<User | null> {
+    return this.userRepository.findOne({
+      where: { userId },
+    });
+  }
+
+  async findUserByEmail(email: string): Promise<User | null> {
     const user = await this.userRepository.findOne({
-        where: { email },
-        relations: ['userRoles','userRoles.role']
+      where: { email },
+      relations: ['userRoles', 'userRoles.role'],
     });
 
     return user;
@@ -32,21 +38,21 @@ export class UserService {
     name: string,
     password: string,
   ): Promise<User> {
-    const existing = await this.userRepository.findOne({where: {email}});
+    const existing = await this.userRepository.findOne({ where: { email } });
 
-    if(existing) {
-        throw new ConflictException(`User already exists`);
+    if (existing) {
+      throw new ConflictException(`User already exists`);
     }
 
     // fetch roles
     const roles = await this.roleRepository.find({
-        where: {
-            name: In([RoleTypes.ROLE_USER]),
-        }
+      where: {
+        name: In([RoleTypes.ROLE_USER]),
+      },
     });
 
-    if(!roles.length) {
-        throw new NotFoundException(`Roles not found`)
+    if (!roles.length) {
+      throw new NotFoundException(`Roles not found`);
     }
 
     const user = this.userRepository.create({
@@ -68,5 +74,12 @@ export class UserService {
     await this.userRoleRepository.save(userRoles);
 
     return savedUser;
+  }
+
+  async findByIdWithRoles(userId: string): Promise<User | null> {
+    return this.userRepository.findOne({
+      where: { userId },
+      relations: ['userRoles', 'userRoles.role'],
+    });
   }
 }

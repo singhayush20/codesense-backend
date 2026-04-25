@@ -1,7 +1,12 @@
-import { CanActivate, ExecutionContext, HttpStatus, Injectable } from "@nestjs/common";
-import { RefreshTokenService } from "../service/refresh-token/refresh-token.service";
-import { AppException } from "../../../exception-handling/app-exception.exception";
-import { ExceptionCodes } from "../../../exception-handling/exception-codes";
+import {
+  CanActivate,
+  ExecutionContext,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
+import { RefreshTokenService } from '../service/refresh-token/refresh-token.service';
+import { AppException } from '../../../exception-handling/app-exception.exception';
+import { ExceptionCodes } from '../../../exception-handling/exception-codes';
 
 @Injectable()
 export class RefreshTokenGuard implements CanActivate {
@@ -10,11 +15,14 @@ export class RefreshTokenGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
 
-    // Extract refresh token from httpOnly cookie
     const refreshToken = request.cookies?.codesense_refresh_token;
 
     if (!refreshToken) {
-      throw new AppException(ExceptionCodes.REFREH_TOKEN_NOT_PRESENT,'Refresh token missing',HttpStatus.UNAUTHORIZED);
+      throw new AppException(
+        ExceptionCodes.REFREH_TOKEN_NOT_PRESENT,
+        'Refresh token missing',
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     const session =
@@ -28,7 +36,11 @@ export class RefreshTokenGuard implements CanActivate {
       );
     }
 
-    request.user = session.user;
+    request.user = {
+      userId: session.user.userId,
+      email: session.user.email,
+    };
+
     request.session = session;
 
     return true;
