@@ -10,7 +10,6 @@ import {
 import { ConfigService } from '@nestjs/config';
 import type { Request, Response } from 'express';
 import { ApiBearerAuth } from '@nestjs/swagger';
-
 import { AuthSuccessResponseDto } from '../dto/auth-success-response.dto';
 import { AuthTokenResponseDto } from '../dto/auth-token-response.dto';
 import { JwtAuthGuard } from '../guards/jwt.guard';
