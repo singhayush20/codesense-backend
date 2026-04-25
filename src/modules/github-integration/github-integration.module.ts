@@ -12,6 +12,8 @@ import { GithubInstallationService } from './service/github-installation.service
 import { GithubInstallationTokenService } from './service/github-installation-token.service';
 import { GithubRepoService } from './service/github-repo.service';
 import { GithubSelectionService } from './service/github-selection.service';
+import { GithubWebhookService } from './service/webhook/webhook.service';
+import { PrProcessingService } from './service/pr-processing/pr-processing.service';
 
 @Module({
   imports: [
@@ -31,6 +33,8 @@ import { GithubSelectionService } from './service/github-selection.service';
     GithubInstallationTokenService,
     GithubRepoService,
     GithubSelectionService,
+    PrProcessingService,
+    GithubWebhookService,
   ],
 })
 export class GithubIntegrationModule {}

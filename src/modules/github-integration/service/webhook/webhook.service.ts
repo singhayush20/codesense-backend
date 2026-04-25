@@ -1,0 +1,110 @@
+import {
+  Injectable,
+  Logger,
+  HttpStatus,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { GithubWebhookUtil } from '../../utils/github-webhook.utils';
+import { PrProcessingService } from '../pr-processing/pr-processing.service';
+import { AxiosError } from 'axios';
+import { GithubEventType, GithubPullRequestPayload } from '../../dtos/pr-handling/github-pr.dto';
+import { AppException } from '../../../../exception-handling/app-exception.exception';
+import { ExceptionCodes } from '../../../../exception-handling/exception-codes';
+
+@Injectable()
+export class GithubWebhookService {
+  private readonly logger = new Logger(GithubWebhookService.name);
+
+  constructor(
+    private readonly config: ConfigService,
+    private readonly prService: PrProcessingService,
+  ) {}
+
+  async handleEvent(
+    event: GithubEventType,
+    signature: string,
+    deliveryId: string,
+    rawPayload: string,
+  ): Promise<void> {
+    const secret = this.config.get<string>('github.webhookSecret');
+
+    if (!secret) {
+      this.logger.error('Webhook secret not configured');
+      throw new AppException(ExceptionCodes.WEBHOOK_CONFIG_ERROR,'Webhook configuration error',HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    try {
+      const isValid = GithubWebhookUtil.verifySignature(
+        rawPayload,
+        signature,
+        secret,
+      );
+
+      if (!isValid) {
+        this.logger.warn(`Invalid signature for delivery ${deliveryId}`);
+        throw new AppException(ExceptionCodes.INVALID_WEBHOOK_SIGNATURE,'Invalid webhook signature',HttpStatus.BAD_REQUEST);
+      }
+
+      const payload = JSON.parse(rawPayload);
+
+      this.logger.log(
+        `Webhook received | event=${event} | deliveryId=${deliveryId}`,
+      );
+
+      await this.routeEvent(event, payload);
+    } catch (error) {
+      this.handleError(error, event, deliveryId);
+    }
+  }
+
+  private async routeEvent(
+    event: GithubEventType,
+    payload: unknown,
+  ): Promise<void> {
+    switch (event) {
+      case 'pull_request':
+        await this.handlePullRequest(payload as GithubPullRequestPayload);
+        break;
+
+      default:
+        this.logger.debug(`Unhandled event: ${event}`);
+    }
+  }
+
+  private async handlePullRequest(
+    payload: GithubPullRequestPayload,
+  ): Promise<void> {
+    const { action } = payload;
+
+    if (!['opened', 'synchronize'].includes(action)) {
+      this.logger.debug(`Ignoring PR action: ${action}`);
+      return;
+    }
+
+    await this.prService.processPullRequest(payload);
+  }
+
+  private handleError(
+    error: unknown,
+    event: string,
+    deliveryId: string,
+  ): never {
+    if (error instanceof AxiosError) {
+      this.logger.error(
+        `GitHub API error | event=${event} | deliveryId=${deliveryId} | status=${error.response?.status} | data=${JSON.stringify(error.response?.data)}`,
+      );
+      throw new AppException(ExceptionCodes.GITHUB_API_ERROR,'GitHub API error',error.response?.status || HttpStatus.BAD_GATEWAY);
+    }
+
+    this.logger.error(
+      `Webhook processing failed | event=${event} | deliveryId=${deliveryId}`,
+      error instanceof Error ? error.stack : undefined,
+    );
+
+    throw new AppException(
+      ExceptionCodes.WEBHOOK_PROCESSING_FAILED,
+      'Webhook processing failed',
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
+  }
+}
