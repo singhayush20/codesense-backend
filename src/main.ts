@@ -6,6 +6,7 @@ import { AppException } from './exception-handling/app-exception.exception';
 import { ExceptionCodes } from './exception-handling/exception-codes';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
+import * as express from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -59,6 +60,11 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, documentFactory);
 
   app.setGlobalPrefix('api')
+
+  app.use(
+    '/github-webhook',
+    express.raw({type: 'application/json'}),
+  )
   
   await app.listen(process.env.PORT ?? 3000);
 }
