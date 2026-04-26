@@ -61,10 +61,7 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api')
 
-  app.use(
-    '/github-webhook',
-    express.raw({type: 'application/json'}),
-  )
+  app.use('/api/v1/github-webhook/action', express.raw({ type: 'application/json' }));
   
   await app.listen(process.env.PORT ?? 3000);
 }

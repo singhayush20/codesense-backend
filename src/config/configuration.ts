@@ -51,7 +51,7 @@ export default () => {
     github: {
       appName: process.env.GITHUB_APP_NAME,
       privateKey: process.env.GITHUB_APP_PRIVATE_KEY,
-      webhookSecret: process.env.GITHUB_WEBHOOK_SECRET,
+      webhookSecret: process.env.GUTHUB_APP_WEBHOOK_SECRET,
       appId: process.env.GITHUB_APP_ID,
     },
   };

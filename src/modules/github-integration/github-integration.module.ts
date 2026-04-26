@@ -14,6 +14,7 @@ import { GithubRepoService } from './service/github-repo.service';
 import { GithubSelectionService } from './service/github-selection.service';
 import { GithubWebhookService } from './service/webhook/webhook.service';
 import { PrProcessingService } from './service/pr-processing/pr-processing.service';
+import { GithubWebhookController } from './controller/github-webhook/github-webhook.controller';
 
 @Module({
   imports: [
@@ -26,7 +27,7 @@ import { PrProcessingService } from './service/pr-processing/pr-processing.servi
       UserRepositorySelection,
     ]),
   ],
-  controllers: [GithubController],
+  controllers: [GithubController, GithubWebhookController],
   providers: [
     GithubAppAuthService,
     GithubInstallationService,
