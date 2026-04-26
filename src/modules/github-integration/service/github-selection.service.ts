@@ -47,7 +47,11 @@ export class GithubSelectionService {
 
     // Validate all repos exist
     if (repos.length !== repoIds.length) {
-      throw new AppException(ExceptionCodes.REPO_NOT_FOUND,'Some repositories not found',HttpStatus.NOT_FOUND);
+      throw new AppException(
+        ExceptionCodes.REPO_NOT_FOUND,
+        'Some repositories not found',
+        HttpStatus.NOT_FOUND,
+      );
     }
 
     // Ownership validation
@@ -84,6 +88,17 @@ export class GithubSelectionService {
     });
 
     return selections.map((s) => this.mapToDto(s.repository));
+  }
+
+  async isRepoSelected(repoId: string): Promise<boolean> {
+    const count = await this.selectionRepo.count({
+      where: {
+        repository: { repoId },
+        isActive: true,
+      },
+    });
+
+    return count > 0;
   }
 
   private mapToDto(repo: GithubRepository): SelectedRepoResponseDto {

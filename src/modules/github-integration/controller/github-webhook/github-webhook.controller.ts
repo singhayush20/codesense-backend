@@ -13,7 +13,7 @@ export class GithubWebhookController {
     @Headers('x-github-delivery') deliveryId: string,
     @Req() req: any,
   ): Promise<void> {
-    const rawBody = req.rawBody;
+    const rawBody = req.rawBody.toString();
 
     await this.webhookService.handleEvent(
       event,

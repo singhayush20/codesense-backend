@@ -10,6 +10,9 @@ import { AxiosError } from 'axios';
 import { GithubEventType, GithubPullRequestPayload } from '../../dtos/pr-handling/github-pr.dto';
 import { AppException } from '../../../../exception-handling/app-exception.exception';
 import { ExceptionCodes } from '../../../../exception-handling/exception-codes';
+import { CacheService } from '../../../../cache/cache.service';
+import { Queue } from 'bullmq';
+import { InjectQueue } from '@nestjs/bullmq';
 
 @Injectable()
 export class GithubWebhookService {
@@ -17,7 +20,9 @@ export class GithubWebhookService {
 
   constructor(
     private readonly config: ConfigService,
-    private readonly prService: PrProcessingService,
+    private readonly cacheService: CacheService,
+    @InjectQueue('pr-processing')
+    private readonly prQueue: Queue,
   ) {}
 
   async handleEvent(
@@ -26,11 +31,27 @@ export class GithubWebhookService {
     deliveryId: string,
     rawPayload: string,
   ): Promise<void> {
+    this.logger.log(`Webhook received: ${event} - ${deliveryId}`);
+
+    const key = `gh:webhook:${deliveryId}`;
+    const exists = await this.cacheService.exists(key);
+
+    if (exists) {
+      this.logger.warn(`Duplicate webhook skipped: ${deliveryId}`);
+      return;
+    }
+
+    await this.cacheService.set(key, true, 3600);
+
     const secret = this.config.get<string>('github.webhookSecret');
 
     if (!secret) {
       this.logger.error('Webhook secret not configured');
-      throw new AppException(ExceptionCodes.WEBHOOK_CONFIG_ERROR,'Webhook configuration error',HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new AppException(
+        ExceptionCodes.WEBHOOK_CONFIG_ERROR,
+        'Webhook configuration error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
 
     try {
@@ -42,7 +63,11 @@ export class GithubWebhookService {
 
       if (!isValid) {
         this.logger.warn(`Invalid signature for delivery ${deliveryId}`);
-        throw new AppException(ExceptionCodes.INVALID_WEBHOOK_SIGNATURE,'Invalid webhook signature',HttpStatus.BAD_REQUEST);
+        throw new AppException(
+          ExceptionCodes.INVALID_WEBHOOK_SIGNATURE,
+          'Invalid webhook signature',
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       const payload = JSON.parse(rawPayload);
@@ -81,7 +106,21 @@ export class GithubWebhookService {
       return;
     }
 
-    await this.prService.processPullRequest(payload);
+    this.logger.log(`Enqueuing PR job for delivery ${payload.pull_request.number}`);
+
+    await this.prQueue.add(
+      'process-pr',
+      { payload },
+      {
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 5000,
+        },
+        removeOnComplete: true,
+        removeOnFail: false,
+      },
+    );
   }
 
   private handleError(
@@ -93,7 +132,11 @@ export class GithubWebhookService {
       this.logger.error(
         `GitHub API error | event=${event} | deliveryId=${deliveryId} | status=${error.response?.status} | data=${JSON.stringify(error.response?.data)}`,
       );
-      throw new AppException(ExceptionCodes.GITHUB_API_ERROR,'GitHub API error',error.response?.status || HttpStatus.BAD_GATEWAY);
+      throw new AppException(
+        ExceptionCodes.GITHUB_API_ERROR,
+        'GitHub API error',
+        error.response?.status || HttpStatus.BAD_GATEWAY,
+      );
     }
 
     this.logger.error(

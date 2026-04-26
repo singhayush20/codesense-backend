@@ -9,6 +9,7 @@ import { UserModule } from './modules/user/user.module';
 import { CacheModule } from './cache/cache.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { GithubIntegrationModule } from './modules/github-integration/github-integration.module';
+import { QueueModule } from './queue/queue.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { GithubIntegrationModule } from './modules/github-integration/github-int
     CacheModule,
     AuthModule,
     GithubIntegrationModule,
+    QueueModule,
   ],
   controllers: [AppController],
   providers: [AppService],

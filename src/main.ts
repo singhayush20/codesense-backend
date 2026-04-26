@@ -1,12 +1,13 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { BadRequestException, HttpStatus, ValidationPipe, VersioningType } from '@nestjs/common';
+import { HttpStatus, ValidationPipe, VersioningType } from '@nestjs/common';
 import { GlobalExceptionFilter } from './exception-handling/global-exception-filter';
 import { AppException } from './exception-handling/app-exception.exception';
 import { ExceptionCodes } from './exception-handling/exception-codes';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
-import * as express from 'express';
+import * as bodyParser from 'body-parser';
+
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -22,6 +23,9 @@ async function bootstrap() {
       forbidUnknownValues: true,
       stopAtFirstError: false,
       disableErrorMessages: process.env.NODE_ENV === 'production',
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
       exceptionFactory: (errors) => {
         const message = errors
           .map((err) => Object.values(err.constraints || {}).join(', '))
@@ -62,11 +66,9 @@ async function bootstrap() {
   app.setGlobalPrefix('api')
 
   app.use(
-    '/api/v1/github-webhook',
-    express.json({
-      verify: (req: any, res, buf) => {
-        req.rawBody = buf;
-      },
+    '/api/v1/github/webhook',
+    bodyParser.raw({
+      type: 'application/json',
     }),
   );
   

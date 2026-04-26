@@ -20,6 +20,7 @@ export interface GithubPullRequestEventPayload {
   };
   repository: {
     full_name: string;
+    id: number;
   };
   pull_request: {
     number: number;
@@ -37,6 +38,6 @@ export interface GithubWebhookHeaders {
 export interface GithubPullRequestPayload {
   action: string;
   installation: { id: number };
-  repository: { full_name: string };
+  repository: { full_name: string; id: number };
   pull_request: { number: number };
 }
