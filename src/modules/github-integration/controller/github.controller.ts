@@ -16,7 +16,7 @@ import * as currentUserDecorator from '../../auth/decorator/current-user.decorat
 import { JwtAuthGuard } from '../../auth/guards/jwt.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorator/roles.decorator';
-import { RoleTypes } from '../../user/enums/role-types.enums';  
+import { RoleTypes } from '../../user/enums/role-types.enums';
 import { ApiBearerAuth } from '@nestjs/swagger';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
