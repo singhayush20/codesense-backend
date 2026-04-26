@@ -1,11 +1,14 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { BadRequestException, HttpStatus, ValidationPipe, VersioningType } from '@nestjs/common';
+import { HttpStatus, ValidationPipe, VersioningType } from '@nestjs/common';
 import { GlobalExceptionFilter } from './exception-handling/global-exception-filter';
 import { AppException } from './exception-handling/app-exception.exception';
 import { ExceptionCodes } from './exception-handling/exception-codes';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
+import * as bodyParser from 'body-parser';
+import * as express from 'express';
+
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -58,8 +61,18 @@ async function bootstrap() {
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, documentFactory);
 
-  app.setGlobalPrefix('api')
-  
+  app.setGlobalPrefix('api');
+
+  // do not change the order of parsers
+  app.use(
+    '/api/v1/github-webhook/action',
+    bodyParser.raw({
+      type: 'application/json',
+    }),
+  );
+
+  app.use(express.json());
+
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();

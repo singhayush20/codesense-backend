@@ -31,10 +31,14 @@ export class CacheService {
     if (ttlSeconds) {
       // add jitter to prevent stampede
       const ttl = ttlSeconds + Math.floor(Math.random() * 30);
-      await this.client.set(key,serialized,'EX',ttl);
+      await this.client.set(key, serialized, 'EX', ttl);
+    } else {
+      await this.client.set(key, serialized);
     }
-    else {
-      await this.client.set(key,serialized);
-    }
+  }
+
+  async exists(key: string): Promise<boolean> {
+    const result = await this.client.exists(key);
+    return result === 1;
   }
 }

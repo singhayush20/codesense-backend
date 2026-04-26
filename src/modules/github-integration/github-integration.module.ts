@@ -12,6 +12,12 @@ import { GithubInstallationService } from './service/github-installation.service
 import { GithubInstallationTokenService } from './service/github-installation-token.service';
 import { GithubRepoService } from './service/github-repo.service';
 import { GithubSelectionService } from './service/github-selection.service';
+import { GithubWebhookService } from './service/webhook/webhook.service';
+import { PrProcessingService } from './service/pr-processing/pr-processing.service';
+import { GithubWebhookController } from './controller/github-webhook/github-webhook.controller';
+import { QueueModule } from '../../queue/queue.module';
+import { PrProcessor } from './processor/pr.processor';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
@@ -23,14 +29,20 @@ import { GithubSelectionService } from './service/github-selection.service';
       GithubRepository,
       UserRepositorySelection,
     ]),
+    BullModule.registerQueue({
+      name: 'pr-processing',
+    }),
   ],
-  controllers: [GithubController],
+  controllers: [GithubController, GithubWebhookController],
   providers: [
     GithubAppAuthService,
     GithubInstallationService,
     GithubInstallationTokenService,
     GithubRepoService,
     GithubSelectionService,
+    PrProcessingService,
+    GithubWebhookService,
+    PrProcessor,
   ],
 })
 export class GithubIntegrationModule {}
