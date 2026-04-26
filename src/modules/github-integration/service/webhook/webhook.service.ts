@@ -5,7 +5,6 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GithubWebhookUtil } from '../../utils/github-webhook.utils';
-import { PrProcessingService } from '../pr-processing/pr-processing.service';
 import { AxiosError } from 'axios';
 import { GithubEventType, GithubPullRequestPayload } from '../../dtos/pr-handling/github-pr.dto';
 import { AppException } from '../../../../exception-handling/app-exception.exception';
