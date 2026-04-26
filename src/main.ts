@@ -7,6 +7,7 @@ import { ExceptionCodes } from './exception-handling/exception-codes';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import * as bodyParser from 'body-parser';
+import * as express from 'express';
 
 
 async function bootstrap() {
@@ -63,15 +64,19 @@ async function bootstrap() {
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, documentFactory);
 
-  app.setGlobalPrefix('api')
+  app.setGlobalPrefix('api');
+
+  app.use(express.json());
 
   app.use(
-    '/api/v1/github/webhook',
-    bodyParser.raw({
-      type: 'application/json',
-    }),
+    '/api/v1/github-webhook/action',
+    bodyParser.raw({ type: '*/*' }),
+    (req: any, _res, next) => {
+      req.rawBody = req.body;
+      next();
+    },
   );
-  
+
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
