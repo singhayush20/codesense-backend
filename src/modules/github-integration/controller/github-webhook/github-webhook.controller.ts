@@ -1,15 +1,20 @@
-import { Controller, HttpCode, HttpStatus, Post, Req, Headers } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Headers,
+  HttpCode,
+  HttpStatus,
+  Req,
+  Logger,
+} from '@nestjs/common';
 import { GithubWebhookService } from '../../service/webhook/webhook.service';
 import { AppException } from '../../../../exception-handling/app-exception.exception';
 import { ExceptionCodes } from '../../../../exception-handling/exception-codes';
 
-
-interface RawBodyRequest extends Request {
-  rawBody: Buffer;
-}
-
 @Controller('github-webhook')
 export class GithubWebhookController {
+  private readonly logger = new Logger(GithubWebhookController.name);
+
   constructor(private readonly webhookService: GithubWebhookService) {}
 
   @Post('action')
@@ -18,27 +23,32 @@ export class GithubWebhookController {
     @Headers('x-github-event') event: string,
     @Headers('x-hub-signature-256') signature: string,
     @Headers('x-github-delivery') deliveryId: string,
-    @Req() req: RawBodyRequest,
+    @Req() req: any,
   ): Promise<void> {
     if (!event || !signature || !deliveryId) {
-      throw new AppException(ExceptionCodes.MISSING_GITHUB_HEADERS,'Missing GitHub headers',HttpStatus.BAD_REQUEST);
-    }
-
-    if (!req.rawBody) {
       throw new AppException(
-        ExceptionCodes.RAW_BODY_NOT_AVAILABLE,
-        'Raw body not available',
+        ExceptionCodes.MISSING_GITHUB_HEADERS,
+        'Missing GitHub headers',
         HttpStatus.BAD_REQUEST,
       );
     }
 
-    const rawPayload = req.rawBody.toString('utf8');
+    if (!req.body || !Buffer.isBuffer(req.body)) {
+      this.logger.error('Webhook body is not raw buffer');
+      throw new AppException(
+        ExceptionCodes.RAW_BODY_NOT_AVAILABLE,
+        'Expected raw buffer body',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const rawBuffer: Buffer = req.body;
 
     await this.webhookService.handleEvent(
-      event,
+      event as any,
       signature,
       deliveryId,
-      rawPayload,
+      rawBuffer,
     );
   }
 }

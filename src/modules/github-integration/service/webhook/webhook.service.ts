@@ -29,7 +29,7 @@ export class GithubWebhookService {
     event: GithubEventType,
     signature: string,
     deliveryId: string,
-    rawPayload: string,
+    rawPayload: Buffer,
   ): Promise<void> {
     this.logger.log(`Webhook received: ${event} - ${deliveryId}`);
 
@@ -70,8 +70,7 @@ export class GithubWebhookService {
         );
       }
 
-      const payload = JSON.parse(rawPayload);
-
+      const payload: unknown = JSON.parse(rawPayload.toString('utf8'));
       this.logger.log(
         `Webhook received | event=${event} | deliveryId=${deliveryId}`,
       );
@@ -106,7 +105,9 @@ export class GithubWebhookService {
       return;
     }
 
-    this.logger.log(`Enqueuing PR job for delivery ${payload.pull_request.number}`);
+    this.logger.log(
+      `Enqueuing PR job for delivery ${payload.pull_request.number}`,
+    );
 
     await this.prQueue.add(
       'process-pr',

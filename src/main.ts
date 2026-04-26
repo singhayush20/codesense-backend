@@ -24,9 +24,6 @@ async function bootstrap() {
       forbidUnknownValues: true,
       stopAtFirstError: false,
       disableErrorMessages: process.env.NODE_ENV === 'production',
-      transformOptions: {
-        enableImplicitConversion: true,
-      },
       exceptionFactory: (errors) => {
         const message = errors
           .map((err) => Object.values(err.constraints || {}).join(', '))
@@ -66,16 +63,15 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
-  app.use(express.json());
-
+  // do not change the order of parsers
   app.use(
     '/api/v1/github-webhook/action',
-    bodyParser.raw({ type: '*/*' }),
-    (req: any, _res, next) => {
-      req.rawBody = req.body;
-      next();
-    },
+    bodyParser.raw({
+      type: 'application/json',
+    }),
   );
+
+  app.use(express.json());
 
   await app.listen(process.env.PORT ?? 3000);
 }
