@@ -2,6 +2,7 @@ import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, Up
 import { UserRole } from "./user-role.entity";
 import { GithubAccount } from "../../github-integration/entity/github-account.entity";
 import { UserRepositorySelection } from "../../github-integration/entity/user-repo-selection.entity";
+import { LLMProvider } from "../../llm/entity/llm-provider.entity";
 
 @Entity('users')
 export class User {
@@ -33,6 +34,9 @@ export class User {
 
   @OneToMany(() => UserRepositorySelection, (selection) => selection.user)
   repositorySelections!: UserRepositorySelection[];
+
+  @OneToMany(() => LLMProvider, (provider) => provider.user)
+  llmProviders!: LLMProvider[];
 
   @CreateDateColumn({ name: 'created_at', nullable: false })
   createdAt!: Date;

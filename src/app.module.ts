@@ -10,6 +10,7 @@ import { CacheModule } from './cache/cache.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { GithubIntegrationModule } from './modules/github-integration/github-integration.module';
 import { QueueModule } from './queue/queue.module';
+import { LlmModule } from './modules/llm/llm.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { QueueModule } from './queue/queue.module';
     AuthModule,
     GithubIntegrationModule,
     QueueModule,
+    LlmModule,
   ],
   controllers: [AppController],
   providers: [AppService],

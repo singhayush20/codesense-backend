@@ -15,7 +15,6 @@ import { AuthTokenResponseDto } from '../dto/auth-token-response.dto';
 import { JwtAuthGuard } from '../guards/jwt.guard';
 import { RefreshTokenGuard } from '../guards/refresh-token.guard';
 import { AuthService } from '../service/auth/auth.service';
-import * as currentUserDecorator from '../decorator/current-user.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -52,7 +51,6 @@ export class AuthController {
   @Post('logout')
   @ApiBearerAuth('access-token')
   async logout(
-    @currentUserDecorator.CurrentUser() user: currentUserDecorator.JwtUser,
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ): Promise<AuthSuccessResponseDto> {

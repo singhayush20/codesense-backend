@@ -15,7 +15,6 @@ import { GithubSelectionService } from './service/github-selection.service';
 import { GithubWebhookService } from './service/webhook/webhook.service';
 import { PrProcessingService } from './service/pr-processing/pr-processing.service';
 import { GithubWebhookController } from './controller/github-webhook/github-webhook.controller';
-import { QueueModule } from '../../queue/queue.module';
 import { PrProcessor } from './processor/pr.processor';
 import { BullModule } from '@nestjs/bullmq';
 
