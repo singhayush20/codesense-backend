@@ -1,7 +1,6 @@
 import { HttpStatus } from '@nestjs/common';
 import { AppException } from '../../../exception-handling/app-exception.exception';
 import { ExceptionCodes } from '../../../exception-handling/exception-codes';
-import { invalid } from 'joi';
 
 export class RepoConfigErrors {
   static repoNotFound(): AppException {
