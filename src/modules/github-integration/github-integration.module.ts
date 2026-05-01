@@ -43,5 +43,6 @@ import { BullModule } from '@nestjs/bullmq';
     GithubWebhookService,
     PrProcessor,
   ],
+  exports: [GithubRepoService],
 })
 export class GithubIntegrationModule {}
