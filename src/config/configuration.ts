@@ -22,6 +22,7 @@ export default () => {
     },
     security: {
       jwtSecretKey: process.env.JWT_SECRET_KEY,
+      apiKeyEncryptionKey: process.env.API_KEY_ENCRYPTION_KEY,
     },
     oauth: {
       google: {
@@ -54,5 +55,6 @@ export default () => {
       webhookSecret: process.env.GUTHUB_APP_WEBHOOK_SECRET,
       appId: process.env.GITHUB_APP_ID,
     },
+
   };
 };
