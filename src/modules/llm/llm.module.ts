@@ -7,10 +7,27 @@ import { CredentialService } from './service/credential.service';
 import { ProviderValidationService } from './service/provider-validation.service';
 import { LlmProviderService } from './service/llm-provider.service';
 import { LlmProviderController } from './controller/llm-provider.controller';
+import { RepoLlmConfig } from './entity/repo-llm-config.entity';
+import { GithubIntegrationModule } from '../github-integration/github-integration.module';
+import { RepoLlmConfigService } from './service/repo-llm-config.service';
+import { RepoLlmConfigController } from './controller/repo-llm-config.controller';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([LLMProvider, LlmProviderCredential])],
-    controllers: [LlmProviderController],
-    providers: [EncryptionService,CredentialService, ProviderValidationService, LlmProviderService],
+  imports: [
+    TypeOrmModule.forFeature([
+      LLMProvider,
+      LlmProviderCredential,
+      RepoLlmConfig,
+    ]),
+    GithubIntegrationModule,
+  ],
+  controllers: [LlmProviderController, RepoLlmConfigController],
+  providers: [
+    EncryptionService,
+    CredentialService,
+    ProviderValidationService,
+    LlmProviderService,
+    RepoLlmConfigService,
+  ],
 })
 export class LlmModule {}
