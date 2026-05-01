@@ -30,7 +30,7 @@ export class RepoLlmConfigController {
   @Roles(RoleTypes.ROLE_USER)
   @ApiOkResponse({ type: RepoLlmConfigResponseDto })
   async upsert(
-    @Param('repoId', ParseIntPipe) repoId: string,
+    @Param('repoId') repoId: string,
     @Body() dto: SetRepoConfigDto,
     @currentUserDecorator.CurrentUser() user: currentUserDecorator.JwtUser,
   ): Promise<RepoLlmConfigResponseDto> {
@@ -41,7 +41,7 @@ export class RepoLlmConfigController {
   @Roles(RoleTypes.ROLE_USER)
   @ApiOkResponse({ type: RepoLlmConfigResponseDto })
   async get(
-    @Param('repoId', ParseIntPipe) repoId: string,
+    @Param('repoId') repoId: string,
     @currentUserDecorator.CurrentUser() user: currentUserDecorator.JwtUser,
   ): Promise<RepoLlmConfigResponseDto> {
     return this.service.get(user.userId, repoId);
@@ -51,7 +51,7 @@ export class RepoLlmConfigController {
   @Roles(RoleTypes.ROLE_USER)
   @ApiOkResponse({ type: SuccessResponseDto })
   async delete(
-    @Param('repoId', ParseIntPipe) repoId: string,
+    @Param('repoId') repoId: string,
     @currentUserDecorator.CurrentUser() user: currentUserDecorator.JwtUser,
   ): Promise<SuccessResponseDto> {
     await this.service.delete(user.userId, repoId);
