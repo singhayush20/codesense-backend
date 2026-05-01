@@ -1,11 +1,16 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as bcrypt from 'bcrypt';
 import { In, Repository } from 'typeorm';
+
 import { Role } from '../entity/role.entity';
 import { UserRole } from '../entity/user-role.entity';
 import { User } from '../entity/user.entity';
 import { RoleTypes } from '../enums/role-types.enums';
-import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {

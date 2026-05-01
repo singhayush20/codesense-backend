@@ -1,14 +1,15 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import configuration from './config/configuration';
-import { configValidationSchema } from './config/config-validation-schema';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserModule } from './modules/user/user.module';
 import { CacheModule } from './cache/cache.module';
+import { configValidationSchema } from './config/config-validation-schema';
+import configuration from './config/configuration';
 import { AuthModule } from './modules/auth/auth.module';
 import { GithubIntegrationModule } from './modules/github-integration/github-integration.module';
+import { UserModule } from './modules/user/user.module';
 import { QueueModule } from './queue/queue.module';
 
 @Module({

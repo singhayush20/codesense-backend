@@ -1,7 +1,8 @@
-import { User } from "../../user/entity/user.entity";
-import { RefreshTokenIssueDto } from "./refresh-token-issue.dto";
+import type  { RefreshTokenIssueDto } from './refresh-token-issue.dto';
+
+import    { type User } from '../../user/entity/user.entity';
 
 export class RefreshTokenRotationDto {
-    user!: User;
-    refreshTokenIssue!: RefreshTokenIssueDto;
+  user!: User;
+  refreshTokenIssue!: RefreshTokenIssueDto;
 }

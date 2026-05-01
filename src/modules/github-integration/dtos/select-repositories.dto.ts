@@ -1,4 +1,4 @@
-import { IsArray, IsString, ArrayNotEmpty } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsString } from 'class-validator';
 
 export class SelectRepositoriesDto {
   @IsArray()

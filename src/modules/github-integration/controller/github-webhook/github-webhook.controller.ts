@@ -1,15 +1,16 @@
 import {
   Controller,
-  Post,
   Headers,
   HttpCode,
   HttpStatus,
-  Req,
   Logger,
+  Post,
+  Req,
 } from '@nestjs/common';
-import { GithubWebhookService } from '../../service/webhook/webhook.service';
+
 import { AppException } from '../../../../exception-handling/app-exception.exception';
 import { ExceptionCodes } from '../../../../exception-handling/exception-codes';
+import { GithubWebhookService } from '../../service/webhook/webhook.service';
 
 @Controller('github-webhook')
 export class GithubWebhookController {
@@ -35,6 +36,7 @@ export class GithubWebhookController {
 
     if (!req.body || !Buffer.isBuffer(req.body)) {
       this.logger.error('Webhook body is not raw buffer');
+
       throw new AppException(
         ExceptionCodes.RAW_BODY_NOT_AVAILABLE,
         'Expected raw buffer body',

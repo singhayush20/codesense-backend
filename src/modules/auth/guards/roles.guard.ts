@@ -1,10 +1,11 @@
 import {
   CanActivate,
   ExecutionContext,
-  Injectable,
   ForbiddenException,
+  Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+
 import { RoleTypes } from '../../user/enums/role-types.enums';
 import { ROLES_KEY } from '../decorator/roles.decorator';
 
@@ -24,7 +25,7 @@ export class RolesGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest();
-    const user = request.user;
+    const { user } = request;
 
     if (!user?.roles || user.roles.length === 0) {
       throw new ForbiddenException('No roles assigned');

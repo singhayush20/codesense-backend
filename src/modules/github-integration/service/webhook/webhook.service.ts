@@ -1,17 +1,17 @@
-import {
-  Injectable,
-  Logger,
-  HttpStatus,
-} from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bullmq';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { GithubWebhookUtil } from '../../utils/github-webhook.utils';
 import { AxiosError } from 'axios';
-import { GithubEventType, GithubPullRequestPayload } from '../../dtos/pr-handling/github-pr.dto';
+import { Queue } from 'bullmq';
+
+import { CacheService } from '../../../../cache/cache.service';
 import { AppException } from '../../../../exception-handling/app-exception.exception';
 import { ExceptionCodes } from '../../../../exception-handling/exception-codes';
-import { CacheService } from '../../../../cache/cache.service';
-import { Queue } from 'bullmq';
-import { InjectQueue } from '@nestjs/bullmq';
+import {
+  GithubEventType,
+  GithubPullRequestPayload,
+} from '../../dtos/pr-handling/github-pr.dto';
+import { GithubWebhookUtil } from '../../utils/github-webhook.utils';
 
 @Injectable()
 export class GithubWebhookService {
@@ -37,6 +37,7 @@ export class GithubWebhookService {
 
     if (exists) {
       this.logger.warn(`Duplicate webhook skipped: ${deliveryId}`);
+
       return;
     }
 
@@ -46,6 +47,7 @@ export class GithubWebhookService {
 
     if (!secret) {
       this.logger.error('Webhook secret not configured');
+
       throw new AppException(
         ExceptionCodes.WEBHOOK_CONFIG_ERROR,
         'Webhook configuration error',
@@ -62,6 +64,7 @@ export class GithubWebhookService {
 
       if (!isValid) {
         this.logger.warn(`Invalid signature for delivery ${deliveryId}`);
+
         throw new AppException(
           ExceptionCodes.INVALID_WEBHOOK_SIGNATURE,
           'Invalid webhook signature',
@@ -70,6 +73,7 @@ export class GithubWebhookService {
       }
 
       const payload: unknown = JSON.parse(rawPayload.toString('utf8'));
+
       this.logger.log(
         `Webhook received | event=${event} | deliveryId=${deliveryId}`,
       );
@@ -101,6 +105,7 @@ export class GithubWebhookService {
 
     if (!['opened', 'synchronize'].includes(action)) {
       this.logger.debug(`Ignoring PR action: ${action}`);
+
       return;
     }
 
@@ -132,6 +137,7 @@ export class GithubWebhookService {
       this.logger.error(
         `GitHub API error | event=${event} | deliveryId=${deliveryId} | status=${error.response?.status} | data=${JSON.stringify(error.response?.data)}`,
       );
+
       throw new AppException(
         ExceptionCodes.GITHUB_API_ERROR,
         'GitHub API error',

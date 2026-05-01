@@ -1,7 +1,8 @@
-import { Injectable } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { DeepPartial, Repository } from "typeorm";
-import { RefreshToken } from "../entity/refresh-token.entity";
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { DeepPartial, Repository } from 'typeorm';
+
+import { RefreshToken } from '../entity/refresh-token.entity';
 
 @Injectable()
 export class RefreshTokenRepository {
@@ -10,7 +11,7 @@ export class RefreshTokenRepository {
     private repo: Repository<RefreshToken>,
   ) {}
 
-  findByTokenHash(tokenHash: string) {
+  async findByTokenHash(tokenHash: string) {
     return this.repo.findOne({
       where: { tokenHash },
       relations: [`user`],
@@ -27,7 +28,7 @@ export class RefreshTokenRepository {
       .execute();
   }
 
-  save(token: DeepPartial<RefreshToken>) {
+  async save(token: DeepPartial<RefreshToken>) {
     return this.repo.save(token);
   }
 }

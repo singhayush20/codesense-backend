@@ -1,4 +1,4 @@
-import { SelectedRepoResponseDto } from "./selected-repo-response.dto";
+import type     { SelectedRepoResponseDto } from './selected-repo-response.dto';
 
 export class SelectRepositoriesResponseDto {
   count!: number;

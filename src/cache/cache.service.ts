@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+
 import { RedisService } from './redis/redis.service';
 
 @Injectable()
@@ -18,10 +19,12 @@ export class CacheService {
 
     if (data) {
       this.logger.debug(`[CACHE HIT] ${key}`);
+
       return JSON.parse(data);
     }
 
     this.logger.debug(`[CACHE MISS] ${key}`);
+
     return null;
   }
 
@@ -31,6 +34,7 @@ export class CacheService {
     if (ttlSeconds) {
       // add jitter to prevent stampede
       const ttl = ttlSeconds + Math.floor(Math.random() * 30);
+
       await this.client.set(key, serialized, 'EX', ttl);
     } else {
       await this.client.set(key, serialized);
@@ -39,6 +43,7 @@ export class CacheService {
 
   async exists(key: string): Promise<boolean> {
     const result = await this.client.exists(key);
+
     return result === 1;
   }
 }

@@ -3,19 +3,21 @@ import {
   Get,
   Post,
   Query,
-  UseGuards,
-  Res,
   Req,
+  Res,
+  UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { Request, Response } from 'express';
 import { ApiBearerAuth } from '@nestjs/swagger';
+
+import * as currentUserDecorator from '../decorator/current-user.decorator';
 import { AuthSuccessResponseDto } from '../dto/auth-success-response.dto';
 import { AuthTokenResponseDto } from '../dto/auth-token-response.dto';
 import { JwtAuthGuard } from '../guards/jwt.guard';
 import { RefreshTokenGuard } from '../guards/refresh-token.guard';
 import { AuthService } from '../service/auth/auth.service';
-import * as currentUserDecorator from '../decorator/current-user.decorator';
+
+import    { type Request, type Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -30,7 +32,9 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ): Promise<AuthSuccessResponseDto> {
     const tokens = await this.authService.exchangeCodeForToken(code);
+
     this.setAuthCookies(response, tokens);
+
     return new AuthSuccessResponseDto(true);
   }
 
@@ -43,6 +47,7 @@ export class AuthController {
     const refreshToken = request.cookies?.codesense_refresh_token;
 
     const tokens = await this.authService.refresh(refreshToken);
+
     this.setAuthCookies(response, tokens);
 
     return new AuthSuccessResponseDto(true);

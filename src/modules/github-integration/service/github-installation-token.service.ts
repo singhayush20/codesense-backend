@@ -1,11 +1,11 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable, HttpStatus, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 
-import { GithubAppAuthService } from './github-app-auth.service';
 import { CacheService } from '../../../cache/cache.service';
 import { AppException } from '../../../exception-handling/app-exception.exception';
 import { ExceptionCodes } from '../../../exception-handling/exception-codes';
+import { GithubAppAuthService } from './github-app-auth.service';
 
 interface GithubInstallationTokenResponse {
   token: string;
@@ -27,6 +27,7 @@ export class GithubInstallationTokenService {
 
     // Check cache
     const cached = await this.cacheService.get<string>(cacheKey);
+
     if (cached) {
       return cached;
     }
@@ -63,8 +64,8 @@ export class GithubInstallationTokenService {
     }
 
     this.logger.debug(`Generated installation token response: ${responseData}`);
-    
-    const token = responseData.token;
+
+    const { token } = responseData;
 
     // Calculate TTL dynamically (IMPORTANT)
     const expiresAt = new Date(responseData.expires_at).getTime();

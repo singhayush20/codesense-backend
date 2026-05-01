@@ -1,4 +1,4 @@
-import Joi from "joi";
+import Joi from 'joi';
 
 export const configValidationSchema = Joi.object({
   ENVIRONMENT: Joi.string().valid('dev', 'prod').required(),

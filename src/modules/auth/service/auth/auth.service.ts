@@ -1,14 +1,16 @@
+import { randomBytes, randomUUID } from 'crypto';
+
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import axios from 'axios';
-import { randomBytes, randomUUID } from 'crypto';
-import { AuthTokenResponseDto } from '../../dto/auth-token-response.dto';
-import { RefreshTokenService } from '../refresh-token/refresh-token.service';
+
 import { AppException } from '../../../../exception-handling/app-exception.exception';
 import { ExceptionCodes } from '../../../../exception-handling/exception-codes';
 import { User } from '../../../user/entity/user.entity';
 import { UserService } from '../../../user/service/user.service';
+import { AuthTokenResponseDto } from '../../dto/auth-token-response.dto';
+import { RefreshTokenService } from '../refresh-token/refresh-token.service';
 
 @Injectable()
 export class AuthService {
@@ -55,7 +57,7 @@ export class AuthService {
 
       const userInfo = userInfoResponse?.data;
 
-      if (!userInfo || !userInfo.email) {
+      if (!userInfo?.email) {
         throw new AppException(
           ExceptionCodes.GOOGLE_USER_INFO_FETCH_FAILED,
           'Failed to fetch user info from Google',
@@ -63,7 +65,7 @@ export class AuthService {
         );
       }
 
-      const email = userInfo.email;
+      const { email } = userInfo;
       const name = this.resolveName(userInfo, email);
 
       // 3. Find or create user (exact Spring behavior)
@@ -73,7 +75,8 @@ export class AuthService {
       this.validateUserState(user);
 
       // 5. Generate access token
-      const expiresInSeconds = this.config.get<number>('tokens.accessTokenExpiresInSeconds') ?? 3600;
+      const expiresInSeconds =
+        this.config.get<number>('tokens.accessTokenExpiresInSeconds') ?? 3600;
 
       const accessToken = this.jwtService.sign(
         {
@@ -126,6 +129,7 @@ export class AuthService {
       await this.refreshTokenService.revokeSession(
         rotation.refreshTokenIssue.token,
       );
+
       throw error;
     }
 
@@ -157,6 +161,7 @@ export class AuthService {
     name: string,
   ): Promise<User> {
     const user = await this.userService.findUserByEmail(email);
+
     if (user !== null) {
       return user;
     }

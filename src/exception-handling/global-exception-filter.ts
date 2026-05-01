@@ -1,11 +1,12 @@
 import {
-  ExceptionFilter,
-  Catch,
   ArgumentsHost,
+  Catch,
+  ExceptionFilter,
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+
 import { ExceptionCodes } from './exception-codes';
 
 @Catch()
@@ -25,6 +26,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
       if (typeof res === 'object') {
         const r = res as any;
+
         code = r.code || code;
         message = r.message || message;
       } else {

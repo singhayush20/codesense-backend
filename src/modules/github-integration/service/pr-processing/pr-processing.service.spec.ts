@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test, type TestingModule } from '@nestjs/testing';
+
 import { PrProcessingService } from './pr-processing.service';
 
 describe('PrProcessingService', () => {

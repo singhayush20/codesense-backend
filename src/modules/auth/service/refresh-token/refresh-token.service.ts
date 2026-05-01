@@ -1,9 +1,8 @@
-import {
-  HttpStatus,
-  Injectable,
-} from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
+
+import { HttpStatus, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+
 import { AppException } from '../../../../exception-handling/app-exception.exception';
 import { ExceptionCodes } from '../../../../exception-handling/exception-codes';
 import { User } from '../../../user/entity/user.entity';
@@ -77,7 +76,9 @@ export class RefreshTokenService {
   }
 
   async revokeSession(refreshToken: string) {
-    if (!refreshToken) return;
+    if (!refreshToken) {
+      return;
+    }
 
     const token = await this.refreshTokenRepository.findByTokenHash(
       this.hashToken(refreshToken),
@@ -95,7 +96,11 @@ export class RefreshTokenService {
     const token = await this.findToken(refreshToken);
 
     if (!token) {
-      throw new AppException(ExceptionCodes.REFREH_TOKEN_NOT_PRESENT,'Invalid refresh token',HttpStatus.UNAUTHORIZED);
+      throw new AppException(
+        ExceptionCodes.REFREH_TOKEN_NOT_PRESENT,
+        'Invalid refresh token',
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     // Expiry check
@@ -195,6 +200,6 @@ export class RefreshTokenService {
 }
 
 class CreatedRefreshToken {
-    refreshToken!: RefreshToken;
-    refreshTokenIssue!: RefreshTokenIssueDto;
+  refreshToken!: RefreshToken;
+  refreshTokenIssue!: RefreshTokenIssueDto;
 }

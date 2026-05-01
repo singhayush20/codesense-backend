@@ -1,23 +1,22 @@
-import { Controller, Get, Query, Post, Body, UseGuards } from '@nestjs/common';
-import { GithubInstallationService } from '../service/github-installation.service';
-import { GithubRepoService } from '../service/github-repo.service';
-import { GithubSelectionService } from '../service/github-selection.service';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
+import * as currentUserDecorator from '../../auth/decorator/current-user.decorator';
+import { Roles } from '../../auth/decorator/roles.decorator';
+import { JwtAuthGuard } from '../../auth/guards/jwt.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { RoleTypes } from '../../user/enums/role-types.enums';
+import { ConnectGithubResponseDto } from '../dtos/connect-response.dto';
+import { GithubAccountResponseDto } from '../dtos/github-account-response.dto';
+import { HandleInstallationResponseDto } from '../dtos/handle-installation-response.dto';
 import { SelectRepositoriesResponseDto } from '../dtos/select-repositories-response.dto';
 import { SelectRepositoriesDto } from '../dtos/select-repositories.dto';
 import { SelectedRepoResponseDto } from '../dtos/selected-repo-response.dto';
-import { SyncReposDto } from '../dtos/sync-repos.dto';
-import { HandleInstallationResponseDto } from '../dtos/handle-installation-response.dto';
-import { GithubAccountResponseDto } from '../dtos/github-account-response.dto';
 import { SyncReposResponseDto } from '../dtos/sync-repo-response.dto';
-import { ConnectGithubResponseDto } from '../dtos/connect-response.dto';
-
-import * as currentUserDecorator from '../../auth/decorator/current-user.decorator';
-import { JwtAuthGuard } from '../../auth/guards/jwt.guard';
-import { RolesGuard } from '../../auth/guards/roles.guard';
-import { Roles } from '../../auth/decorator/roles.decorator';
-import { RoleTypes } from '../../user/enums/role-types.enums';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { SyncReposDto } from '../dtos/sync-repos.dto';
+import { GithubInstallationService } from '../service/github-installation.service';
+import { GithubRepoService } from '../service/github-repo.service';
+import { GithubSelectionService } from '../service/github-selection.service';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('github')

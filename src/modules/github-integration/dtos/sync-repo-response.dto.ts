@@ -1,4 +1,4 @@
-import { GithubRepoResponseDto } from "./github-repo-response.dto";
+import type     { GithubRepoResponseDto } from './github-repo-response.dto';
 
 export class SyncReposResponseDto {
   total!: number;

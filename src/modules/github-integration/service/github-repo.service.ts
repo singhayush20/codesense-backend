@@ -1,25 +1,26 @@
+import { HttpService } from '@nestjs/axios';
 import {
-    HttpStatus,
+  HttpStatus,
   Injectable,
   InternalServerErrorException,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { GithubInstallationTokenService } from './github-installation-token.service';
-import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
 import { InjectRepository } from '@nestjs/typeorm';
-import { GithubRepository } from '../entity/github-repo.entity';
+import { firstValueFrom } from 'rxjs';
 import { Repository } from 'typeorm';
-import { GithubAccount } from '../entity/github-account.entity';
-import { GithubRepoResponseDto } from '../dtos/github-repo-response.dto';
-import { SyncReposResponseDto } from '../dtos/sync-repo-response.dto';
-import { GithubInstallationReposResponse } from '../dtos/github-installation-repo-response';
+
 import { AppException } from '../../../exception-handling/app-exception.exception';
 import { ExceptionCodes } from '../../../exception-handling/exception-codes';
-import { User } from '../../user/entity/user.entity';
 import { JwtUser } from '../../auth/decorator/current-user.decorator';
+import { User } from '../../user/entity/user.entity';
 import { UserService } from '../../user/service/user.service';
+import { GithubInstallationReposResponse } from '../dtos/github-installation-repo-response';
+import { GithubRepoResponseDto } from '../dtos/github-repo-response.dto';
+import { SyncReposResponseDto } from '../dtos/sync-repo-response.dto';
+import { GithubAccount } from '../entity/github-account.entity';
+import { GithubRepository } from '../entity/github-repo.entity';
+import { GithubInstallationTokenService } from './github-installation-token.service';
 
 @Injectable()
 export class GithubRepoService {
@@ -55,6 +56,7 @@ export class GithubRepoService {
       githubResponse = response.data;
     } catch (error) {
       this.logger.error('Failed to fetch repositories from GitHub', error);
+
       throw new AppException(
         ExceptionCodes.GITHUB_API_ERROR,
         'Failed to fetch repositories from GitHub',
@@ -116,7 +118,11 @@ export class GithubRepoService {
 
     // Ownership validation
     if (account.user.userId !== user.userId) {
-      throw new AppException(ExceptionCodes.UNAUTHORIZED_ACCESS,'Access denied to this account',HttpStatus.FORBIDDEN);
+      throw new AppException(
+        ExceptionCodes.UNAUTHORIZED_ACCESS,
+        'Access denied to this account',
+        HttpStatus.FORBIDDEN,
+      );
     }
 
     // Delegate to core logic
@@ -138,6 +144,7 @@ export class GithubRepoService {
 
   async findByRepoIdDto(repoId: string): Promise<GithubRepoResponseDto> {
     const repo = await this.findByRepoId(repoId);
+
     return this.mapToDto(repo);
   }
 

@@ -1,11 +1,13 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { JwtUtil } from '../utils/github-jwt.utils';
-import { AppException } from '../../../exception-handling/app-exception.exception';
-import { ExceptionCodes } from '../../../exception-handling/exception-codes';
+import { log } from 'console';
 import fs from 'fs';
 import path from 'path';
-import { log } from 'console';
+
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+
+import { AppException } from '../../../exception-handling/app-exception.exception';
+import { ExceptionCodes } from '../../../exception-handling/exception-codes';
+import { JwtUtil } from '../utils/github-jwt.utils';
 
 @Injectable()
 export class GithubAppAuthService {
@@ -14,6 +16,7 @@ export class GithubAppAuthService {
       path.resolve(process.cwd(), 'github-app.pem'),
       'utf-8',
     );
+
     this.githubAppKey = key;
   }
 
@@ -25,7 +28,12 @@ export class GithubAppAuthService {
 
     if (!appId) {
       this.logger.error('GitHub App credentials are not properly configured.');
-      throw new AppException(ExceptionCodes.GITHUB_APP_CREDENTIALS_NOT_CONFIGURED, 'GitHub App credentials are not properly configured.',HttpStatus.INTERNAL_SERVER_ERROR);
+
+      throw new AppException(
+        ExceptionCodes.GITHUB_APP_CREDENTIALS_NOT_CONFIGURED,
+        'GitHub App credentials are not properly configured.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
 
     return JwtUtil.generateGithubAppJwt(appId, this.githubAppKey);

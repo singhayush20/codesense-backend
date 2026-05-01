@@ -1,19 +1,20 @@
 import {
-  Injectable,
   ForbiddenException,
-  NotFoundException,
   HttpStatus,
+  Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UserRepositorySelection } from '../entity/user-repo-selection.entity';
-import { Repository, In } from 'typeorm';
-import { GithubRepository } from '../entity/github-repo.entity';
-import { SelectRepositoriesResponseDto } from '../dtos/select-repositories-response.dto';
-import { SelectedRepoResponseDto } from '../dtos/selected-repo-response.dto';
-import { JwtUser } from '../../auth/decorator/current-user.decorator';
+import { In, Repository } from 'typeorm';
+
 import { AppException } from '../../../exception-handling/app-exception.exception';
 import { ExceptionCodes } from '../../../exception-handling/exception-codes';
+import { JwtUser } from '../../auth/decorator/current-user.decorator';
 import { UserService } from '../../user/service/user.service';
+import { SelectRepositoriesResponseDto } from '../dtos/select-repositories-response.dto';
+import { SelectedRepoResponseDto } from '../dtos/selected-repo-response.dto';
+import { GithubRepository } from '../entity/github-repo.entity';
+import { UserRepositorySelection } from '../entity/user-repo-selection.entity';
 
 @Injectable()
 export class GithubSelectionService {

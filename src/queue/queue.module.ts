@@ -1,5 +1,6 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
+
 import { GithubIntegrationModule } from '../modules/github-integration/github-integration.module';
 
 @Module({

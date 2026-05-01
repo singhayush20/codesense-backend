@@ -1,14 +1,15 @@
 import {
-  Entity,
-  PrimaryGeneratedColumn,
-  ManyToOne,
-  JoinColumn,
   Column,
-  Index,
   CreateDateColumn,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
-import { User } from './user.entity';
+
 import { Role } from './role.entity';
+import { User } from './user.entity';
 
 @Entity('user_roles')
 @Index(['user', 'role'], { unique: true })
@@ -18,7 +19,7 @@ export class UserRole {
 
   @ManyToOne(() => User, (user) => user.userRoles, {
     onDelete: 'CASCADE',
-    eager: true, 
+    eager: true,
   })
   @JoinColumn({ name: 'user_id' })
   user!: User;

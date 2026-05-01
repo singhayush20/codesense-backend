@@ -1,22 +1,20 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { GithubAccount } from '../entity/github-account.entity';
-import { Repository } from 'typeorm';
 import { HttpService } from '@nestjs/axios';
-import { GithubInstallationTokenService } from './github-installation-token.service';
-import { firstValueFrom } from 'rxjs';
-import { User } from '../../user/entity/user.entity';
-import { GithubAccountResponseDto } from '../dtos/github-account-response.dto';
-import { HandleInstallationResponseDto } from '../dtos/handle-installation-response.dto';
-import { ExceptionCodes } from '../../../exception-handling/exception-codes';
-import { AppException } from '../../../exception-handling/app-exception.exception';
-import { AxiosError } from 'axios';
-import { GithubInstallationResponse } from '../dtos/github-installation-response.dto';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { InjectRepository } from '@nestjs/typeorm';
+import { AxiosError } from 'axios';
+import { firstValueFrom } from 'rxjs';
+import { Repository } from 'typeorm';
+
+import { AppException } from '../../../exception-handling/app-exception.exception';
+import { ExceptionCodes } from '../../../exception-handling/exception-codes';
 import { JwtUser } from '../../auth/decorator/current-user.decorator';
 import { UserService } from '../../user/service/user.service';
-import { GithubAppAuthService } from './github-app-auth.service';
+import { GithubAccountResponseDto } from '../dtos/github-account-response.dto';
+import { HandleInstallationResponseDto } from '../dtos/handle-installation-response.dto';
+import { GithubAccount } from '../entity/github-account.entity';
 import { mapGithubAccountType } from '../enums/github-account-types.enum';
+import { GithubAppAuthService } from './github-app-auth.service';
 
 @Injectable()
 export class GithubInstallationService {
@@ -34,14 +32,15 @@ export class GithubInstallationService {
   getGithubInstallationUrl(): string {
     const githubAppName = this.configService.get<string>('github.appName');
 
-    if (githubAppName)
+    if (githubAppName) {
       return `https://github.com/apps/${githubAppName}/installations/new`;
-    else
-      throw new AppException(
-        ExceptionCodes.GITHUB_APP_NAME_NOT_CONFIGURED,
-        'GitHub App name is not properly configured.',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+    }
+
+    throw new AppException(
+      ExceptionCodes.GITHUB_APP_NAME_NOT_CONFIGURED,
+      'GitHub App name is not properly configured.',
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
   }
 
   async handleInstallation(
@@ -79,6 +78,7 @@ export class GithubInstallationService {
 
     if (!saved) {
       this.logger.error('Failed to persist GitHub account');
+
       throw new AppException(
         ExceptionCodes.DATA_PERSISTENCE_ERROR,
         'Failed to persist GitHub account',
@@ -133,7 +133,7 @@ export class GithubInstallationService {
 
     if (error instanceof AxiosError) {
       if (error.response) {
-        const status = error.response.status;
+        const { status } = error.response;
 
         // Rate limiting
         if (status === 403) {

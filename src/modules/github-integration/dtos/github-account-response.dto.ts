@@ -1,4 +1,4 @@
-import { GithubAccountType } from '../enums/github-account-types.enum';
+import type     { GithubAccountType } from '../enums/github-account-types.enum';
 
 export class GithubAccountResponseDto {
   id!: string;

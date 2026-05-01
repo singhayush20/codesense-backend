@@ -1,14 +1,14 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
 import { HttpStatus, ValidationPipe, VersioningType } from '@nestjs/common';
-import { GlobalExceptionFilter } from './exception-handling/global-exception-filter';
-import { AppException } from './exception-handling/app-exception.exception';
-import { ExceptionCodes } from './exception-handling/exception-codes';
+import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import cookieParser from 'cookie-parser';
 import * as bodyParser from 'body-parser';
+import cookieParser from 'cookie-parser';
 import * as express from 'express';
 
+import { AppModule } from './app.module';
+import { AppException } from './exception-handling/app-exception.exception';
+import { ExceptionCodes } from './exception-handling/exception-codes';
+import { GlobalExceptionFilter } from './exception-handling/global-exception-filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -59,6 +59,7 @@ async function bootstrap() {
     )
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
+
   SwaggerModule.setup('api/docs', app, documentFactory);
 
   app.setGlobalPrefix('api');

@@ -1,6 +1,15 @@
-import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { GithubRepository } from "./github-repo.entity";
-import { User } from "../../user/entity/user.entity";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+
+import { User } from '../../user/entity/user.entity';
+import { GithubRepository } from './github-repo.entity';
 
 @Entity('user_repo_selection')
 @Index(['user', 'repository'], { unique: true })

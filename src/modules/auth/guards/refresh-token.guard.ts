@@ -4,9 +4,10 @@ import {
   HttpStatus,
   Injectable,
 } from '@nestjs/common';
-import { RefreshTokenService } from '../service/refresh-token/refresh-token.service';
+
 import { AppException } from '../../../exception-handling/app-exception.exception';
 import { ExceptionCodes } from '../../../exception-handling/exception-codes';
+import { RefreshTokenService } from '../service/refresh-token/refresh-token.service';
 
 @Injectable()
 export class RefreshTokenGuard implements CanActivate {

@@ -1,11 +1,16 @@
-import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
-import { GithubInstallationTokenService } from '../github-installation-token.service';
 import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { AxiosError } from 'axios';
-import { GithubPullRequestEventPayload, GithubPrFile, GithubIssueCommentResponse } from '../../dtos/pr-handling/github-pr.dto';
+import { firstValueFrom } from 'rxjs';
+
 import { AppException } from '../../../../exception-handling/app-exception.exception';
 import { ExceptionCodes } from '../../../../exception-handling/exception-codes';
+import {
+  GithubIssueCommentResponse,
+  GithubPrFile,
+  GithubPullRequestEventPayload,
+} from '../../dtos/pr-handling/github-pr.dto';
+import { GithubInstallationTokenService } from '../github-installation-token.service';
 import { GithubSelectionService } from '../github-selection.service';
 
 @Injectable()
@@ -20,15 +25,17 @@ export class PrProcessingService {
 
   async processPullRequest(
     payload: GithubPullRequestEventPayload,
-  ): Promise<void> {    
+  ): Promise<void> {
     const installationId = payload.installation.id;
     const repoFullName = payload.repository.full_name;
     const prNumber = payload.pull_request.number;
     const repoId = payload.repository.id.toString();
 
-    this.logger.log(`PR processing started: prNumber: ${prNumber}, repo: ${repoFullName}, installation: ${installationId}, repoId: ${repoId}`);
+    this.logger.log(
+      `PR processing started: prNumber: ${prNumber}, repo: ${repoFullName}, installation: ${installationId}, repoId: ${repoId}`,
+    );
 
-    if(!repoId) {
+    if (!repoId) {
       this.logger.debug(`Skipping repo ${repoId} (not found)`);
     }
 
@@ -36,8 +43,9 @@ export class PrProcessingService {
 
     if (!isAllowed) {
       this.logger.debug(`Skipping repo ${repoId} (not selected)`);
+
       return;
-    }  
+    }
 
     const [owner, repo] = repoFullName.split('/');
 

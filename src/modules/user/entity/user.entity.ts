@@ -1,7 +1,15 @@
-import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { UserRole } from "./user-role.entity";
-import { GithubAccount } from "../../github-integration/entity/github-account.entity";
-import { UserRepositorySelection } from "../../github-integration/entity/user-repo-selection.entity";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+
+import { GithubAccount } from '../../github-integration/entity/github-account.entity';
+import { UserRepositorySelection } from '../../github-integration/entity/user-repo-selection.entity';
+import { UserRole } from './user-role.entity';
 
 @Entity('users')
 export class User {

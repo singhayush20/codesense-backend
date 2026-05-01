@@ -1,14 +1,25 @@
-import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { GithubRepository } from "./github-repo.entity";
-import { User } from "../../user/entity/user.entity";
-import { GithubAccountType } from "../enums/github-account-types.enum";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
-/**  
+import { User } from '../../user/entity/user.entity';
+import { GithubAccountType } from '../enums/github-account-types.enum';
+import { GithubRepository } from './github-repo.entity';
+
+/**
  * Represents a GitHub App installation linked to a user.
  * Which GitHub accounts are connected?
  * Which installations exist for a user?
  * Which installation ID should be used to fetch data?
-*/
+ */
 @Entity('github_accounts')
 @Index(['user'])
 @Index(['user', 'githubAccountId'], { unique: true })
