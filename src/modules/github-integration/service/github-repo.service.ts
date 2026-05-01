@@ -1,5 +1,5 @@
 import {
-    HttpStatus,
+  HttpStatus,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -17,7 +17,6 @@ import { SyncReposResponseDto } from '../dtos/sync-repo-response.dto';
 import { GithubInstallationReposResponse } from '../dtos/github-installation-repo-response';
 import { AppException } from '../../../exception-handling/app-exception.exception';
 import { ExceptionCodes } from '../../../exception-handling/exception-codes';
-import { User } from '../../user/entity/user.entity';
 import { JwtUser } from '../../auth/decorator/current-user.decorator';
 import { UserService } from '../../user/service/user.service';
 
@@ -116,7 +115,11 @@ export class GithubRepoService {
 
     // Ownership validation
     if (account.user.userId !== user.userId) {
-      throw new AppException(ExceptionCodes.UNAUTHORIZED_ACCESS,'Access denied to this account',HttpStatus.FORBIDDEN);
+      throw new AppException(
+        ExceptionCodes.UNAUTHORIZED_ACCESS,
+        'Access denied to this account',
+        HttpStatus.FORBIDDEN,
+      );
     }
 
     // Delegate to core logic
@@ -132,6 +135,23 @@ export class GithubRepoService {
     if (!repo) {
       throw new NotFoundException(`Repository with repoId ${repoId} not found`);
     }
+
+    return repo;
+  }
+
+  async findRepoByRepoIdAndUserId(
+    userId: string,
+    repoId: string,
+  ): Promise<GithubRepository | null> {
+    const repo = await this.repoRepository.findOne({
+      where: {
+        id: repoId,
+        githubAccount: {
+          user: { userId },
+        },
+      },
+      relations: ['githubAccount'],
+    });
 
     return repo;
   }
