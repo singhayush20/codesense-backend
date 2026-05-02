@@ -73,10 +73,64 @@ export class GithubSelectionService {
     // Idempotent upsert
     await this.selectionRepo.upsert(selections, ['user', 'repository']);
 
-    // Return clean DTO
     return {
       count: repos.length,
       repositories: repos.map(this.mapToDto),
+    };
+  }
+
+  async unselectRepositories(
+    jwtUser: JwtUser,
+    repoIds: string[],
+  ): Promise<SelectRepositoriesResponseDto> {
+    const user = await this.userService.findUserById(jwtUser.userId);
+
+    if (!user) {
+      throw new AppException(
+        ExceptionCodes.USER_NOT_FOUND,
+        'User not found',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    const selections = await this.selectionRepo.find({
+      where: {
+        user: { userId: user.userId },
+        repository: { repoId: In(repoIds) },
+        isActive: true,
+      },
+      relations: [
+        'repository',
+        'repository.githubAccount',
+        'repository.githubAccount.user',
+      ],
+    });
+
+    if (selections.length !== repoIds.length) {
+      throw new AppException(
+        ExceptionCodes.REPO_NOT_FOUND,
+        'Some selected repositories not found',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    for (const selection of selections) {
+      if (selection.repository.githubAccount.user.userId !== user.userId) {
+        throw new ForbiddenException(
+          `Access denied for repo ${selection.repository.repoId}`,
+        );
+      }
+    }
+
+    for (const selection of selections) {
+      selection.isActive = false;
+    }
+
+    await this.selectionRepo.save(selections);
+
+    return {
+      count: selections.length,
+      repositories: selections.map((s) => this.mapToDto(s.repository)),
     };
   }
 

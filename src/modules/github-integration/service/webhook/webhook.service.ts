@@ -12,6 +12,8 @@ import { ExceptionCodes } from '../../../../exception-handling/exception-codes';
 import { CacheService } from '../../../../cache/cache.service';
 import { Queue } from 'bullmq';
 import { InjectQueue } from '@nestjs/bullmq';
+import { GithubInstallationService } from '../github-installation.service';
+import { GithubInstallationDeletedPayload } from '../../dtos/github-installation-deletion.dto';
 
 @Injectable()
 export class GithubWebhookService {
@@ -22,6 +24,7 @@ export class GithubWebhookService {
     private readonly cacheService: CacheService,
     @InjectQueue('pr-processing')
     private readonly prQueue: Queue,
+    private readonly installationService: GithubInstallationService,
   ) {}
 
   async handleEvent(
@@ -88,7 +91,11 @@ export class GithubWebhookService {
       case 'pull_request':
         await this.handlePullRequest(payload as GithubPullRequestPayload);
         break;
-
+      case 'installation':
+        await this.handleInstallationEvent(
+          payload as GithubInstallationDeletedPayload,
+        );
+        break;
       default:
         this.logger.debug(`Unhandled event: ${event}`);
     }
@@ -121,6 +128,25 @@ export class GithubWebhookService {
         removeOnFail: false,
       },
     );
+  }
+
+  private async handleInstallationEvent(
+    payload: GithubInstallationDeletedPayload,
+  ): Promise<void> {
+    const { action, installation } = payload;
+
+    if (action !== 'deleted') {
+      this.logger.debug(`Ignoring installation action: ${action}`);
+      return;
+    }
+
+    const installationId = installation.id.toString();
+
+    this.logger.warn(
+      `GitHub App uninstalled | installationId=${installationId}`,
+    );
+
+    await this.installationService.handleInstallationDeleted(installationId);
   }
 
   private handleError(

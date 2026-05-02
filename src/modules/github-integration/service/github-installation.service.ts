@@ -1,7 +1,12 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import {
+  ForbiddenException,
+  HttpStatus,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GithubAccount } from '../entity/github-account.entity';
-import { Repository } from 'typeorm';
+import { In, Repository, DataSource } from 'typeorm';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { GithubAccountResponseDto } from '../dtos/github-account-response.dto';
@@ -14,12 +19,15 @@ import { JwtUser } from '../../auth/decorator/current-user.decorator';
 import { UserService } from '../../user/service/user.service';
 import { GithubAppAuthService } from './github-app-auth.service';
 import { mapGithubAccountType } from '../enums/github-account-types.enum';
+import { GithubRepository } from '../entity/github-repo.entity';
+import { UserRepositorySelection } from '../entity/user-repo-selection.entity';
 
 @Injectable()
 export class GithubInstallationService {
   private readonly logger = new Logger(GithubInstallationService.name);
 
   constructor(
+    private readonly dataSource: DataSource,
     @InjectRepository(GithubAccount)
     private githubAccountRepository: Repository<GithubAccount>,
     private userService: UserService,
@@ -91,6 +99,76 @@ export class GithubInstallationService {
         installationId: saved.installationId,
       },
     };
+  }
+
+  async unlinkAccount(jwtUser: JwtUser, accountId: string): Promise<void> {
+    await this.dataSource.transaction(async (manager) => {
+      const account = await manager.findOne(GithubAccount, {
+        where: { id: accountId },
+        relations: ['user'],
+      });
+
+      if (!account) {
+        throw new AppException(
+          ExceptionCodes.GITHUB_ACCOUNT_NOT_FOUND,
+          'GitHub account not found',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      if (account.user.userId !== jwtUser.userId) {
+        throw new AppException(
+          ExceptionCodes.UNAUTHORIZED_REPO_DELETION,
+          'This operation is not allowed for your account',
+          HttpStatus.FORBIDDEN,
+        );
+      }
+
+      // Get repos under account
+      const repos = await manager.find(GithubRepository, {
+        where: { githubAccount: { id: accountId } },
+      });
+
+      const repoIds = repos.map((r) => r.id);
+
+      if (repoIds.length > 0) {
+        // Delete selections
+        await manager.delete(UserRepositorySelection, {
+          repository: { id: In(repoIds) },
+        });
+
+        // Delete repos
+        await manager.delete(GithubRepository, {
+          id: In(repoIds),
+        });
+      }
+
+      // Delete account
+      await manager.delete(GithubAccount, { id: accountId });
+    });
+  }
+
+  async handleInstallationDeleted(installationId: string): Promise<void> {
+    await this.dataSource.transaction(async (manager) => {
+      const account = await manager.findOne(GithubAccount, {
+        where: { installationId },
+      });
+
+      if (!account) {
+        // Idempotency: webhook might be retried
+        this.logger.warn(
+          `Installation not found (already deleted?) | installationId=${installationId}`,
+        );
+        return;
+      }
+
+      this.logger.log(
+        `Deleting GitHub account and related data | accountId=${account.id}`,
+      );
+
+      // If CASCADE is configured, this is enough:
+      await manager.delete(GithubAccount, { id: account.id });
+    });
   }
 
   async getUserAccounts(userId: string): Promise<GithubAccountResponseDto[]> {
