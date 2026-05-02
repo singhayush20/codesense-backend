@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, Post, Body, UseGuards, Patch, Delete } from '@nestjs/common';
 import { GithubInstallationService } from '../service/github-installation.service';
 import { GithubRepoService } from '../service/github-repo.service';
 import { GithubSelectionService } from '../service/github-selection.service';
@@ -54,6 +54,16 @@ export class GithubController {
     return this.installationService.getUserAccounts(user.userId);
   }
 
+  @Delete('accounts/unlink')
+  @Roles(RoleTypes.ROLE_USER)
+  async unlinkAccount(
+    @currentUserDecorator.CurrentUser() user: currentUserDecorator.JwtUser,
+    @Body('accountId') accountId: string,
+  ): Promise<{ success: boolean }> {
+    await this.installationService.unlinkAccount(user, accountId);
+    return { success: true };
+  }
+
   @Post('repos/sync')
   @Roles(RoleTypes.ROLE_USER)
   async syncRepos(
@@ -70,6 +80,15 @@ export class GithubController {
     @Body() dto: SelectRepositoriesDto,
   ): Promise<SelectRepositoriesResponseDto> {
     return this.selectionService.selectRepositories(user, dto.repoIds);
+  }
+
+  @Patch('repos/unselect')
+  @Roles(RoleTypes.ROLE_USER)
+  async unselectRepos(
+    @currentUserDecorator.CurrentUser() user: currentUserDecorator.JwtUser,
+    @Body() dto: SelectRepositoriesDto,
+  ): Promise<SelectRepositoriesResponseDto> {
+    return this.selectionService.unselectRepositories(user, dto.repoIds);
   }
 
   @Get('repos/selected')

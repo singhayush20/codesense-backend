@@ -4,6 +4,7 @@ import { User } from "../../user/entity/user.entity";
 
 @Entity('user_repo_selection')
 @Index(['user', 'repository'], { unique: true })
+@Index('idx_user_repo_active', ['user', 'repository', 'isActive'])
 export class UserRepositorySelection {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
