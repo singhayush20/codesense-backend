@@ -9,18 +9,8 @@ import { JwtUser } from '../../auth/decorator/current-user.decorator';
 import { AppException } from '../../../exception-handling/app-exception.exception';
 import { ExceptionCodes } from '../../../exception-handling/exception-codes';
 import { UserService } from '../../user/service/user.service';
-
-export interface SelectedRepoDto {
-  id: string;
-  repoId: string;
-  name: string;
-  fullName: string;
-}
-
-export interface SelectRepositoriesResponse {
-  count: number;
-  repositories: SelectedRepoDto[];
-}
+import { SelectRepositoriesResponseDto } from '../dtos/select-repositories-response.dto';
+import { SelectedRepoResponseDto } from '../dtos/selected-repo-response.dto';
 
 @Injectable()
 export class GithubSelectionService {
@@ -38,7 +28,7 @@ export class GithubSelectionService {
     jwtUser: JwtUser,
     installationId: string,
     repoIds: string[],
-  ): Promise<SelectRepositoriesResponse> {
+  ): Promise<SelectRepositoriesResponseDto> {
     const user = await this.userService.findUserById(jwtUser.userId);
 
     if (!user) {
@@ -94,7 +84,7 @@ export class GithubSelectionService {
     jwtUser: JwtUser,
     installationId: string,
     repoIds: string[],
-  ): Promise<SelectRepositoriesResponse> {
+  ): Promise<SelectRepositoriesResponseDto> {
     const user = await this.userService.findUserById(jwtUser.userId);
 
     if (!user) {
@@ -163,7 +153,7 @@ export class GithubSelectionService {
     };
   }
 
-  async getUserSelections(userId: string): Promise<SelectedRepoDto[]> {
+  async getUserSelections(userId: string): Promise<SelectedRepoResponseDto[]> {
     const selections = await this.selectionRepo.find({
       where: { user: { userId } },
       relations: ['repository'],
@@ -189,12 +179,13 @@ export class GithubSelectionService {
     return count > 0;
   }
 
-  private mapToDto(repo: GithubRepository): SelectedRepoDto {
+  private mapToDto(repo: GithubRepository): SelectedRepoResponseDto {
     return {
       id: repo.id,
       repoId: repo.githubRepoId,
       name: repo.name,
       fullName: repo.fullName,
+      isPrivate: repo.isPrivate,
     };
   }
 }

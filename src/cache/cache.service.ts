@@ -41,4 +41,8 @@ export class CacheService {
     const result = await this.client.exists(key);
     return result === 1;
   }
+
+  async delete(key: string): Promise<void> {
+    await this.client.del(key);
+  }
 }

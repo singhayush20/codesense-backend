@@ -4,8 +4,8 @@ import {
   Entity,
   Index,
   JoinColumn,
-  ManyToOne,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -19,7 +19,7 @@ export class GithubInstallation {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @ManyToOne(() => GithubAccount, (account) => account.installations, {
+  @OneToOne(() => GithubAccount, (account) => account.installation, {
     nullable: false,
     onDelete: 'CASCADE',
   })

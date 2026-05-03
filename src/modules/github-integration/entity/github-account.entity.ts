@@ -6,7 +6,9 @@ import {
   JoinColumn,
   ManyToOne,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
+  Unique,
   UpdateDateColumn,
 } from 'typeorm';
 import { User } from '../../user/entity/user.entity';
@@ -16,6 +18,7 @@ import { GithubInstallation } from './github-installation.entity';
 @Entity('github_accounts')
 @Index(['user'])
 @Index(['user', 'githubAccountId'], { unique: true })
+@Unique(['githubAccountId'])
 export class GithubAccount {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
@@ -30,7 +33,7 @@ export class GithubAccount {
   @Column({ type: 'bigint' })
   githubAccountId!: string;
 
-  @Column({ nullable: false })
+  @Column({ nullable: false, unique: true })
   loginId!: string;
 
   @Column({
@@ -43,8 +46,8 @@ export class GithubAccount {
   @Column({ default: true })
   isConnected!: boolean;
 
-  @OneToMany(() => GithubInstallation, (inst) => inst.account)
-  installations!: GithubInstallation[];
+  @OneToOne(() => GithubInstallation, (inst) => inst.account)
+  installation!: GithubInstallation;
 
   @CreateDateColumn()
   createdAt!: Date;

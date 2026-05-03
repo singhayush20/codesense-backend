@@ -111,7 +111,19 @@ export class GithubWebhookService {
   private async handlePullRequest(
     payload: GithubPullRequestPayload,
   ): Promise<void> {
-    const { action } = payload;
+    const { action, installation } = payload;
+
+    // if installation is active, then only process PR events. Otherwise ignore (e.g. if installation was deleted/deactivated but webhook still sends events)
+    const dbInstallation = await this.installationRepo.findOne({
+      where: { installationId: installation.id.toString() },
+    });
+
+    if (!dbInstallation || !dbInstallation.isActive) {
+      this.logger.warn(
+        `PR event for inactive/non-existent installation ignored: ${installation.id}`,
+      );
+      return;
+    }
 
     if (!['opened', 'synchronize'].includes(action)) {
       this.logger.debug(`Ignoring PR action: ${action}`);

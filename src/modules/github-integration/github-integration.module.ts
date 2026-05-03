@@ -19,6 +19,7 @@ import { PrProcessor } from './processor/pr.processor';
 import { BullModule } from '@nestjs/bullmq';
 import { GithubApiService } from './service/github-api.service';
 import { GithubInstallation } from './entity/github-installation.entity';
+import { User } from '../user/entity/user.entity';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { GithubInstallation } from './entity/github-installation.entity';
       GithubRepository,
       UserRepositorySelection,
       GithubInstallation,
+      User,
     ]),
     BullModule.registerQueue({
       name: 'pr-processing',

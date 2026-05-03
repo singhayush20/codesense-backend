@@ -1,6 +1,6 @@
 import { Injectable, ForbiddenException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 
 import { GithubRepository } from '../entity/github-repo.entity';
 import { GithubInstallation } from '../entity/github-installation.entity';
@@ -10,11 +10,10 @@ import { GithubInstallationTokenService } from './github-installation-token.serv
 
 import { AppException } from '../../../exception-handling/app-exception.exception';
 import { ExceptionCodes } from '../../../exception-handling/exception-codes';
-import { GithubApiService, GithubRepoDto } from './github-api.service';
-
-export interface SyncReposResponse {
-  count: number;
-}
+import { GithubApiService } from './github-api.service';
+import { GithubRepoResponseDto } from '../dtos/github-repo-response.dto';
+import { SyncReposResponseDto } from '../dtos/sync-repo-response.dto';
+import { GithubRepoDto } from '../dtos/github-api/github-installation-repos-api-response.dto';
 
 @Injectable()
 export class GithubRepoService {
@@ -32,7 +31,7 @@ export class GithubRepoService {
   async syncRepositoriesByInstallationId(
     jwtUser: JwtUser,
     installationId: string,
-  ): Promise<SyncReposResponse> {
+  ): Promise<SyncReposResponseDto> {
     const installation = await this.installationRepo.findOne({
       where: { installationId },
       relations: ['account', 'account.user'],
@@ -75,17 +74,40 @@ export class GithubRepoService {
       page++;
     }
 
-    const entities = allRepos.map((repo) =>
+    const entities = allRepos.map((repo) : GithubRepository =>
       this.repoRepo.create({
         githubRepoId: repo.id.toString(),
         name: repo.name,
         fullName: repo.full_name,
         installation,
+        isPrivate: repo.private,
+        permissions: repo.permissions,
       }),
     );
 
     await this.repoRepo.upsert(entities, ['githubRepoId', 'installation']);
 
-    return { count: entities.length };
+    const savedRepos = await this.repoRepo.find({
+      where: {
+        installation: { id: installation.id },
+        githubRepoId: In(entities.map((e) => e.githubRepoId)),
+      },
+    });
+    
+    const repos: GithubRepoResponseDto[] = savedRepos.map(
+      (repo): GithubRepoResponseDto => ({
+        id: repo.id,
+        repoId: repo.githubRepoId,
+        name: repo.name,
+        fullName: repo.fullName,
+        isPrivate: repo.isPrivate,
+        permissions: repo.permissions,
+      }),
+    );
+  
+    return {
+      total: repos.length,
+      repositories: repos,
+    };
   }
 }

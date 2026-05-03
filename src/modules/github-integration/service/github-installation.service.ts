@@ -15,6 +15,13 @@ import { ConfigService } from '@nestjs/config';
 import { AxiosError } from 'axios';
 import { firstValueFrom } from 'rxjs';
 import { GithubAppAuthService } from './github-app-auth.service';
+import { CacheService } from '../../../cache/cache.service';
+import { User } from '../../user/entity/user.entity';
+import { ConnectGithubResponseDto } from '../dtos/connect-response.dto';
+import {
+  GithubUserResponse,
+} from '../dtos/github-auth.dto';
+import { GithubInstallationResponse } from '../dtos/github-installation-response.dto';
 
 @Injectable()
 export class GithubInstallationService {
@@ -30,17 +37,33 @@ export class GithubInstallationService {
     @InjectRepository(GithubInstallation)
     private readonly installationRepo: Repository<GithubInstallation>,
 
-    @InjectRepository(GithubAccount)
-    private readonly userRepo: Repository<GithubAccount>,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
 
     private readonly githubAuthService: GithubAppAuthService,
+    private readonly cacheService: CacheService,
   ) {}
 
   // =========================
   // OAuth URL
   // =========================
-  getGithubOAuthUrl(): string {
-    return `https://github.com/login/oauth/authorize?...`;
+  async getGithubOAuthUrl(userId: string): Promise<ConnectGithubResponseDto> {
+    const state = crypto.randomUUID();
+
+    const cacheKey = `gh:oauth:state:${state}`;
+
+    await this.cacheService.set(cacheKey, userId, 300);
+
+    const params = new URLSearchParams({
+      client_id: this.config.get('github.clientId')!,
+      redirect_uri: this.config.get('github.oauthRedirectUri')!,
+      scope: 'read:user user:email',
+      state,
+    });
+
+    return {
+      url: `https://github.com/login/oauth/authorize?${params.toString()}`,
+    };
   }
 
   // =========================
@@ -49,11 +72,14 @@ export class GithubInstallationService {
   async handleOAuthCallback(
     user: JwtUser,
     code: string,
+    state: string,
   ): Promise<GithubAccount> {
+    await this.validateState(state, user.userId);
+
     const githubUser = await this.fetchGithubUser(code);
 
     const userEntity = await this.userRepo.findOneOrFail({
-      where: { id: user.userId },
+      where: { userId: user.userId },
     });
 
     let account = await this.accountRepo.findOne({
@@ -78,11 +104,65 @@ export class GithubInstallationService {
     return this.accountRepo.save(account);
   }
 
+  private async validateState(state: string, userId: string): Promise<void> {
+    const cacheKey = `gh:oauth:state:${state}`;
+
+    const storedUserId = await this.cacheService.get<string>(cacheKey);
+
+    if (!storedUserId) {
+      throw new AppException(
+        ExceptionCodes.INVALID_OAUTH_STATE,
+        'OAuth state expired or invalid',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    if (storedUserId !== userId) {
+      throw new AppException(
+        ExceptionCodes.INVALID_OAUTH_STATE,
+        'OAuth state mismatch',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    // delete after use (one-time)
+    await this.cacheService.delete(cacheKey);
+  }
+
   // =========================
   // Install URL
   // =========================
-  getGithubInstallationUrl(accountId: string): string {
-    return `https://github.com/apps/YOUR_APP/installations/new?target_id=${accountId}`;
+  async getGithubInstallationUrl(
+    accountId: string,
+    user: JwtUser,
+  ): Promise<string> {
+    const account = await this.accountRepo.findOne({
+      where: {
+        user: { userId: user.userId },
+        isConnected: true,
+      },
+      relations: ['installations'],
+    });
+
+    if (!account) {
+      throw new AppException(
+        ExceptionCodes.GITHUB_ACCOUNT_NOT_FOUND,
+        'GitHub account not found or not connected',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    const installation = account.installation;
+
+    if (installation) {
+      await this.installationRepo.update(
+        { account: { id: accountId } },
+        { isActive: true },
+      );
+      return `https://github.com/settings/installations/${installation.installationId}`;
+    } else {
+      return `https://github.com/apps/codesense-platform/installations/new/permissions?target_id=${accountId}`;
+    }
   }
 
   // =========================
@@ -121,7 +201,7 @@ export class GithubInstallationService {
 
     await this.installationRepo.upsert(
       {
-        installationId, // already string (correct for bigint)
+        installationId,
         targetId: githubAccountId,
         account,
         isActive: true,
@@ -137,58 +217,6 @@ export class GithubInstallationService {
   }
 
   // =========================
-  // Sync Installations (CRITICAL)
-  // =========================
-  async syncInstallations(user: JwtUser): Promise<void> {
-    const accounts = await this.accountRepo.find({
-      where: {
-        user: { userId: user.userId },
-        isConnected: true,
-      },
-    });
-
-    for (const account of accounts) {
-      const installations = await this.getUserInstallations(
-        account.githubAccountId,
-      );
-
-      for (const inst of installations) {
-        await this.installationRepo.upsert(
-          {
-            installationId: inst.id.toString(),
-            targetId: inst.account.id.toString(),
-            account,
-            isActive: true,
-          },
-          ['installationId'],
-        );
-      }
-    }
-  }
-
-  private async getUserInstallations(
-    accessToken: string,
-  ): Promise<GithubUserInstallation[]> {
-    try {
-      const response = await firstValueFrom(
-        this.http.get<GithubUserInstallationsResponse>(
-          'https://api.github.com/user/installations',
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              Accept: 'application/vnd.github+json',
-            },
-          },
-        ),
-      );
-
-      return response.data.installations;
-    } catch (error) {
-      this.handleGithubError(error, 'Failed to fetch user installations');
-    }
-  }
-
-  // =========================
   // Accounts
   // =========================
   async getUserAccounts(userId: string): Promise<GithubAccount[]> {
@@ -197,7 +225,7 @@ export class GithubInstallationService {
     });
   }
 
-  async unlinkAccount(user: JwtUser, accountId: string): Promise<void> {
+  async signout(user: JwtUser, accountId: string): Promise<void> {
     const account = await this.accountRepo.findOne({
       where: {
         id: accountId,
@@ -271,7 +299,7 @@ export class GithubInstallationService {
     installationId: string,
   ): Promise<GithubInstallationResponse> {
     try {
-      const jwt = this.githubAuthService.generateAppJwt(); // you already have this in token service
+      const jwt = this.githubAuthService.generateAppJwt();
 
       const response = await firstValueFrom(
         this.http.get<GithubInstallationResponse>(
@@ -315,29 +343,4 @@ export class GithubInstallationService {
       HttpStatus.INTERNAL_SERVER_ERROR,
     );
   }
-}
-
-interface GithubUserResponse {
-  id: number;
-  login: string;
-}
-
-interface GithubInstallationResponse {
-  id: number;
-  account: {
-    id: number;
-    login: string;
-  };
-}
-interface GithubUserInstallation {
-  id: number;
-  account: {
-    id: number;
-    login: string;
-  };
-}
-
-interface GithubUserInstallationsResponse {
-  total_count: number;
-  installations: GithubUserInstallation[];
 }
