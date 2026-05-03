@@ -1,3 +1,4 @@
-export class ConnectGithubResponseDto {
-  url!: string;
+export interface ConnectGithubResponseDto {
+  reconnect: boolean;
+  url?: string;
 }

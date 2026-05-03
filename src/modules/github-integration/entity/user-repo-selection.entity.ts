@@ -1,10 +1,9 @@
-import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { GithubRepository } from "./github-repo.entity";
 import { User } from "../../user/entity/user.entity";
 
 @Entity('user_repo_selection')
 @Index(['user', 'repository'], { unique: true })
-@Index('idx_user_repo_active', ['user', 'repository', 'isActive'])
 export class UserRepositorySelection {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
@@ -22,9 +21,6 @@ export class UserRepositorySelection {
   })
   @JoinColumn({ name: 'repository_id' })
   repository!: GithubRepository;
-
-  @Column({ default: true })
-  isActive!: boolean;
 
   @CreateDateColumn()
   createdAt!: Date;

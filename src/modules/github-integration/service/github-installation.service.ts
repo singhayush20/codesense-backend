@@ -18,9 +18,14 @@ import { ConfigService } from '@nestjs/config';
 import { JwtUser } from '../../auth/decorator/current-user.decorator';
 import { UserService } from '../../user/service/user.service';
 import { GithubAppAuthService } from './github-app-auth.service';
-import { mapGithubAccountType } from '../enums/github-account-types.enum';
+import {
+  GithubAccountType,
+  mapGithubAccountType,
+} from '../enums/github-account-types.enum';
 import { GithubRepository } from '../entity/github-repo.entity';
 import { UserRepositorySelection } from '../entity/user-repo-selection.entity';
+import { GithubAccountStatus } from '../enums/github-account-status.enum';
+import { ConnectGithubResponseDto } from '../dtos/connect-response.dto';
 
 @Injectable()
 export class GithubInstallationService {
@@ -36,6 +41,26 @@ export class GithubInstallationService {
     private readonly authService: GithubAppAuthService,
   ) {}
 
+  async getConnectInfo(userId: string): Promise<ConnectGithubResponseDto> {
+    const existing = await this.githubAccountRepository.findOne({
+      where: {
+        user: { userId },
+        status: GithubAccountStatus.DISCONNECTED,
+      },
+    });
+
+    if (existing) {
+      return {
+        reconnect: true,
+      };
+    }
+
+    return {
+      reconnect: false,
+      url: this.getGithubInstallationUrl(),
+    };
+  }
+
   getGithubInstallationUrl(): string {
     const githubAppName = this.configService.get<string>('github.appName');
 
@@ -50,55 +75,133 @@ export class GithubInstallationService {
   }
 
   async handleInstallation(
-    jwtUser: JwtUser,
+    user: JwtUser,
     installationId: string,
   ): Promise<HandleInstallationResponseDto> {
-    const user = await this.userService.findUserById(jwtUser.userId);
-
-    if (!user) {
-      throw new AppException(
-        ExceptionCodes.USER_NOT_FOUND,
-        'User not found',
-        HttpStatus.NOT_FOUND,
-      );
-    }
-
-    const appJwt = this.authService.generateAppJwt();
-
-    const data = await this.getAccountDetails(installationId, appJwt);
-
-    await this.githubAccountRepository.upsert(
-      {
-        installationId,
-        user,
-        githubAccountId: data.account.id.toString(),
-        loginId: data.account.login,
-        accountType: mapGithubAccountType(data.account.type),
-      },
-      ['installationId'],
-    );
-
-    const saved = await this.githubAccountRepository.findOne({
+    const exists = await this.githubAccountRepository.findOne({
       where: { installationId },
     });
 
-    if (!saved) {
-      this.logger.error('Failed to persist GitHub account');
-      throw new AppException(
-        ExceptionCodes.DATA_PERSISTENCE_ERROR,
-        'Failed to persist GitHub account',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+    if (exists) {
+      exists.status = GithubAccountStatus.ACTIVE;
+      exists.disconnectedAt = null;
+      const account = await this.githubAccountRepository.save(exists);
+
+      return {
+        success: true,
+        account: {
+          id: account.id,
+          login: account.loginId,
+          installationId: account.installationId,
+        },
+      };
     }
+
+    const installation = await this.fetchInstallationDetails(installationId);
+
+    const account = await this.githubAccountRepository.save({
+      user: { userId: user.userId },
+      installationId,
+      githubAccountId: installation.account.id.toString(),
+      loginId: installation.account.login,
+      accountType:
+        installation.account.type === 'User'
+          ? GithubAccountType.USER
+          : GithubAccountType.ORGANIZATION,
+      status: GithubAccountStatus.ACTIVE,
+    });
 
     return {
       success: true,
       account: {
-        id: saved.id,
-        login: saved.loginId,
-        installationId: saved.installationId,
+        id: account.id,
+        login: account.loginId,
+        installationId: account.installationId,
       },
     };
+  }
+
+  async reconnectAccount(userId: string): Promise<void> {
+    const accounts = await this.githubAccountRepository.find({
+      where: {
+        user: { userId },
+        status: GithubAccountStatus.DISCONNECTED,
+      },
+    });
+
+    for (const acc of accounts) {
+      const exists = await this.checkInstallationExists(acc.installationId);
+
+      if (!exists) continue;
+
+      acc.status = GithubAccountStatus.ACTIVE;
+      acc.disconnectedAt = null;
+
+      await this.githubAccountRepository.save(acc);
+    }
+  }
+
+  async syncUserInstallations(userId: string): Promise<void> {
+    const accounts = await this.githubAccountRepository.find({
+      where: { user: { userId } },
+    });
+
+    for (const acc of accounts) {
+      const exists = await this.checkInstallationExists(acc.installationId);
+
+      if (!exists) {
+        acc.status = GithubAccountStatus.DISCONNECTED;
+        acc.disconnectedAt = new Date();
+      } else if (acc.status === GithubAccountStatus.DISCONNECTED) {
+        acc.status = GithubAccountStatus.ACTIVE;
+        acc.disconnectedAt = null;
+      }
+
+      await this.githubAccountRepository.save(acc);
+    }
+  }
+
+  private async checkInstallationExists(
+    installationId: string,
+  ): Promise<boolean> {
+    try {
+      const jwt = this.authService.generateAppJwt();
+
+      await firstValueFrom(
+        this.http.get(
+          `https://api.github.com/app/installations/${installationId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${jwt}`,
+              Accept: 'application/vnd.github+json',
+            },
+          },
+        ),
+      );
+
+      return true;
+    } catch (err: any) {
+      if (err.response?.status === 404) return false;
+      throw err;
+    }
+  }
+
+  private async fetchInstallationDetails(installationId: string) {
+    const jwt = this.authService.generateAppJwt();
+
+    const res = await firstValueFrom(
+      this.http.get(
+        `https://api.github.com/app/installations/${installationId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${jwt}`,
+            Accept: 'application/vnd.github+json',
+          },
+        },
+      ),
+    );
+
+    return res.data;
   }
 
   async unlinkAccount(jwtUser: JwtUser, accountId: string): Promise<void> {
@@ -124,15 +227,16 @@ export class GithubInstallationService {
         );
       }
 
-      // Get repos under account
+      // Fetch repos
       const repos = await manager.find(GithubRepository, {
         where: { githubAccount: { id: accountId } },
+        select: ['id'],
       });
 
       const repoIds = repos.map((r) => r.id);
 
       if (repoIds.length > 0) {
-        // Delete selections
+        // Delete selections FIRST (FK dependency)
         await manager.delete(UserRepositorySelection, {
           repository: { id: In(repoIds) },
         });
@@ -143,8 +247,11 @@ export class GithubInstallationService {
         });
       }
 
-      // Delete account
-      await manager.delete(GithubAccount, { id: accountId });
+      // Soft disconnect account (do this LAST)
+      account.status = GithubAccountStatus.DISCONNECTED;
+      account.disconnectedAt = new Date();
+
+      await manager.save(account);
     });
   }
 
@@ -173,7 +280,7 @@ export class GithubInstallationService {
 
   async getUserAccounts(userId: string): Promise<GithubAccountResponseDto[]> {
     const accounts = await this.githubAccountRepository.find({
-      where: { user: { userId } },
+      where: { user: { userId }, status: GithubAccountStatus.ACTIVE },
       order: { createdAt: 'DESC' },
     });
 

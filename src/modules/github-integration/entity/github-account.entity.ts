@@ -2,6 +2,7 @@ import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, OneToMa
 import { GithubRepository } from "./github-repo.entity";
 import { User } from "../../user/entity/user.entity";
 import { GithubAccountType } from "../enums/github-account-types.enum";
+import { GithubAccountStatus } from "../enums/github-account-status.enum";
 
 /**  
  * Represents a GitHub App installation linked to a user.
@@ -42,6 +43,17 @@ export class GithubAccount {
 
   @OneToMany(() => GithubRepository, (repository) => repository.githubAccount)
   githubRepositories!: GithubRepository[];
+
+  @Column({
+    type: 'enum',
+    enum: GithubAccountStatus,
+    enumName: 'github_account_status_enum',
+    default: GithubAccountStatus.ACTIVE,
+  })
+  status!: GithubAccountStatus;
+
+  @Column({name: 'disconnected_at', type: 'timestamp', nullable: true })
+  disconnectedAt?: Date | null;
 
   @CreateDateColumn()
   createdAt!: Date;

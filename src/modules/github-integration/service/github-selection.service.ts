@@ -14,6 +14,7 @@ import { JwtUser } from '../../auth/decorator/current-user.decorator';
 import { AppException } from '../../../exception-handling/app-exception.exception';
 import { ExceptionCodes } from '../../../exception-handling/exception-codes';
 import { UserService } from '../../user/service/user.service';
+import { UnselectedReposResponseDto } from '../dtos/unselect-repos-response.dto';
 
 @Injectable()
 export class GithubSelectionService {
@@ -57,7 +58,11 @@ export class GithubSelectionService {
     // Ownership validation
     for (const repo of repos) {
       if (repo.githubAccount.user.userId !== user.userId) {
-        throw new ForbiddenException(`Access denied for repo ${repo.repoId}`);
+        throw new AppException(
+          ExceptionCodes.UNAUTHORIZED_ACCESS,
+          'Access to repo not allowed',
+          HttpStatus.FORBIDDEN,
+        );
       }
     }
 
@@ -66,7 +71,6 @@ export class GithubSelectionService {
       this.selectionRepo.create({
         user,
         repository: repo,
-        isActive: true,
       }),
     );
 
@@ -82,7 +86,7 @@ export class GithubSelectionService {
   async unselectRepositories(
     jwtUser: JwtUser,
     repoIds: string[],
-  ): Promise<SelectRepositoriesResponseDto> {
+  ): Promise<UnselectedReposResponseDto> {
     const user = await this.userService.findUserById(jwtUser.userId);
 
     if (!user) {
@@ -97,7 +101,6 @@ export class GithubSelectionService {
       where: {
         user: { userId: user.userId },
         repository: { repoId: In(repoIds) },
-        isActive: true,
       },
       relations: [
         'repository',
@@ -116,27 +119,37 @@ export class GithubSelectionService {
 
     for (const selection of selections) {
       if (selection.repository.githubAccount.user.userId !== user.userId) {
-        throw new ForbiddenException(
+        throw new AppException(
+          ExceptionCodes.UNAUTHORIZED_ACCESS,
           `Access denied for repo ${selection.repository.repoId}`,
+          HttpStatus.FORBIDDEN,
         );
       }
     }
 
-    for (const selection of selections) {
-      selection.isActive = false;
-    }
-
-    await this.selectionRepo.save(selections);
+    await this.selectionRepo
+      .createQueryBuilder()
+      .delete()
+      .where('user_id = :userId', { userId: user.userId })
+      .andWhere(
+        `
+    "repository_id" IN (
+      SELECT "id" FROM "github_repositories"
+      WHERE "repoId" IN (:...repoIds)
+    )
+  `,
+        { repoIds },
+      )
+      .execute();
 
     return {
       count: selections.length,
-      repositories: selections.map((s) => this.mapToDto(s.repository)),
     };
   }
 
   async getUserSelections(userId: string): Promise<SelectedRepoResponseDto[]> {
     const selections = await this.selectionRepo.find({
-      where: { user: { userId }, isActive: true },
+      where: { user: { userId } },
       relations: ['repository'],
       order: { createdAt: 'DESC' },
     });
@@ -148,7 +161,6 @@ export class GithubSelectionService {
     const count = await this.selectionRepo.count({
       where: {
         repository: { repoId },
-        isActive: true,
       },
     });
 
