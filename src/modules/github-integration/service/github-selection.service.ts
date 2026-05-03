@@ -1,34 +1,44 @@
-import {
-  Injectable,
-  ForbiddenException,
-  NotFoundException,
-  HttpStatus,
-} from '@nestjs/common';
+import { Injectable, ForbiddenException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UserRepositorySelection } from '../entity/user-repo-selection.entity';
 import { Repository, In } from 'typeorm';
+
+import { UserRepositorySelection } from '../entity/user-repo-selection.entity';
 import { GithubRepository } from '../entity/github-repo.entity';
-import { SelectRepositoriesResponseDto } from '../dtos/select-repositories-response.dto';
-import { SelectedRepoResponseDto } from '../dtos/selected-repo-response.dto';
 import { JwtUser } from '../../auth/decorator/current-user.decorator';
+
 import { AppException } from '../../../exception-handling/app-exception.exception';
 import { ExceptionCodes } from '../../../exception-handling/exception-codes';
 import { UserService } from '../../user/service/user.service';
+
+export interface SelectedRepoDto {
+  id: string;
+  repoId: string;
+  name: string;
+  fullName: string;
+}
+
+export interface SelectRepositoriesResponse {
+  count: number;
+  repositories: SelectedRepoDto[];
+}
 
 @Injectable()
 export class GithubSelectionService {
   constructor(
     @InjectRepository(UserRepositorySelection)
-    private selectionRepo: Repository<UserRepositorySelection>,
-    private userService: UserService,
+    private readonly selectionRepo: Repository<UserRepositorySelection>,
+
     @InjectRepository(GithubRepository)
-    private repoRepo: Repository<GithubRepository>,
+    private readonly repoRepo: Repository<GithubRepository>,
+
+    private readonly userService: UserService,
   ) {}
 
   async selectRepositories(
     jwtUser: JwtUser,
+    installationId: string,
     repoIds: string[],
-  ): Promise<SelectRepositoriesResponseDto> {
+  ): Promise<SelectRepositoriesResponse> {
     const user = await this.userService.findUserById(jwtUser.userId);
 
     if (!user) {
@@ -39,50 +49,52 @@ export class GithubSelectionService {
       );
     }
 
-    // Fetch repos
     const repos = await this.repoRepo.find({
-      where: { repoId: In(repoIds) },
-      relations: ['githubAccount', 'githubAccount.user'],
+      where: {
+        id: In(repoIds),
+        installation: { installationId },
+      },
+      relations: [
+        'installation',
+        'installation.account',
+        'installation.account.user',
+      ],
     });
 
-    // Validate all repos exist
     if (repos.length !== repoIds.length) {
       throw new AppException(
         ExceptionCodes.REPO_NOT_FOUND,
-        'Some repositories not found',
+        'Some repos not found',
         HttpStatus.NOT_FOUND,
       );
     }
 
-    // Ownership validation
     for (const repo of repos) {
-      if (repo.githubAccount.user.userId !== user.userId) {
-        throw new ForbiddenException(`Access denied for repo ${repo.repoId}`);
+      if (repo.installation.account.user.userId !== user.userId) {
+        throw new ForbiddenException(`Access denied for repo ${repo.id}`);
       }
     }
 
-    // Prepare selections
     const selections = repos.map((repo) =>
       this.selectionRepo.create({
         user,
         repository: repo,
-        isActive: true,
       }),
     );
 
-    // Idempotent upsert
     await this.selectionRepo.upsert(selections, ['user', 'repository']);
 
     return {
       count: repos.length,
-      repositories: repos.map(this.mapToDto),
+      repositories: repos.map((r) => this.mapToDto(r)),
     };
   }
 
   async unselectRepositories(
     jwtUser: JwtUser,
+    installationId: string,
     repoIds: string[],
-  ): Promise<SelectRepositoriesResponseDto> {
+  ): Promise<SelectRepositoriesResponse> {
     const user = await this.userService.findUserById(jwtUser.userId);
 
     if (!user) {
@@ -93,16 +105,20 @@ export class GithubSelectionService {
       );
     }
 
+    // Fetch selections (NO isActive anymore)
     const selections = await this.selectionRepo.find({
       where: {
         user: { userId: user.userId },
-        repository: { repoId: In(repoIds) },
-        isActive: true,
+        repository: {
+          id: In(repoIds),
+          installation: { installationId },
+        },
       },
       relations: [
         'repository',
-        'repository.githubAccount',
-        'repository.githubAccount.user',
+        'repository.installation',
+        'repository.installation.account',
+        'repository.installation.account.user',
       ],
     });
 
@@ -114,54 +130,71 @@ export class GithubSelectionService {
       );
     }
 
+    // Ownership + installation validation
     for (const selection of selections) {
-      if (selection.repository.githubAccount.user.userId !== user.userId) {
+      const repo = selection.repository;
+
+      if (repo.installation.account.user.userId !== user.userId) {
+        throw new ForbiddenException(`Access denied for repo ${repo.id}`);
+      }
+
+      if (!repo.installation.isActive) {
         throw new ForbiddenException(
-          `Access denied for repo ${selection.repository.repoId}`,
+          `Installation inactive for repo ${repo.id}`,
         );
       }
     }
 
-    for (const selection of selections) {
-      selection.isActive = false;
-    }
+    // Collect repo DTOs BEFORE delete
+    const responseRepos = selections.map((s) => this.mapToDto(s.repository));
 
-    await this.selectionRepo.save(selections);
+    // Hard delete
+    await this.selectionRepo.delete({
+      user: { userId: user.userId },
+      repository: {
+        id: In(repoIds),
+        installation: { installationId },
+      },
+    });
 
     return {
-      count: selections.length,
-      repositories: selections.map((s) => this.mapToDto(s.repository)),
+      count: responseRepos.length,
+      repositories: responseRepos,
     };
   }
 
-  async getUserSelections(userId: string): Promise<SelectedRepoResponseDto[]> {
+  async getUserSelections(userId: string): Promise<SelectedRepoDto[]> {
     const selections = await this.selectionRepo.find({
-      where: { user: { userId }, isActive: true },
+      where: { user: { userId } },
       relations: ['repository'],
-      order: { createdAt: 'DESC' },
     });
 
     return selections.map((s) => this.mapToDto(s.repository));
   }
 
-  async isRepoSelected(repoId: string): Promise<boolean> {
-    const count = await this.selectionRepo.count({
-      where: {
-        repository: { repoId },
-        isActive: true,
-      },
-    });
+  async isRepoSelectedForInstallation(
+    githubRepoId: string,
+    installationId: string,
+  ): Promise<boolean> {
+    const count = await this.selectionRepo
+      .createQueryBuilder('selection')
+      .innerJoin('selection.repository', 'repo')
+      .innerJoin('repo.installation', 'installation')
+      .where('repo.githubRepoId = :repoId', { repoId: githubRepoId })
+      .andWhere('installation.installationId = :installationId', {
+        installationId,
+      })
+      .getCount();
 
     return count > 0;
   }
 
-  private mapToDto(repo: GithubRepository): SelectedRepoResponseDto {
+  private mapToDto(repo: GithubRepository): SelectedRepoDto {
     return {
       id: repo.id,
-      repoId: repo.repoId,
+      repoId: repo.githubRepoId,
       name: repo.name,
       fullName: repo.fullName,
-      isPrivate: repo.isPrivate,
     };
   }
 }
