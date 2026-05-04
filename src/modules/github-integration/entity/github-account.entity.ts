@@ -1,17 +1,24 @@
-import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { GithubRepository } from "./github-repo.entity";
-import { User } from "../../user/entity/user.entity";
-import { GithubAccountType } from "../enums/github-account-types.enum";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  Unique,
+  UpdateDateColumn,
+} from 'typeorm';
+import { User } from '../../user/entity/user.entity';
+import { GithubAccountType } from '../enums/github-account-types.enum';
+import { GithubInstallation } from './github-installation.entity';
 
-/**  
- * Represents a GitHub App installation linked to a user.
- * Which GitHub accounts are connected?
- * Which installations exist for a user?
- * Which installation ID should be used to fetch data?
-*/
 @Entity('github_accounts')
 @Index(['user'])
 @Index(['user', 'githubAccountId'], { unique: true })
+@Unique(['githubAccountId'])
 export class GithubAccount {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
@@ -26,22 +33,21 @@ export class GithubAccount {
   @Column({ type: 'bigint' })
   githubAccountId!: string;
 
-  @Column({ unique: true, nullable: false })
+  @Column({ nullable: false, unique: true })
   loginId!: string;
 
   @Column({
     type: 'enum',
     enum: GithubAccountType,
     enumName: 'github_account_type_enum',
-    nullable: false,
   })
   accountType!: GithubAccountType;
 
-  @Column({ type: 'bigint', unique: true, nullable: false })
-  installationId!: string;
+  @Column({ default: true })
+  isConnected!: boolean;
 
-  @OneToMany(() => GithubRepository, (repository) => repository.githubAccount)
-  githubRepositories!: GithubRepository[];
+  @OneToOne(() => GithubInstallation, (inst) => inst.account)
+  installation!: GithubInstallation;
 
   @CreateDateColumn()
   createdAt!: Date;

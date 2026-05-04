@@ -54,6 +54,9 @@ export default () => {
       privateKey: process.env.GITHUB_APP_PRIVATE_KEY,
       webhookSecret: process.env.GUTHUB_APP_WEBHOOK_SECRET,
       appId: process.env.GITHUB_APP_ID,
+      clientId: process.env.GITHUB_CLIENT_ID,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+      oauthRedirectUri: process.env.GITHUB_OAUTH_REDIRECT_URI,
     },
 
   };

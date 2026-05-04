@@ -6,29 +6,38 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { GithubWebhookUtil } from '../../utils/github-webhook.utils';
 import { AxiosError } from 'axios';
-import { GithubEventType, GithubPullRequestPayload } from '../../dtos/pr-handling/github-pr.dto';
+import { GithubPullRequestPayload } from '../../dtos/pr-handling/github-pr.dto';
 import { AppException } from '../../../../exception-handling/app-exception.exception';
 import { ExceptionCodes } from '../../../../exception-handling/exception-codes';
 import { CacheService } from '../../../../cache/cache.service';
 import { Queue } from 'bullmq';
 import { InjectQueue } from '@nestjs/bullmq';
-import { GithubInstallationService } from '../github-installation.service';
-import { GithubInstallationDeletedPayload } from '../../dtos/github-installation-deletion.dto';
+import { In, Repository, DataSource } from 'typeorm';
+import { GithubInstallation } from '../../entity/github-installation.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { GithubRepository } from '../../entity/github-repo.entity';
+import { UserRepositorySelection } from '../../entity/user-repo-selection.entity';
 
 @Injectable()
 export class GithubWebhookService {
   private readonly logger = new Logger(GithubWebhookService.name);
 
   constructor(
+    private readonly dataSource: DataSource,
     private readonly config: ConfigService,
     private readonly cacheService: CacheService,
     @InjectQueue('pr-processing')
     private readonly prQueue: Queue,
-    private readonly installationService: GithubInstallationService,
+    @InjectRepository(GithubInstallation)
+    private readonly installationRepo: Repository<GithubInstallation>,
+    @InjectRepository(GithubRepository)
+    private readonly githubRepositoryRepo: Repository<GithubRepository>,
+    @InjectRepository(UserRepositorySelection)
+    private readonly userRepositorySelectionRepo: Repository<UserRepositorySelection>,
   ) {}
 
   async handleEvent(
-    event: GithubEventType,
+    event: string,
     signature: string,
     deliveryId: string,
     rawPayload: Buffer,
@@ -83,18 +92,15 @@ export class GithubWebhookService {
     }
   }
 
-  private async routeEvent(
-    event: GithubEventType,
-    payload: unknown,
-  ): Promise<void> {
+  private async routeEvent(event: string, payload: unknown): Promise<void> {
     switch (event) {
       case 'pull_request':
         await this.handlePullRequest(payload as GithubPullRequestPayload);
         break;
       case 'installation':
-        await this.handleInstallationEvent(
-          payload as GithubInstallationDeletedPayload,
-        );
+        if ((payload as any).action === 'deleted') {
+          await this.handleInstallationDeleted(payload);
+        }
         break;
       default:
         this.logger.debug(`Unhandled event: ${event}`);
@@ -104,7 +110,19 @@ export class GithubWebhookService {
   private async handlePullRequest(
     payload: GithubPullRequestPayload,
   ): Promise<void> {
-    const { action } = payload;
+    const { action, installation } = payload;
+
+    // if installation is active, then only process PR events. Otherwise ignore (e.g. if installation was deleted/deactivated but webhook still sends events)
+    const dbInstallation = await this.installationRepo.findOne({
+      where: { installationId: installation.id.toString() },
+    });
+
+    if (!dbInstallation || !dbInstallation.isActive) {
+      this.logger.warn(
+        `PR event for inactive/non-existent installation ignored: ${installation.id}`,
+      );
+      return;
+    }
 
     if (!['opened', 'synchronize'].includes(action)) {
       this.logger.debug(`Ignoring PR action: ${action}`);
@@ -130,23 +148,53 @@ export class GithubWebhookService {
     );
   }
 
-  private async handleInstallationEvent(
-    payload: GithubInstallationDeletedPayload,
-  ): Promise<void> {
-    const { action, installation } = payload;
+  async handleInstallationDeleted(payload: any): Promise<void> {
+    const installationId = payload.installation?.id?.toString();
 
-    if (action !== 'deleted') {
-      this.logger.debug(`Ignoring installation action: ${action}`);
+    if (!installationId) {
+      this.logger.warn('Invalid installation.deleted payload');
       return;
     }
 
-    const installationId = installation.id.toString();
+    await this.dataSource.transaction(async (manager) => {
+      const installation = await manager.findOne(GithubInstallation, {
+        where: { installationId },
+      });
 
-    this.logger.warn(
-      `GitHub App uninstalled | installationId=${installationId}`,
-    );
+      if (!installation) {
+        this.logger.warn(
+          `Installation not found for deletion: ${installationId}`,
+        );
+        return;
+      }
 
-    await this.installationService.handleInstallationDeleted(installationId);
+      // 1. fetch repo ids using FK
+      const repos = await manager.find(GithubRepository, {
+        where: { installation: { id: installation.id } },
+        select: ['id'],
+      });
+
+      const repoIds = repos.map((r) => r.id);
+
+      if (repoIds.length > 0) {
+        // 2. delete selections using FK
+        await manager.delete(UserRepositorySelection, {
+          repository: { id: In(repoIds) },
+        });
+
+        // 3. delete repos using FK
+        await manager.delete(GithubRepository, {
+          installation: { id: installation.id },
+        });
+      }
+
+      // 4. delete installation
+      await manager.delete(GithubInstallation, {
+        id: installation.id,
+      });
+    });
+
+    this.logger.log(`Installation deleted & cleaned: ${installationId}`);
   }
 
   private handleError(

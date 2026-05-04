@@ -21,7 +21,7 @@ export class PrProcessingService {
   async processPullRequest(
     payload: GithubPullRequestEventPayload,
   ): Promise<void> {    
-    const installationId = payload.installation.id;
+    const installationId = payload.installation.id.toString();
     const repoFullName = payload.repository.full_name;
     const prNumber = payload.pull_request.number;
     const repoId = payload.repository.id.toString();
@@ -30,9 +30,14 @@ export class PrProcessingService {
 
     if(!repoId) {
       this.logger.debug(`Skipping repo ${repoId} (not found)`);
+      return;
     }
 
-    const isAllowed = await this.githubSelectionService.isRepoSelected(repoId);
+    const isAllowed =
+      await this.githubSelectionService.isRepoSelectedForInstallation(
+        repoId,
+        installationId,
+      );
 
     if (!isAllowed) {
       this.logger.debug(`Skipping repo ${repoId} (not selected)`);

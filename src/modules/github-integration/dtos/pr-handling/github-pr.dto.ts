@@ -27,8 +27,6 @@ export interface GithubPullRequestEventPayload {
   };
 }
 
-export type GithubEventType = 'pull_request' | string;
-
 export interface GithubWebhookHeaders {
   event: string;
   signature: string;

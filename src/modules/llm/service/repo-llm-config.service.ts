@@ -11,7 +11,6 @@ import { SetRepoConfigDto } from '../dtos/set-repo-config.dto';
 
 import { RepoConfigErrors } from '../exceptions/repo-config.exceptions';
 import { RepoConfigUtil } from '../utils/repo-config.util';
-import { GithubRepoService } from '../../github-integration/service/github-repo.service';
 
 @Injectable()
 export class RepoLlmConfigService {
@@ -21,8 +20,6 @@ export class RepoLlmConfigService {
 
     @InjectRepository(LLMProvider)
     private readonly providerRepo: Repository<LLMProvider>,
-
-    private readonly githubRepoService: GithubRepoService,
   ) {}
 
   /**
@@ -48,17 +45,15 @@ export class RepoLlmConfigService {
 
     RepoConfigUtil.validateModel(dto.model);
 
-    let config = await this.repoConfigRepo.findOne({
-      where: {
-        repository: {
-          id: repoId,
-          githubAccount: {
-            user: { userId },
-          },
-        },
-      },
-      relations: ['repository'],
-    });
+    let config = await this.repoConfigRepo
+      .createQueryBuilder('config')
+      .innerJoin('config.repository', 'repo')
+      .innerJoin('repo.installation', 'installation')
+      .innerJoin('installation.account', 'account')
+      .innerJoin('account.user', 'user')
+      .where('repo.id = :repoId', { repoId })
+      .andWhere('user.id = :userId', { userId })
+      .getOne();
 
     if (!config) {
       const repo = await this.getOwnedRepoOrThrow(userId, repoId);
@@ -82,17 +77,19 @@ export class RepoLlmConfigService {
    * Get repo config
    */
   async get(userId: string, repoId: string): Promise<RepoLlmConfigResponseDto> {
-    const config = await this.repoConfigRepo.findOne({
-      where: {
-        repository: {
-          id: repoId,
-          githubAccount: {
-            user: { userId },
-          },
-        },
-      },
-      relations: ['repository', 'provider', 'provider.credential'],
-    });
+    const config = await this.repoConfigRepo
+      .createQueryBuilder('config')
+      .innerJoinAndSelect('config.repository', 'repo')
+      .innerJoinAndSelect('config.provider', 'provider')
+      .innerJoinAndSelect('provider.credential', 'credential')
+      .innerJoin('repo.installation', 'installation')
+      .innerJoin('installation.account', 'account')
+      .innerJoin('account.user', 'user')
+      .where('repo.id = :repoId', { repoId })
+      .andWhere('user.id = :userId', { userId })
+      .getOne();
+
+    if (!config) throw RepoConfigErrors.configNotFound();
 
     if (!config) throw RepoConfigErrors.configNotFound();
 
@@ -103,17 +100,19 @@ export class RepoLlmConfigService {
    * Delete repo config
    */
   async delete(userId: string, repoId: string): Promise<void> {
-    const config = await this.repoConfigRepo.findOne({
-      where: {
-        repository: {
-          id: repoId,
-          githubAccount: {
-            user: { userId },
-          },
-        },
-      },
-      relations: ['repository'],
-    });
+    const config = await this.repoConfigRepo
+      .createQueryBuilder('config')
+      .innerJoin('config.repository', 'repo')
+      .innerJoin('repo.installation', 'installation')
+      .innerJoin('installation.account', 'account')
+      .innerJoin('account.user', 'user')
+      .where('repo.id = :repoId', { repoId })
+      .andWhere('user.id = :userId', { userId })
+      .getOne();
+
+    if (!config) throw RepoConfigErrors.configNotFound();
+
+    await this.repoConfigRepo.remove(config);
 
     if (!config) throw RepoConfigErrors.configNotFound();
 
@@ -124,10 +123,15 @@ export class RepoLlmConfigService {
     userId: string,
     repoId: string,
   ): Promise<GithubRepository> {
-    const repo = await this.githubRepoService.findRepoByRepoIdAndUserId(
-      userId,
-      repoId,
-    );
+    const repo = await this.repoConfigRepo.manager
+      .getRepository(GithubRepository)
+      .createQueryBuilder('repo')
+      .innerJoin('repo.installation', 'installation')
+      .innerJoin('installation.account', 'account')
+      .innerJoin('account.user', 'user')
+      .where('repo.id = :repoId', { repoId })
+      .andWhere('user.id = :userId', { userId })
+      .getOne();
 
     if (!repo) throw RepoConfigErrors.repoNotFound();
 

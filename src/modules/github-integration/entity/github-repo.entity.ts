@@ -1,6 +1,6 @@
 import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { GithubAccount } from "./github-account.entity";
 import { UserRepositorySelection } from "./user-repo-selection.entity";
+import { GithubInstallation } from "./github-installation.entity";
 
 /**
  * Represents repositories accessible via a GitHub installation.
@@ -9,22 +9,26 @@ import { UserRepositorySelection } from "./user-repo-selection.entity";
  * What repos belong to which GitHub account?
  */
 @Entity('github_repositories')
-@Index(['githubAccount', 'repoId'], { unique: true })
-@Index(['repoId'])
-@Index(['githubAccount'])
+@Index(['githubRepoId'])
+@Index(['installation'])
+@Index(['githubRepoId', 'installation'], { unique: true })
 export class GithubRepository {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @ManyToOne(() => GithubAccount, (account) => account.githubRepositories, {
-    nullable: false,
-    onDelete: 'CASCADE',
-  })
-  @JoinColumn({ name: 'github_account_id' })
-  githubAccount!: GithubAccount;
+  @ManyToOne(
+    () => GithubInstallation,
+    (installation) => installation.repositories,
+    {
+      nullable: false,
+      onDelete: 'CASCADE',
+    },
+  )
+  @JoinColumn({ name: 'installation_id' })
+  installation!: GithubInstallation;
 
   @Column({ type: 'bigint' })
-  repoId!: string;
+  githubRepoId!: string;
 
   @Column({ nullable: false })
   name!: string;
