@@ -1,4 +1,4 @@
-import { Injectable, ForbiddenException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 
@@ -32,7 +32,7 @@ export class GithubRepoService {
     jwtUser: JwtUser,
     installationId: string,
   ): Promise<SyncReposResponseDto> {
-    const installation = await this.installationRepo.findOne({
+    const installation: GithubInstallation | null  = await this.installationRepo.findOne({
       where: { installationId },
       relations: ['account', 'account.user'],
     });
@@ -46,11 +46,19 @@ export class GithubRepoService {
     }
 
     if (installation.account.user.userId !== jwtUser.userId) {
-      throw new ForbiddenException('Access denied');
+      throw new AppException(
+        ExceptionCodes.GITHUB_ACCESS_DENIED,
+        'Access denied',
+        HttpStatus.FORBIDDEN,
+      );
     }
 
     if (!installation.isActive) {
-      throw new ForbiddenException('Inactive installation');
+      throw new AppException(
+        ExceptionCodes.GITHUB_INSTALLATION_INACTIVE,
+        'Inactive installation',
+        HttpStatus.FORBIDDEN,
+      );
     }
 
     const token = await this.tokenService.getToken(installation.installationId);

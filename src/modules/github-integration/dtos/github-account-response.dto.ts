@@ -5,4 +5,5 @@ export interface GithubAccountResponseDto {
   accountType: string;
   isConnected: boolean;
   createdAt: Date;
+  installationId?: string | null;
 }

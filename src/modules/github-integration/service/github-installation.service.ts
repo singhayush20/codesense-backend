@@ -22,6 +22,7 @@ import {
   GithubUserResponse,
 } from '../dtos/github-auth.dto';
 import { GithubInstallationResponse } from '../dtos/github-installation-response.dto';
+import { GithubAccountResponseDto } from '../dtos/github-account-response.dto';
 
 @Injectable()
 export class GithubInstallationService {
@@ -141,7 +142,7 @@ export class GithubInstallationService {
         user: { userId: user.userId },
         isConnected: true,
       },
-      relations: ['installations'],
+      relations: ['installation'],
     });
 
     if (!account) {
@@ -155,13 +156,16 @@ export class GithubInstallationService {
     const installation = account.installation;
 
     if (installation) {
-      await this.installationRepo.update(
-        { account: { id: accountId } },
-        { isActive: true },
-      );
+      if (!installation.isActive) {
+        await this.installationRepo.save({
+          ...installation,
+          isActive: true,
+        });
+      }
       return `https://github.com/settings/installations/${installation.installationId}`;
     } else {
-      return `https://github.com/apps/codesense-platform/installations/new/permissions?target_id=${accountId}`;
+      const githubAppName = this.config.get<string>('github.appName');
+      return `https://github.com/apps/${githubAppName}/installations/new/permissions?target_id=${accountId}`;
     }
   }
 
@@ -219,35 +223,58 @@ export class GithubInstallationService {
   // =========================
   // Accounts
   // =========================
-  async getUserAccounts(userId: string): Promise<GithubAccount[]> {
-    return this.accountRepo.find({
-      where: { user: { userId } },
+  async getUserAccounts(userId: string): Promise<GithubAccountResponseDto[]> {
+    const accounts = await this.accountRepo.find({
+      where: {
+        user: { userId },
+        isConnected: true,
+      },
+      relations: ['installation'],
     });
+
+    return accounts.map((acc) => this.mapToDto(acc));
+  }
+
+  private mapToDto(account: GithubAccount): GithubAccountResponseDto {
+    return {
+      id: account.id,
+      githubAccountId: account.githubAccountId,
+      loginId: account.loginId,
+      accountType: account.accountType,
+      isConnected: account.isConnected,
+      installationId: account.installation?.installationId ?? null,
+      createdAt: account.createdAt,
+    };
   }
 
   async signout(user: JwtUser, accountId: string): Promise<void> {
-    const account = await this.accountRepo.findOne({
-      where: {
-        id: accountId,
-        user: { userId: user.userId },
-      },
+    await this.accountRepo.manager.transaction(async (manager) => {
+      const account = await manager.findOne(GithubAccount, {
+        where: {
+          id: accountId,
+          user: { userId: user.userId },
+        },
+        relations: ['user'],
+      });
+
+      if (!account) {
+        throw new AppException(
+          ExceptionCodes.GITHUB_ACCOUNT_NOT_FOUND,
+          'Account not found',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      account.isConnected = false;
+      await manager.save(account);
+
+      await manager
+        .createQueryBuilder()
+        .update(GithubInstallation)
+        .set({ isActive: false })
+        .where('account_id = :accountId', { accountId })
+        .execute();
     });
-
-    if (!account) {
-      throw new AppException(
-        ExceptionCodes.GITHUB_ACCOUNT_NOT_FOUND,
-        'Account not found',
-        HttpStatus.NOT_FOUND,
-      );
-    }
-
-    account.isConnected = false;
-    await this.accountRepo.save(account);
-
-    await this.installationRepo.update(
-      { account: { id: accountId } },
-      { isActive: false },
-    );
   }
 
   private async fetchGithubUser(code: string): Promise<GithubUserResponse> {

@@ -6,7 +6,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { GithubWebhookUtil } from '../../utils/github-webhook.utils';
 import { AxiosError } from 'axios';
-import { GithubEventType, GithubPullRequestPayload } from '../../dtos/pr-handling/github-pr.dto';
+import { GithubPullRequestPayload } from '../../dtos/pr-handling/github-pr.dto';
 import { AppException } from '../../../../exception-handling/app-exception.exception';
 import { ExceptionCodes } from '../../../../exception-handling/exception-codes';
 import { CacheService } from '../../../../cache/cache.service';
@@ -37,7 +37,7 @@ export class GithubWebhookService {
   ) {}
 
   async handleEvent(
-    event: GithubEventType,
+    event: string,
     signature: string,
     deliveryId: string,
     rawPayload: Buffer,
@@ -92,16 +92,15 @@ export class GithubWebhookService {
     }
   }
 
-  private async routeEvent(
-    event: GithubEventType,
-    payload: unknown,
-  ): Promise<void> {
+  private async routeEvent(event: string, payload: unknown): Promise<void> {
     switch (event) {
       case 'pull_request':
         await this.handlePullRequest(payload as GithubPullRequestPayload);
         break;
-      case 'installation.deleted':
-        await this.handleInstallationDeleted(payload);
+      case 'installation':
+        if ((payload as any).action === 'deleted') {
+          await this.handleInstallationDeleted(payload);
+        }
         break;
       default:
         this.logger.debug(`Unhandled event: ${event}`);
@@ -157,9 +156,8 @@ export class GithubWebhookService {
       return;
     }
 
-    await this.dataSource.transaction(async (_) => {
-
-      const installation = await this.installationRepo.findOne({
+    await this.dataSource.transaction(async (manager) => {
+      const installation = await manager.findOne(GithubInstallation, {
         where: { installationId },
       });
 
@@ -170,12 +168,8 @@ export class GithubWebhookService {
         return;
       }
 
-      // 1. mark inactive
-      installation.isActive = false;
-      await this.installationRepo.save(installation);
-
-      // 2. fetch repo IDs
-      const repos = await this.githubRepositoryRepo.find({
+      // 1. fetch repo ids using FK
+      const repos = await manager.find(GithubRepository, {
         where: { installation: { id: installation.id } },
         select: ['id'],
       });
@@ -183,16 +177,21 @@ export class GithubWebhookService {
       const repoIds = repos.map((r) => r.id);
 
       if (repoIds.length > 0) {
-        // 3. delete selections FIRST
-        await this.userRepositorySelectionRepo.delete({
+        // 2. delete selections using FK
+        await manager.delete(UserRepositorySelection, {
           repository: { id: In(repoIds) },
         });
 
-        // 4. delete repos
-        await this.githubRepositoryRepo.delete({
+        // 3. delete repos using FK
+        await manager.delete(GithubRepository, {
           installation: { id: installation.id },
         });
       }
+
+      // 4. delete installation
+      await manager.delete(GithubInstallation, {
+        id: installation.id,
+      });
     });
 
     this.logger.log(`Installation deleted & cleaned: ${installationId}`);
