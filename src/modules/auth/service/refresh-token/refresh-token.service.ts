@@ -161,9 +161,10 @@ export class RefreshTokenService {
     issuedAt: Date,
   ): Promise<CreatedRefreshToken> {
     const rawToken = this.generateToken();
-    const tokenExpiresInMs =
-      this.configService.get<number>('tokens.refreshTokenExpiresIn') ??
-      7 * 24 * 60 * 60 * 1000; // 7 days;
+    const tokenExpiresInSeconds =
+      this.configService.get<number>('tokens.refreshTokenExpiresInSeconds') ??
+      7 * 24 * 60 * 60; // 7 days in seconds
+    const tokenExpiresInMs = tokenExpiresInSeconds * 1000;
     const expiresAt = new Date(issuedAt.getTime() + tokenExpiresInMs);
 
     const entity = await this.refreshTokenRepository.save({

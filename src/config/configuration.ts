@@ -41,13 +41,13 @@ export default () => {
       sameSite: 'lax' as const,
       path: '/',
       maxAge: {
-        accessToken: 60 * 60 * 1000, // 1 hour
-        refreshToken: 7 * 24 * 60 * 60 * 1000, // 7 days
+        accessToken: 60 * 60 * 1000, // 1 hour in milliseconds
+        refreshToken: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
       },
     },
     tokens: {
-      accessTokenExpiresInSeconds: 3600, // 1 hour
-      refreshTokenExpiresIn: 7 * 24 * 60 * 60 * 1000, // 7 days
+      accessTokenExpiresInSeconds: 3600, // 1 hour in seconds
+      refreshTokenExpiresInSeconds: 7 * 24 * 60 * 60, // 7 days in seconds
     },
     github: {
       appName: process.env.GITHUB_APP_NAME,
@@ -58,6 +58,5 @@ export default () => {
       clientSecret: process.env.GITHUB_CLIENT_SECRET,
       oauthRedirectUri: process.env.GITHUB_OAUTH_REDIRECT_URI,
     },
-
   };
 };
