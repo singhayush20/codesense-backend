@@ -11,3 +11,8 @@ export class ProviderResponseDto {
 
   keyFingerprint!: string | null;
 }
+
+export class ProviderListResponseDto {
+  providerType!: string;
+  providers!: ProviderResponseDto[];
+}

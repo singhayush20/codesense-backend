@@ -16,7 +16,7 @@ import { ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorator/roles.decorator';
 import { RoleTypes } from '../../user/enums/role-types.enums';
-import { ProviderResponseDto } from '../dtos/provider-response.dto';
+import { ProviderListResponseDto, ProviderResponseDto } from '../dtos/provider-response.dto';
 import { SuccessResponseDto } from '../dtos/success-response.dto';
 import * as currentUserDecorator from '../../auth/decorator/current-user.decorator';
 import { ProviderMapper } from '../mapper/provider-model-to-dto.mapper';
@@ -44,10 +44,10 @@ export class LlmProviderController {
 
   @Get()
   @Roles(RoleTypes.ROLE_USER)
-  @ApiOkResponse({ type: [ProviderResponseDto] })
+  @ApiOkResponse({ type: [ProviderListResponseDto] })
   async getAll(
     @currentUserDecorator.CurrentUser() user: currentUserDecorator.JwtUser,
-  ): Promise<ProviderResponseDto[]> {
+  ): Promise<ProviderListResponseDto[]> {
     const providerResponseDto = await this.providerService.getAll(user.userId);
 
     return providerResponseDto;

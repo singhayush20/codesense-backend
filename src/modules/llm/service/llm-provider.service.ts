@@ -4,7 +4,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { LLMProvider } from '../entity/llm-provider.entity';
 import { CreateProviderDto } from '../dtos/create-provider.dto';
 import { User } from '../../user/entity/user.entity';
-import { ProviderResponseDto } from '../dtos/provider-response.dto';
+import {
+  ProviderListResponseDto,
+  ProviderResponseDto,
+} from '../dtos/provider-response.dto';
 
 @Injectable()
 export class LlmProviderService {
@@ -23,20 +26,38 @@ export class LlmProviderService {
     return this.repo.save(provider);
   }
 
-  async getAll(userId: string): Promise<ProviderResponseDto[]> {
+  async getAll(userId: string): Promise<ProviderListResponseDto[]> {
     const providers = await this.repo.find({
       where: { user: { userId } },
       relations: ['credential'],
     });
 
-    return providers.map((p) => ({
-      id: p.publicId,
-      providerType: p.providerType,
-      displayName: p.displayName,
-      isActive: p.isActive,
-      isValid: p.credential?.isValid ?? false,
-      keyFingerprint: p.credential?.keyFingerprint ?? null,
+    const mappedProviders: ProviderResponseDto[] = providers.map((provider: LLMProvider): ProviderResponseDto => ({
+      id: provider.publicId,
+      providerType: provider.providerType,
+      displayName: provider.displayName,
+      isActive: provider.isActive,
+      isValid: provider.credential?.isValid ?? false,
+      keyFingerprint: provider.credential?.keyFingerprint || null,
     }));
+
+    const groupedByType = mappedProviders.reduce(
+      (acc, provider) => {
+        const existing = acc.find((g) => g.providerType === provider.providerType);
+        if (existing) {
+          existing.providers.push(provider);
+        } else {
+          acc.push({
+            providerType: provider.providerType,
+            providers: [provider],
+          });
+        }
+        return acc;
+      },
+      [] as ProviderListResponseDto[],
+    );
+
+    return groupedByType;
   }
 
   async delete(providerPublicId: string, userId: string) {
