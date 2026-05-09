@@ -2,6 +2,7 @@ import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, OneToOne, Prim
 import { GithubRepository } from "../../github-integration/entity/github-repo.entity";
 import { PrState } from "../enums/pr-state.enum";
 import { PullRequestReview } from "./pull-request-review.entity";
+import { PullRequestFile } from "./pull-request-file.entity";
 
 @Entity('pull_requests')
 @Unique(['repository', 'prNumber'])
@@ -14,6 +15,11 @@ export class PullRequest {
   })
   @JoinColumn({ name: 'repo_id' })
   repository!: GithubRepository;
+
+  @OneToMany(() => PullRequestFile, (file) => file.pullRequest, {
+    cascade: true,
+  })
+  files!: PullRequestFile[];
 
   @OneToMany(() => PullRequestReview, (review) => review.pullRequest, {
     cascade: true,
@@ -38,15 +44,15 @@ export class PullRequest {
   @Column({ name: 'head_branch', nullable: false })
   headBranch!: string;
 
-  @Column({ name: 'created_at' })
+  @Column({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 
-  @Column({ name: 'updated_at' })
+  @Column({ name: 'updated_at', type: 'timestamptz' })
   updatedAt!: Date;
 
-  @Column({ name: 'merged_at' })
+  @Column({ name: 'merged_at', type: 'timestamptz', nullable: true })
   mergedAt?: Date;
 
-  @Column({ name: 'last_synced' })
+  @Column({ name: 'last_synced', type: 'timestamptz' })
   lastSynced!: Date;
 }

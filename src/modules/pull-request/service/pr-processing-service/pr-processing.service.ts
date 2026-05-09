@@ -90,7 +90,7 @@ export class PrProcessingService {
           `https://api.github.com/repos/${owner}/${repo}/pulls/${prNumber}/files`,
           {
             headers: {
-              Authorization: `Bearer ${token}`,
+              Authorization: token,
               Accept: 'application/vnd.github+json',
             },
           },
@@ -120,7 +120,7 @@ export class PrProcessingService {
           { body: comment },
           {
             headers: {
-              Authorization: `Bearer ${token}`,
+              Authorization: token,
               Accept: 'application/vnd.github+json',
             },
           },

@@ -33,8 +33,6 @@ export class GithubInstallationTokenService {
 
     const appJwt = this.authService.generateAppJwt();
 
-    this.logger.debug('Generating installation token with appJwt: %s', appJwt);
-
     let responseData: GithubInstallationTokenResponse;
 
     try {
@@ -44,12 +42,14 @@ export class GithubInstallationTokenService {
           {},
           {
             headers: {
-              Authorization: `Bearer ${appJwt}`, // MUST be JWT
+              Authorization: `Bearer ${appJwt}`,
               Accept: 'application/vnd.github+json',
             },
           },
         ),
       );
+
+      this.logger.debug(`Github installation access token: ${JSON.stringify(response.data)}`);
 
       responseData = response.data;
     } catch (error) {
