@@ -2,27 +2,21 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { GithubPullRequestEventPayload } from '../dtos/pr-handling/github-pr.dto';
-import { PrProcessingService } from '../../pull-request/service/pr-processing-service/pr-processing.service';
+import { PrWorkflowService } from '../../pull-request/service/orchestration/pr-workflow/pr-workflow.service';
 
 @Processor('pr-processing')
 export class PrProcessor extends WorkerHost {
   private readonly logger = new Logger(PrProcessor.name);
 
-  constructor(private readonly prService: PrProcessingService) {
+  constructor(private readonly prWorkflowService: PrWorkflowService) {
     super();
   }
 
   async process(
     job: Job<{ payload: GithubPullRequestEventPayload }>,
   ): Promise<void> {
-    try {
-      if (job.name !== 'process-pr') return;
-      this.logger.log(`Processing job ${job.id}`);
+    this.logger.log(`Processing PR job: ${job.id}`);
 
-      await this.prService.processPullRequest(job.data.payload);
-    } catch (error) {
-      this.logger.error(`Job failed: ${job.id}`, error);
-      throw error;
-    }
+    await this.prWorkflowService.processPullRequest(job.data.payload);
   }
 }

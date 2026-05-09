@@ -19,7 +19,7 @@ import { GithubRepoDto } from '../dtos/github-api/github-installation-repos-api-
 export class GithubRepoService {
   constructor(
     @InjectRepository(GithubRepository)
-    private readonly repoRepo: Repository<GithubRepository>,
+    private readonly githubRepoRepository: Repository<GithubRepository>,
 
     @InjectRepository(GithubInstallation)
     private readonly installationRepo: Repository<GithubInstallation>,
@@ -83,7 +83,7 @@ export class GithubRepoService {
     }
 
     const entities = allRepos.map((repo) : GithubRepository =>
-      this.repoRepo.create({
+      this.githubRepoRepository.create({
         githubRepoId: repo.id.toString(),
         name: repo.name,
         fullName: repo.full_name,
@@ -93,9 +93,9 @@ export class GithubRepoService {
       }),
     );
 
-    await this.repoRepo.upsert(entities, ['githubRepoId', 'installation']);
+    await this.githubRepoRepository.upsert(entities, ['githubRepoId', 'installation']);
 
-    const savedRepos = await this.repoRepo.find({
+    const savedRepos = await this.githubRepoRepository.find({
       where: {
         installation: { id: installation.id },
         githubRepoId: In(entities.map((e) => e.githubRepoId)),
@@ -117,5 +117,12 @@ export class GithubRepoService {
       total: repos.length,
       repositories: repos,
     };
+  }
+
+  async getRepositoryByGithubRepoId(githubRepoId: string): Promise<GithubRepository | null> {
+    return this.githubRepoRepository.findOne({
+      where: { githubRepoId },
+      relations: ['installation'],
+    });
   }
 }

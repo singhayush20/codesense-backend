@@ -37,6 +37,22 @@ export class CacheService {
     }
   }
 
+  async setIfNotExists(key: string, value: any, ttlSeconds?: number): Promise<boolean> {
+    const serialized = JSON.stringify(value);
+    let result;
+
+    if (ttlSeconds) {
+      // add jitter to prevent stampede
+      const ttl = ttlSeconds + Math.floor(Math.random() * 30);
+      // atomic set with NX and EX options to ensure lock is set only if not exists and has an expiration
+      result = await this.client.set(key, serialized, 'EX', ttl, 'NX');
+    } else {
+      result = await this.client.set(key, serialized, 'NX');
+    }
+
+    return result === 'OK';
+  }
+
   async exists(key: string): Promise<boolean> {
     const result = await this.client.exists(key);
     return result === 1;

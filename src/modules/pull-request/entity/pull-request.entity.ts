@@ -44,6 +44,9 @@ export class PullRequest {
   @Column({ name: 'head_branch', nullable: false })
   headBranch!: string;
 
+  @Column({ name: 'is_merged', nullable: false, default: false })
+  isMerged!: boolean;
+
   @Column({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 
