@@ -17,6 +17,7 @@ import { GithubInstallation } from '../../entity/github-installation.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GithubRepository } from '../../entity/github-repo.entity';
 import { UserRepositorySelection } from '../../entity/user-repo-selection.entity';
+import { WebhookEvent } from '../../entity/github-webhook-event.entity';
 
 @Injectable()
 export class GithubWebhookService {
@@ -30,10 +31,8 @@ export class GithubWebhookService {
     private readonly prQueue: Queue,
     @InjectRepository(GithubInstallation)
     private readonly installationRepo: Repository<GithubInstallation>,
-    @InjectRepository(GithubRepository)
-    private readonly githubRepositoryRepo: Repository<GithubRepository>,
-    @InjectRepository(UserRepositorySelection)
-    private readonly userRepositorySelectionRepo: Repository<UserRepositorySelection>,
+    @InjectRepository(WebhookEvent)
+    private readonly webhookEventRepo: Repository<WebhookEvent>
   ) {}
 
   async handleEvent(
@@ -45,14 +44,18 @@ export class GithubWebhookService {
     this.logger.log(`Webhook received: ${event} - ${deliveryId}`);
 
     const key = `gh:webhook:${deliveryId}`;
-    const exists = await this.cacheService.exists(key);
+    const existsInCache = await this.cacheService.exists(key);
 
-    if (exists) {
+    if (existsInCache) {
       this.logger.warn(`Duplicate webhook skipped: ${deliveryId}`);
       return;
     }
-
-    await this.cacheService.set(key, true, 3600);
+    
+    const existsInDb = await this.webhookEventRepo.findOne({ where: { deliveryId, processed: true } });
+    if (existsInDb) {
+      this.logger.warn(`Duplicate webhook found in DB, skipping: ${deliveryId}`);
+      return;
+    }
 
     const secret = this.config.get<string>('github.webhookSecret');
 
@@ -85,6 +88,16 @@ export class GithubWebhookService {
       this.logger.log(
         `Webhook received | event=${event} | deliveryId=${deliveryId}`,
       );
+
+      await this.webhookEventRepo.insert({
+        deliveryId,
+        eventType: event,
+        processed: true,
+        payload: JSON.parse(payload as any),
+      });
+
+      await this.cacheService.set(key, true, 3600);
+  
 
       await this.routeEvent(event, payload);
     } catch (error) {

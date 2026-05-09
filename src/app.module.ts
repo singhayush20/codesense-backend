@@ -11,6 +11,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { GithubIntegrationModule } from './modules/github-integration/github-integration.module';
 import { QueueModule } from './queue/queue.module';
 import { LlmModule } from './modules/llm/llm.module';
+import { PullRequestModule } from './modules/pull-request/pull-request.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { LlmModule } from './modules/llm/llm.module';
     GithubIntegrationModule,
     QueueModule,
     LlmModule,
+    PullRequestModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -2,7 +2,7 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { GithubPullRequestEventPayload } from '../dtos/pr-handling/github-pr.dto';
-import { PrProcessingService } from '../service/pr-processing/pr-processing.service';
+import { PrProcessingService } from '../../pull-request/service/pr-processing-service/pr-processing.service';
 
 @Processor('pr-processing')
 export class PrProcessor extends WorkerHost {
