@@ -45,14 +45,16 @@ export class RepoLlmConfigService {
 
     RepoConfigUtil.validateModel(dto.model);
 
-    let config = await this.repoConfigRepo
+    var config = await this.repoConfigRepo
       .createQueryBuilder('config')
-      .innerJoin('config.repository', 'repo')
+      .innerJoinAndSelect('config.repository', 'repo')
+      .innerJoinAndSelect('config.provider', 'provider')
+      .innerJoinAndSelect('provider.credential', 'credential')
       .innerJoin('repo.installation', 'installation')
       .innerJoin('installation.account', 'account')
-      .innerJoin('account.user', 'user')
+      .innerJoin('account.user', 'appUser')
       .where('repo.id = :repoId', { repoId })
-      .andWhere('user.id = :userId', { userId })
+      .andWhere('appUser.userId = :userId', { userId })
       .getOne();
 
     if (!config) {
@@ -86,12 +88,10 @@ export class RepoLlmConfigService {
       .innerJoin('installation.account', 'account')
       .innerJoin('account.user', 'user')
       .where('repo.id = :repoId', { repoId })
-      .andWhere('user.id = :userId', { userId })
+      .andWhere('user.user_id = :userId', { userId })
       .getOne();
 
-    if (!config) throw RepoConfigErrors.configNotFound();
-
-    if (!config) throw RepoConfigErrors.configNotFound();
+    if (!config) return new RepoLlmConfigResponseDto(); // return empty DTO if no config found
 
     return this.toDto(config, config.provider);
   }
@@ -102,17 +102,15 @@ export class RepoLlmConfigService {
   async delete(userId: string, repoId: string): Promise<void> {
     const config = await this.repoConfigRepo
       .createQueryBuilder('config')
-      .innerJoin('config.repository', 'repo')
+      .innerJoinAndSelect('config.repository', 'repo')
+      .innerJoinAndSelect('config.provider', 'provider')
+      .innerJoinAndSelect('provider.credential', 'credential')
       .innerJoin('repo.installation', 'installation')
       .innerJoin('installation.account', 'account')
-      .innerJoin('account.user', 'user')
+      .innerJoin('account.user', 'app_user')
       .where('repo.id = :repoId', { repoId })
-      .andWhere('user.id = :userId', { userId })
+      .andWhere('app_user.user_id = :userId', { userId })
       .getOne();
-
-    if (!config) throw RepoConfigErrors.configNotFound();
-
-    await this.repoConfigRepo.remove(config);
 
     if (!config) throw RepoConfigErrors.configNotFound();
 
@@ -128,12 +126,14 @@ export class RepoLlmConfigService {
       .createQueryBuilder('repo')
       .innerJoin('repo.installation', 'installation')
       .innerJoin('installation.account', 'account')
-      .innerJoin('account.user', 'user')
+      .innerJoin('account.user', 'appUser')
       .where('repo.id = :repoId', { repoId })
-      .andWhere('user.id = :userId', { userId })
+      .andWhere('appUser.userId = :userId', { userId })
       .getOne();
 
-    if (!repo) throw RepoConfigErrors.repoNotFound();
+    if (!repo) {
+      throw RepoConfigErrors.repoNotFound();
+    }
 
     return repo;
   }
