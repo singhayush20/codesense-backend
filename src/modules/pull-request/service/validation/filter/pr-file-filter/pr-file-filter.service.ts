@@ -3,9 +3,6 @@ import { Injectable } from '@nestjs/common';
 @Injectable()
 export class PrFileFilterService {
   private readonly ignoredPatterns = [
-    'package-lock.json',
-    'pnpm-lock.yaml',
-    'yarn.lock',
     '.snap',
     '.png',
     '.jpg',

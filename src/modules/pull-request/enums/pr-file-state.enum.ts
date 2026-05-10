@@ -1,7 +1,7 @@
 export enum PrFileState {
     ADDED = 'added',
     MODIFIED = 'modified',
-    DELETED = 'deleted',
+    REMOVED = 'removed',
     RENAMED = 'renamed',
 }
 

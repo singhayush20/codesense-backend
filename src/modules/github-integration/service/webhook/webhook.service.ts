@@ -93,7 +93,7 @@ export class GithubWebhookService {
       await this.webhookEventRepo.save({
         deliveryId,
         eventType: event,
-        processed: false,
+        processed: true,
         payload,
       });
 

@@ -94,7 +94,7 @@ export class PrWorkflowService {
         pullRequestId,
       },
       {
-        jobId: `ai-review:${pullRequestId}`,
+        jobId: `ai-review-${pullRequestId}`,
         attempts: 5,
         backoff: {
           type: 'exponential',
