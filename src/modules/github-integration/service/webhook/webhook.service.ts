@@ -18,6 +18,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { GithubRepository } from '../../entity/github-repo.entity';
 import { UserRepositorySelection } from '../../entity/user-repo-selection.entity';
 import { WebhookEvent } from '../../entity/github-webhook-event.entity';
+import { JsonObject } from '../../../../types/types';
 
 @Injectable()
 export class GithubWebhookService {
@@ -84,16 +85,16 @@ export class GithubWebhookService {
         );
       }
 
-      const payload: unknown = JSON.parse(rawPayload.toString('utf8'));
+      const payload = JSON.parse(rawPayload.toString('utf8')) as JsonObject;
       this.logger.log(
         `Webhook received | event=${event} | deliveryId=${deliveryId}`,
       );
 
-      await this.webhookEventRepo.insert({
+      await this.webhookEventRepo.save({
         deliveryId,
         eventType: event,
-        processed: true,
-        payload: JSON.parse(payload as any),
+        processed: false,
+        payload,
       });
 
       await this.cacheService.set(key, true, 3600);

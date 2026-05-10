@@ -13,12 +13,16 @@ import { PullRequestLockService } from './service/sync/pull-request-lock/pull-re
 import { PrValidationService } from './service/validation/pr-validation/pr-validation.service';
 import { CacheModule } from '../../cache/cache.module';
 import { PrFileFilterService } from './service/validation/filter/pr-file-filter/pr-file-filter.service';
+import { BullModule } from '@nestjs/bullmq';
 @Module({
   imports: [
     TypeOrmModule.forFeature([PullRequest, PullRequestReview, PullRequestFile]),
     forwardRef(() => GithubIntegrationModule),
     HttpModule,
     CacheModule,
+    BullModule.registerQueue({
+      name: 'code-review',
+    }),
   ],
   providers: [
     PrWorkflowService,
@@ -30,5 +34,6 @@ import { PrFileFilterService } from './service/validation/filter/pr-file-filter/
     PrFileFilterService,
   ],
   controllers: [],
+  exports: [PrWorkflowService],
 })
 export class PullRequestModule {}

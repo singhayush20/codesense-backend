@@ -1,4 +1,11 @@
-import { Column, Entity, Index, PrimaryGeneratedColumn } from "typeorm";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import type { JsonObject } from '../../../types/types';
 
 @Entity('github_webhook_events')
 @Index(['deliveryId'], { unique: true })
@@ -13,11 +20,15 @@ export class WebhookEvent {
   eventType!: string;
 
   @Column({ name: 'payload', type: 'json', nullable: false })
-  payload!: Record<string, any>;
+  payload!: JsonObject;
 
   @Column({ name: 'processed', default: false })
   processed!: boolean;
 
-  @Column({ name: 'created_at', nullable: false })
+  @CreateDateColumn({
+    name: 'created_at',
+    type: 'timestamptz',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
   createdAt!: Date;
 }
