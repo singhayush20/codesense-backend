@@ -33,8 +33,6 @@ export class GithubInstallationTokenService {
 
     const appJwt = this.authService.generateAppJwt();
 
-    this.logger.debug('Generating installation token with appJwt: %s', appJwt);
-
     let responseData: GithubInstallationTokenResponse;
 
     try {
@@ -44,7 +42,7 @@ export class GithubInstallationTokenService {
           {},
           {
             headers: {
-              Authorization: `Bearer ${appJwt}`, // MUST be JWT
+              Authorization: `Bearer ${appJwt}`,
               Accept: 'application/vnd.github+json',
             },
           },
@@ -53,7 +51,7 @@ export class GithubInstallationTokenService {
 
       responseData = response.data;
     } catch (error) {
-      this.logger.error('Failed to generate installation token', error);
+      this.logger.error(`Failed to generate installation token ${error instanceof Error ? error.message : 'unknown error'}`);
 
       throw new AppException(
         ExceptionCodes.GITHUB_API_ERROR,
@@ -61,8 +59,6 @@ export class GithubInstallationTokenService {
         HttpStatus.BAD_GATEWAY,
       );
     }
-
-    this.logger.debug(`Generated installation token response: ${responseData}`);
     
     const token = responseData.token;
 

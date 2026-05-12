@@ -1,5 +1,5 @@
 import { HttpModule } from '@nestjs/axios';
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CacheModule } from '../../cache/cache.module';
 import { UserModule } from '../user/user.module';
@@ -13,13 +13,14 @@ import { GithubInstallationTokenService } from './service/github-installation-to
 import { GithubRepoService } from './service/github-repo.service';
 import { GithubSelectionService } from './service/github-selection.service';
 import { GithubWebhookService } from './service/webhook/webhook.service';
-import { PrProcessingService } from './service/pr-processing/pr-processing.service';
 import { GithubWebhookController } from './controller/github-webhook/github-webhook.controller';
 import { PrProcessor } from './processor/pr.processor';
 import { BullModule } from '@nestjs/bullmq';
 import { GithubApiService } from './service/github-api.service';
 import { GithubInstallation } from './entity/github-installation.entity';
 import { User } from '../user/entity/user.entity';
+import { WebhookEvent } from './entity/github-webhook-event.entity';
+import { PullRequestModule } from '../pull-request/pull-request.module';
 
 @Module({
   imports: [
@@ -32,10 +33,12 @@ import { User } from '../user/entity/user.entity';
       UserRepositorySelection,
       GithubInstallation,
       User,
+      WebhookEvent,
     ]),
     BullModule.registerQueue({
       name: 'pr-processing',
     }),
+    forwardRef(() => PullRequestModule),
   ],
   controllers: [GithubController, GithubWebhookController],
   providers: [
@@ -44,11 +47,14 @@ import { User } from '../user/entity/user.entity';
     GithubInstallationTokenService,
     GithubRepoService,
     GithubSelectionService,
-    PrProcessingService,
     GithubWebhookService,
     PrProcessor,
     GithubApiService,
   ],
-  exports: [GithubRepoService],
+  exports: [
+    GithubRepoService,
+    GithubInstallationTokenService,
+    GithubSelectionService,
+  ],
 })
 export class GithubIntegrationModule {}

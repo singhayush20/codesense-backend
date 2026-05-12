@@ -25,7 +25,8 @@ import { CurrentUser } from '../../auth/decorator/current-user.decorator';
 import { SyncReposResponseDto } from '../dtos/sync-repo-response.dto';
 import { ConnectGithubResponseDto } from '../dtos/connect-response.dto';
 import { SelectedRepoResponseDto } from '../dtos/selected-repo-response.dto';
-
+import { GithubInstallationTokenService } from '../service/github-installation-token.service';
+import { GithubAppAuthService } from '../service/github-app-auth.service';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('github')
@@ -35,6 +36,8 @@ export class GithubController {
     private readonly installationService: GithubInstallationService,
     private readonly repoService: GithubRepoService,
     private readonly selectionService: GithubSelectionService,
+    private readonly tokenService: GithubAppAuthService,
+    private readonly appInstallationTokenService: GithubInstallationTokenService,
   ) {}
 
   // =========================
@@ -160,5 +163,22 @@ export class GithubController {
   ): Promise<{ success: boolean }> {
     await this.installationService.signout(user, accountId);
     return { success: true };
+  }
+
+  @Get('github-auth-token')
+  @Roles(RoleTypes.ROLE_USER)
+  async getGithubAuthTokenForInstallationId(): Promise<{ authToken: string }> {
+    const token = await this.tokenService.generateAppJwt();
+    return { authToken: token };
+  }
+
+  @Post('github-app-installation-token')
+  @Roles(RoleTypes.ROLE_USER)
+  async getGithubAppInstallationToken(
+    @Body('installationId') installationId: string,
+  ): Promise<{ token: string }> {
+    const token =
+      await this.appInstallationTokenService.getToken(installationId);
+    return { token };
   }
 }
