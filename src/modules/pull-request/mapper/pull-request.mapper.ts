@@ -24,6 +24,11 @@ export class PullRequestMapper {
       updatedAt: new Date(pr.updated_at),
       mergedAt: pr.merged_at ? new Date(pr.merged_at) : undefined,
       lastSynced: new Date(),
+      additions: pr.additions,
+      deletions: pr.deletions,
+      changedFiles: pr.changed_files,
+      commits: pr.commits,
+      body: pr.body,
     };
   }
 
