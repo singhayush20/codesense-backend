@@ -1,8 +1,8 @@
 import { GithubRepository } from '../../github-integration/entity/github-repo.entity';
 import { getPrStateFromString } from '../enums/pr-state.enum';
-import { GithubPullRequestResponse } from '../dto/pull-request/GithubPullRequestResponse';
+import { GithubPullRequestResponse } from '../dto/pull-request/github-pull-request-response.dto';
 import { PullRequest } from '../entity/pull-request.entity';
-import { GithubPullRequestFileResponse } from '../dto/pull-request/GithubPullRequestFileResponse';
+import { GithubPullRequestFileResponse } from '../dto/pull-request/github-pull-request-file-response.dto';
 import { PullRequestFile } from '../entity/pull-request-file.entity';
 import { getPrFileStateFromString } from '../enums/pr-file-state.enum';
 
@@ -29,6 +29,7 @@ export class PullRequestMapper {
       changedFiles: pr.changed_files,
       commits: pr.commits,
       body: pr.body,
+      headSha: pr.head.sha,
     };
   }
 

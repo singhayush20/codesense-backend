@@ -2,12 +2,12 @@ import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { GithubInstallationTokenService } from '../../../../github-integration/service/github-installation-token.service';
 import { HttpService } from '@nestjs/axios';
 import { GithubRepository } from '../../../../github-integration/entity/github-repo.entity';
-import { GithubPullRequestResponse } from '../../../dto/pull-request/GithubPullRequestResponse';
+import { GithubPullRequestResponse } from '../../../dto/pull-request/github-pull-request-response.dto';
 import { firstValueFrom } from 'rxjs';
 import { AppException } from '../../../../../exception-handling/app-exception.exception';
 import { ExceptionCodes } from '../../../../../exception-handling/exception-codes';
 import { AxiosError } from 'axios';
-import { GithubPullRequestFileResponse } from '../../../dto/pull-request/GithubPullRequestFileResponse';
+import { GithubPullRequestFileResponse } from '../../../dto/pull-request/github-pull-request-file-response.dto';
 
 @Injectable()
 export class GithubPrApiService {

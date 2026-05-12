@@ -12,9 +12,11 @@ import { GithubIntegrationModule } from './modules/github-integration/github-int
 import { QueueModule } from './queue/queue.module';
 import { LlmModule } from './modules/llm/llm.module';
 import { PullRequestModule } from './modules/pull-request/pull-request.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: `.env.${process.env.NODE_ENV || 'dev'}`,
@@ -37,7 +39,7 @@ import { PullRequestModule } from './modules/pull-request/pull-request.module';
         autoLoadEntities: true,
 
         synchronize: false, // ALWAYS false (we use migrations)
-        logging: true, // disable in prod later
+        logging: ['error', 'warn'],
         retryAttempts: 1,
         retryDelay: 0,
       }),

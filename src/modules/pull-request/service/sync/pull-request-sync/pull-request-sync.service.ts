@@ -4,8 +4,9 @@ import { PullRequestFileSyncService } from '../pull-request-file-sync/pull-reque
 import { DataSource, EntityManager } from 'typeorm';
 import { GithubRepository } from '../../../../github-integration/entity/github-repo.entity';
 import { PullRequest } from '../../../entity/pull-request.entity';
-import { GithubPullRequestResponse } from '../../../dto/pull-request/GithubPullRequestResponse';
+import { GithubPullRequestResponse } from '../../../dto/pull-request/github-pull-request-response.dto';
 import { PullRequestMapper } from '../../../mapper/pull-request.mapper';
+import { RepositoryFileContentSyncService } from '../repository-file-content-sync/repository-file-content-sync.service';
 
 @Injectable()
 export class PullRequestSyncService {
@@ -13,6 +14,7 @@ export class PullRequestSyncService {
     private readonly githubPrApiService: GithubPrApiService,
     private readonly pullRequestFileSyncService: PullRequestFileSyncService,
     private readonly dataSource: DataSource,
+    private readonly repositoryFileContentSyncService: RepositoryFileContentSyncService,
   ) {}
 
   async syncPullRequest(
@@ -25,21 +27,34 @@ export class PullRequestSyncService {
       this.githubPrApiService.fetchPullRequestFiles(repository, prNumber),
     ]);
 
-    return this.dataSource.transaction(async (manager) => {
+    // perform the operations in the same transaction using the manager
+    const result = await this.dataSource.transaction(async (manager) => {
       const pullRequest = await this.upsertPullRequest(
         manager,
         repository,
         prResponse,
       );
 
-      await this.pullRequestFileSyncService.syncFiles(
+      const savedFiles = await this.pullRequestFileSyncService.syncFiles(
         manager,
         pullRequest,
         fileResponses,
       );
 
-      return pullRequest;
+      return {
+        pullRequest,
+        savedFiles,
+      };
     });
+
+    // perform outside the transaction because this needs file to be fetched from network
+    await this.repositoryFileContentSyncService.syncSnapshots(
+      repository,
+      result.pullRequest,
+      result.savedFiles,
+    );
+
+    return result.pullRequest;
   }
 
   private async upsertPullRequest(

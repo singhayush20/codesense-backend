@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrFileFilterService } from '../../validation/filter/pr-file-filter/pr-file-filter.service';
 import { EntityManager } from 'typeorm';
 import { PullRequest } from '../../../entity/pull-request.entity';
-import { GithubPullRequestFileResponse } from '../../../dto/pull-request/GithubPullRequestFileResponse';
+import { GithubPullRequestFileResponse } from '../../../dto/pull-request/github-pull-request-file-response.dto';
 import { PullRequestFile } from '../../../entity/pull-request-file.entity';
 import { PullRequestMapper } from '../../../mapper/pull-request.mapper';
 
@@ -14,7 +14,7 @@ export class PullRequestFileSyncService {
     manager: EntityManager,
     pullRequest: PullRequest,
     files: GithubPullRequestFileResponse[],
-  ): Promise<void> {
+  ): Promise<PullRequestFile[]> {
     await manager.delete(PullRequestFile, {
       pullRequest: {
         id: pullRequest.id,
@@ -26,7 +26,7 @@ export class PullRequestFileSyncService {
     );
 
     if(!filteredFiles.length) {
-      return;
+      return [];
     }
 
     const entities = filteredFiles.map(
@@ -39,6 +39,6 @@ export class PullRequestFileSyncService {
         )
     );
 
-    await manager.save(PullRequestFile, entities);
+    return await manager.save(PullRequestFile, entities);
   }
 }

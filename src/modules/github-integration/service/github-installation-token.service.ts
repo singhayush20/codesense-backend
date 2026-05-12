@@ -49,11 +49,9 @@ export class GithubInstallationTokenService {
         ),
       );
 
-      this.logger.debug(`Github installation access token: ${JSON.stringify(response.data)}`);
-
       responseData = response.data;
     } catch (error) {
-      this.logger.error('Failed to generate installation token', error);
+      this.logger.error(`Failed to generate installation token ${error instanceof Error ? error.message : 'unknown error'}`);
 
       throw new AppException(
         ExceptionCodes.GITHUB_API_ERROR,
@@ -61,8 +59,6 @@ export class GithubInstallationTokenService {
         HttpStatus.BAD_GATEWAY,
       );
     }
-
-    this.logger.debug(`Generated installation token response: ${responseData}`);
     
     const token = responseData.token;
 

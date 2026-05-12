@@ -14,9 +14,14 @@ import { PrValidationService } from './service/validation/pr-validation/pr-valid
 import { CacheModule } from '../../cache/cache.module';
 import { PrFileFilterService } from './service/validation/filter/pr-file-filter/pr-file-filter.service';
 import { BullModule } from '@nestjs/bullmq';
+import { GithubPrFileContentService } from './service/github/github-pr-file-content/github-pr-file-content.service';
+import { RepositoryFileContentSyncService } from './service/sync/repository-file-content-sync/repository-file-content-sync.service';
+import { SnapshotCleanupService } from './service/sync/snapshot-cleanup/snapshot-cleanup.service';
+import { SnapshotCleanupCron } from './cron/snapshot-cleanup.cron';
+import { PullRequestFileSnapshot } from './entity/pull-request-file-snapshot.entity';
 @Module({
   imports: [
-    TypeOrmModule.forFeature([PullRequest, PullRequestReview, PullRequestFile]),
+    TypeOrmModule.forFeature([PullRequest, PullRequestReview, PullRequestFile, PullRequestFileSnapshot]),
     forwardRef(() => GithubIntegrationModule),
     HttpModule,
     CacheModule,
@@ -32,6 +37,10 @@ import { BullModule } from '@nestjs/bullmq';
     PullRequestLockService,
     PrValidationService,
     PrFileFilterService,
+    GithubPrFileContentService,
+    RepositoryFileContentSyncService,
+    SnapshotCleanupService,
+    SnapshotCleanupCron,
   ],
   controllers: [],
   exports: [PrWorkflowService],

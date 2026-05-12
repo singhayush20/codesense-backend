@@ -1,6 +1,15 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from "typeorm";
-import { PullRequest } from "./pull-request.entity";
-import { PrFileState } from "../enums/pr-file-state.enum";
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  Unique,
+} from 'typeorm';
+import { PullRequest } from './pull-request.entity';
+import { PrFileState } from '../enums/pr-file-state.enum';
+import { PullRequestFileSnapshot } from './pull-request-file-snapshot.entity';
 
 @Entity('pull_request_files')
 @Unique(['pullRequest', 'fileName'])
@@ -13,6 +22,12 @@ export class PullRequestFile {
   })
   @JoinColumn({ name: 'pull_request_id' })
   pullRequest!: PullRequest;
+
+  @OneToMany(
+    () => PullRequestFileSnapshot,
+    (snapshot) => snapshot.pullRequestFile,
+  )
+  snapshots!: PullRequestFileSnapshot[];
 
   @Column({ name: 'file_name', type: 'varchar', length: 255, nullable: false })
   fileName!: string;

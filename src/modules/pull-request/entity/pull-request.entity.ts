@@ -1,11 +1,9 @@
 import {
   Column,
   Entity,
-  Index,
   JoinColumn,
   ManyToOne,
   OneToMany,
-  OneToOne,
   PrimaryGeneratedColumn,
   Unique,
 } from 'typeorm';
@@ -83,4 +81,7 @@ export class PullRequest {
 
   @Column({ name: 'last_synced', type: 'timestamptz' })
   lastSynced!: Date;
+
+  @Column({ name: 'head_sha', nullable: false })
+  headSha!: string;
 }
