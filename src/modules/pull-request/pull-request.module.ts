@@ -19,9 +19,17 @@ import { RepositoryFileContentSyncService } from './service/sync/repository-file
 import { SnapshotCleanupService } from './service/sync/snapshot-cleanup/snapshot-cleanup.service';
 import { SnapshotCleanupCron } from './cron/snapshot-cleanup.cron';
 import { PullRequestFileSnapshot } from './entity/pull-request-file-snapshot.entity';
+import { PullRequestQueryService } from './service/query/pull-request-query/pull-request-query.service';
+import { PullRequestFileQueryService } from './service/query/pull-request-file-query/pull-request-file-query.service';
+import { PullRequestQueryController } from './controller/pull-request-query/pull-request-query.controller';
 @Module({
   imports: [
-    TypeOrmModule.forFeature([PullRequest, PullRequestReview, PullRequestFile, PullRequestFileSnapshot]),
+    TypeOrmModule.forFeature([
+      PullRequest,
+      PullRequestReview,
+      PullRequestFile,
+      PullRequestFileSnapshot,
+    ]),
     forwardRef(() => GithubIntegrationModule),
     HttpModule,
     CacheModule,
@@ -41,8 +49,10 @@ import { PullRequestFileSnapshot } from './entity/pull-request-file-snapshot.ent
     RepositoryFileContentSyncService,
     SnapshotCleanupService,
     SnapshotCleanupCron,
+    PullRequestQueryService,
+    PullRequestFileQueryService,
   ],
-  controllers: [],
+  controllers: [PullRequestQueryController],
   exports: [PrWorkflowService],
 })
 export class PullRequestModule {}
