@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   CanActivate,
   ExecutionContext,
@@ -8,8 +5,9 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { RoleTypes } from '../../user/enums/role-types.enums';
 import { ROLES_KEY } from '../decorator/roles.decorator';
+import { AuthenticatedRequest } from '../dto/authenticated-request.dto';
+import { RoleTypes } from '../../user/enums/role-types.enums';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -26,14 +24,15 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const user = request.user;
 
     if (!user?.roles || user.roles.length === 0) {
       throw new ForbiddenException('No roles assigned');
     }
 
-    const hasRole = requiredRoles.some((role) => user.roles.includes(role));
+    const userRoles = user.roles;
+    const hasRole = requiredRoles.some((role) => userRoles.includes(role));
 
     if (!hasRole) {
       throw new ForbiddenException('Insufficient permissions');
