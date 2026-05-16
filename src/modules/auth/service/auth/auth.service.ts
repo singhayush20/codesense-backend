@@ -9,6 +9,8 @@ import { AppException } from '../../../../exception-handling/app-exception.excep
 import { ExceptionCodes } from '../../../../exception-handling/exception-codes';
 import { User } from '../../../user/entity/user.entity';
 import { UserService } from '../../../user/service/user.service';
+import { GoogleUserInfoResponse } from '../../dto/google-user-info-response.dto';
+import { GoogleTokenResponse } from '../../dto/google-token-response.dto';
 
 @Injectable()
 export class AuthService {
@@ -24,7 +26,7 @@ export class AuthService {
   async exchangeCodeForToken(code: string): Promise<AuthTokenResponseDto> {
     try {
       // 1. Exchange code → token
-      const tokenResponse = await axios.post(
+      const tokenResponse = await axios.post<GoogleTokenResponse>(
         this.config.get<string>('oauth.google.tokenUrl')!,
         new URLSearchParams({
           code,
@@ -49,7 +51,7 @@ export class AuthService {
       }
 
       // 2. Fetch user info
-      const userInfoResponse = await axios.get(
+      const userInfoResponse = await axios.get<GoogleUserInfoResponse>(
         `${this.config.get<string>('oauth.google.tokenInfoUrl')}${idToken}`,
       );
 
@@ -73,7 +75,8 @@ export class AuthService {
       this.validateUserState(user);
 
       // 5. Generate access token
-      const expiresInSeconds = this.config.get<number>('tokens.accessTokenExpiresInSeconds') ?? 3600;
+      const expiresInSeconds =
+        this.config.get<number>('tokens.accessTokenExpiresInSeconds') ?? 3600;
 
       const accessToken = this.jwtService.sign(
         {
@@ -104,7 +107,7 @@ export class AuthService {
       if (axios.isAxiosError(error)) {
         throw new AppException(
           ExceptionCodes.GOOGLE_OAUTH_LOGIN_FAILED,
-          error.response?.data || 'Google OAuth failed',
+          'Google OAuth failed',
           HttpStatus.UNAUTHORIZED,
         );
       }
@@ -117,7 +120,17 @@ export class AuthService {
     }
   }
 
-  async refresh(refreshToken: string): Promise<AuthTokenResponseDto> {
+  async refresh(
+    refreshToken: string | undefined,
+  ): Promise<AuthTokenResponseDto> {
+    if (refreshToken === undefined) {
+      throw new AppException(
+        ExceptionCodes.REFREH_TOKEN_NOT_PRESENT,
+        'Refresh token missing',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
     const rotation = await this.refreshTokenService.rotate(refreshToken);
 
     try {
@@ -148,7 +161,10 @@ export class AuthService {
     );
   }
 
-  async logout(refreshToken: string): Promise<void> {
+  async logout(refreshToken: string | undefined): Promise<void> {
+    if (refreshToken === undefined) {
+      return;
+    }
     await this.refreshTokenService.revokeSession(refreshToken);
   }
 
@@ -178,10 +194,10 @@ export class AuthService {
     }
   }
 
-  private resolveName(userInfo: any, email: string): string {
-    return userInfo.name && userInfo.name.trim().length > 0
-      ? userInfo.name
-      : email;
+  private resolveName(userInfo: GoogleUserInfoResponse, email: string): string {
+    const name = userInfo.name?.trim();
+
+    return name && name.length > 0 ? name : email;
   }
 
   private generateRandomPassword(): string {

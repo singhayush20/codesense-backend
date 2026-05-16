@@ -1,7 +1,7 @@
 export class RefreshTokenIssueDto {
-    token!: string;
+  token!: string;
 
-    expiresAt!: Date;
+  expiresAt!: Date;
 
-    sessionId!: string;
+  sessionId!: string;
 }

@@ -1,9 +1,4 @@
-import {
-  ForbiddenException,
-  HttpStatus,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { LLMProvider } from '../entity/llm-provider.entity';
 import { LlmProviderCredential } from '../entity/llm-provider-credential.entity';
@@ -31,7 +26,7 @@ export class CredentialService {
   async addOrUpdateCredentials(
     providerPublicId: string,
     userId: string,
-    config: Record<string, any>,
+    config: Record<string, string>,
   ): Promise<void> {
     const provider = await this.providerRepo.findOne({
       where: {
@@ -80,7 +75,7 @@ export class CredentialService {
   async getDecryptedConfig(
     providerId: number,
     userId: string,
-  ): Promise<Record<string, any>> {
+  ): Promise<Record<string, string>> {
     const credential = await this.credentialRepo.findOne({
       where: {
         provider: {
@@ -104,7 +99,7 @@ export class CredentialService {
 
   private generateFingerprint(
     providerType: ProviderType,
-    config: Record<string, unknown>,
+    config: Record<string, string>,
   ): string {
     let keyMaterial: string;
 
@@ -112,15 +107,15 @@ export class CredentialService {
       case ProviderType.OPENAI:
       case ProviderType.ANTHROPIC:
       case ProviderType.GEMINI:
-        keyMaterial = String((config as any).apiKey);
+        keyMaterial = String(config.apiKey);
         break;
 
       case ProviderType.BEDROCK:
-        keyMaterial = String((config as any).accessKeyId);
+        keyMaterial = String(config.accessKeyId);
         break;
 
       case ProviderType.OLLAMA:
-        keyMaterial = String((config as any).baseUrl ?? 'local');
+        keyMaterial = String(config.baseUrl ?? 'local');
         break;
 
       default:

@@ -1,13 +1,13 @@
 export interface GithubFileContentResponse {
-    name: string;
+  name: string;
 
-    path: string;
+  path: string;
 
-    sha: string;
+  sha: string;
 
-    size: number;
+  size: number;
 
-    content?: string;
+  content?: string;
 
-    encoding?: string;
+  encoding?: string;
 }

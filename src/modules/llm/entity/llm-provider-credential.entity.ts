@@ -1,5 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm";
-import { LLMProvider } from "./llm-provider.entity";
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  OneToOne,
+  JoinColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { LLMProvider } from './llm-provider.entity';
 
 @Entity('llm_provider_credentials')
 export class LlmProviderCredential {

@@ -4,7 +4,7 @@ export interface GithubPullRequestFileResponse {
   filename: string;
 
   status: string;
-  
+
   additions: number;
 
   deletions: number;

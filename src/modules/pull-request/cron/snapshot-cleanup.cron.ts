@@ -1,6 +1,6 @@
-import { Injectable, Logger } from "@nestjs/common";
-import { SnapshotCleanupService } from "../service/sync/snapshot-cleanup/snapshot-cleanup.service";
-import { Cron, CronExpression } from "@nestjs/schedule";
+import { Injectable, Logger } from '@nestjs/common';
+import { SnapshotCleanupService } from '../service/sync/snapshot-cleanup/snapshot-cleanup.service';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class SnapshotCleanupCron {

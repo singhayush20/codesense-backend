@@ -1,10 +1,10 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class CreateTokenStorageSchema1777625248179 implements MigrationInterface {
-    name = 'CreateTokenStorageSchema1777625248179'
+  name = 'CreateTokenStorageSchema1777625248179';
 
-    public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`
             CREATE TABLE "llm_provider_credentials" (
                 "id" SERIAL NOT NULL,
                 "encrypted_config" text NOT NULL,
@@ -17,7 +17,7 @@ export class CreateTokenStorageSchema1777625248179 implements MigrationInterface
                 CONSTRAINT "PK_e28e493a8d193a9d3e7b89e1ba6" PRIMARY KEY ("id")
             )
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             CREATE TYPE "public"."provider_type_enum" AS ENUM(
                 'openai',
                 'anthropic',
@@ -27,7 +27,7 @@ export class CreateTokenStorageSchema1777625248179 implements MigrationInterface
                 'nvidia'
             )
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             CREATE TABLE "llm_providers" (
                 "id" SERIAL NOT NULL,
                 "public_id" uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -42,38 +42,37 @@ export class CreateTokenStorageSchema1777625248179 implements MigrationInterface
                 CONSTRAINT "PK_98a22bf2f8befea87081c600b3f" PRIMARY KEY ("id")
             )
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             CREATE INDEX "idx_llm_providers_user" ON "llm_providers" ("user_id")
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             ALTER TABLE "llm_provider_credentials"
             ADD CONSTRAINT "FK_7d14c349db2cc4fe53e54140ee9" FOREIGN KEY ("provider_id") REFERENCES "llm_providers"("id") ON DELETE CASCADE ON UPDATE NO ACTION
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             ALTER TABLE "llm_providers"
             ADD CONSTRAINT "FK_0eb496e627faa3f79eba3c16cdb" FOREIGN KEY ("user_id") REFERENCES "users"("user_id") ON DELETE CASCADE ON UPDATE NO ACTION
         `);
-    }
+  }
 
-    public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`
             ALTER TABLE "llm_providers" DROP CONSTRAINT "FK_0eb496e627faa3f79eba3c16cdb"
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             ALTER TABLE "llm_provider_credentials" DROP CONSTRAINT "FK_7d14c349db2cc4fe53e54140ee9"
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             DROP INDEX "public"."idx_llm_providers_user"
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             DROP TABLE "llm_providers"
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             DROP TYPE "public"."provider_type_enum"
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             DROP TABLE "llm_provider_credentials"
         `);
-    }
-
+  }
 }

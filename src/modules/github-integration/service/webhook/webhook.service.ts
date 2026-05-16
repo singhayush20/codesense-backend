@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  HttpStatus,
-} from '@nestjs/common';
+import { Injectable, Logger, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GithubWebhookUtil } from '../../utils/github-webhook.utils';
 import { AxiosError } from 'axios';
@@ -19,6 +15,7 @@ import { GithubRepository } from '../../entity/github-repo.entity';
 import { UserRepositorySelection } from '../../entity/user-repo-selection.entity';
 import { WebhookEvent } from '../../entity/github-webhook-event.entity';
 import { JsonObject } from '../../../../types/types';
+import { GithubInstallationPayload } from '../../dtos/github-api/github-installation.dto';
 
 @Injectable()
 export class GithubWebhookService {
@@ -33,7 +30,7 @@ export class GithubWebhookService {
     @InjectRepository(GithubInstallation)
     private readonly installationRepo: Repository<GithubInstallation>,
     @InjectRepository(WebhookEvent)
-    private readonly webhookEventRepo: Repository<WebhookEvent>
+    private readonly webhookEventRepo: Repository<WebhookEvent>,
   ) {}
 
   async handleEvent(
@@ -51,10 +48,14 @@ export class GithubWebhookService {
       this.logger.warn(`Duplicate webhook skipped: ${deliveryId}`);
       return;
     }
-    
-    const existsInDb = await this.webhookEventRepo.findOne({ where: { deliveryId, processed: true } });
+
+    const existsInDb = await this.webhookEventRepo.findOne({
+      where: { deliveryId, processed: true },
+    });
     if (existsInDb) {
-      this.logger.warn(`Duplicate webhook found in DB, skipping: ${deliveryId}`);
+      this.logger.warn(
+        `Duplicate webhook found in DB, skipping: ${deliveryId}`,
+      );
       return;
     }
 
@@ -98,7 +99,6 @@ export class GithubWebhookService {
       });
 
       await this.cacheService.set(key, true, 3600);
-  
 
       await this.routeEvent(event, payload);
     } catch (error) {
@@ -111,11 +111,14 @@ export class GithubWebhookService {
       case 'pull_request':
         await this.handlePullRequest(payload as GithubPullRequestPayload);
         break;
-      case 'installation':
-        if ((payload as any).action === 'deleted') {
-          await this.handleInstallationDeleted(payload);
+      case 'installation': {
+        const installationPayload: GithubInstallationPayload =
+          payload as GithubInstallationPayload;
+        if (installationPayload.action === 'deleted') {
+          await this.handleInstallationDeleted(installationPayload);
         }
         break;
+      }
       default:
         this.logger.debug(`Unhandled event: ${event}`);
     }
@@ -162,7 +165,9 @@ export class GithubWebhookService {
     );
   }
 
-  async handleInstallationDeleted(payload: any): Promise<void> {
+  async handleInstallationDeleted(
+    payload: GithubInstallationPayload,
+  ): Promise<void> {
     const installationId = payload.installation?.id?.toString();
 
     if (!installationId) {

@@ -22,7 +22,12 @@ import { AuthController } from './controller/auth.controller';
     }),
     UserModule,
   ],
-  providers: [AuthService, RefreshTokenService, RefreshTokenRepository, JwtStrategy],
+  providers: [
+    AuthService,
+    RefreshTokenService,
+    RefreshTokenRepository,
+    JwtStrategy,
+  ],
   controllers: [AuthController],
 })
 export class AuthModule {}

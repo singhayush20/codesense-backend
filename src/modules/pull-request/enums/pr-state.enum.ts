@@ -5,7 +5,6 @@ export enum PrState {
 }
 
 export function getPrStateFromString(state: string): PrState {
-  
   if (Object.values(PrState).includes(state as PrState)) {
     return state as PrState;
   }

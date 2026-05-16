@@ -45,7 +45,7 @@ export class RepoLlmConfigService {
 
     RepoConfigUtil.validateModel(dto.model);
 
-    var config = await this.repoConfigRepo
+    let config = await this.repoConfigRepo
       .createQueryBuilder('config')
       .innerJoinAndSelect('config.repository', 'repo')
       .innerJoinAndSelect('config.provider', 'provider')

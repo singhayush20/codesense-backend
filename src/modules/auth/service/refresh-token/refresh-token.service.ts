@@ -1,9 +1,6 @@
-import {
-  HttpStatus,
-  Injectable,
-} from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { randomUUID } from 'crypto';
+import { randomBytes, createHash, randomUUID } from 'crypto';
 import { AppException } from '../../../../exception-handling/app-exception.exception';
 import { ExceptionCodes } from '../../../../exception-handling/exception-codes';
 import { User } from '../../../user/entity/user.entity';
@@ -95,7 +92,11 @@ export class RefreshTokenService {
     const token = await this.findToken(refreshToken);
 
     if (!token) {
-      throw new AppException(ExceptionCodes.REFREH_TOKEN_NOT_PRESENT,'Invalid refresh token',HttpStatus.UNAUTHORIZED);
+      throw new AppException(
+        ExceptionCodes.REFREH_TOKEN_NOT_PRESENT,
+        'Invalid refresh token',
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     // Expiry check
@@ -185,17 +186,17 @@ export class RefreshTokenService {
   }
 
   private generateToken(): string {
-    return require('crypto')
-      .randomBytes(RefreshTokenService.TOKEN_BYTE_LENGTH)
-      .toString('base64url');
+    return randomBytes(RefreshTokenService.TOKEN_BYTE_LENGTH).toString(
+      'base64url',
+    );
   }
 
   private hashToken(token: string): string {
-    return require('crypto').createHash('sha256').update(token).digest('hex');
+    return createHash('sha256').update(token).digest('hex');
   }
 }
 
 class CreatedRefreshToken {
-    refreshToken!: RefreshToken;
-    refreshTokenIssue!: RefreshTokenIssueDto;
+  refreshToken!: RefreshToken;
+  refreshTokenIssue!: RefreshTokenIssueDto;
 }

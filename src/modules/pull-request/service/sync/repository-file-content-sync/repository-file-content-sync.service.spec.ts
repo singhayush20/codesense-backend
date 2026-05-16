@@ -9,7 +9,9 @@ describe('RepositoryFileContentSyncService', () => {
       providers: [RepositoryFileContentSyncService],
     }).compile();
 
-    service = module.get<RepositoryFileContentSyncService>(RepositoryFileContentSyncService);
+    service = module.get<RepositoryFileContentSyncService>(
+      RepositoryFileContentSyncService,
+    );
   });
 
   it('should be defined', () => {

@@ -5,7 +5,7 @@ import { ProviderType } from '../enums/provider.type';
 export class ProviderValidationService {
   async validate(
     providerType: ProviderType,
-    config: Record<string, any>,
+    config: Record<string, string>,
   ): Promise<boolean> {
     switch (providerType) {
       case ProviderType.OPENAI:

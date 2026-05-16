@@ -10,6 +10,7 @@ import {
 import { GithubWebhookService } from '../../service/webhook/webhook.service';
 import { AppException } from '../../../../exception-handling/app-exception.exception';
 import { ExceptionCodes } from '../../../../exception-handling/exception-codes';
+import * as githubWebhookPayloadDtos from '../../dtos/github-api/github-webhook-payload.dtos';
 
 @Controller('github-webhook')
 export class GithubWebhookController {
@@ -23,7 +24,7 @@ export class GithubWebhookController {
     @Headers('x-github-event') event: string,
     @Headers('x-hub-signature-256') signature: string,
     @Headers('x-github-delivery') deliveryId: string,
-    @Req() req: any,
+    @Req() req: githubWebhookPayloadDtos.GithubWebhookPayload,
   ): Promise<void> {
     if (!event || !signature || !deliveryId) {
       throw new AppException(
@@ -45,7 +46,7 @@ export class GithubWebhookController {
     const rawBuffer: Buffer = req.body;
 
     await this.webhookService.handleEvent(
-      event as any,
+      event,
       signature,
       deliveryId,
       rawBuffer,

@@ -1,15 +1,15 @@
 export class RepoLlmConfigResponseDto {
-    repoId!: string;
+  repoId!: string;
 
-    providerId!: string;
+  providerId!: string;
 
-    providerType!: string;
+  providerType!: string;
 
-    displayName!: string;
+  displayName!: string;
 
-    model!: string;
+  model!: string;
 
-    isActive!: boolean;
+  isActive!: boolean;
 
-    isValid!: boolean;
+  isValid!: boolean;
 }

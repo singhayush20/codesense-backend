@@ -1,4 +1,4 @@
-export default () => {
+const configuration = () => {
   const isProduction = process.env.NODE_ENV === 'production';
 
   return {
@@ -60,3 +60,7 @@ export default () => {
     },
   };
 };
+
+export default configuration;
+
+export type AppConfig = ReturnType<typeof configuration>;

@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -18,7 +17,6 @@ import { RoleTypes } from '../../user/enums/role-types.enums';
 import { RepoLlmConfigResponseDto } from '../dtos/repo-llm-config-response.dto';
 import { SetRepoConfigDto } from '../dtos/set-repo-config.dto';
 import { SuccessResponseDto } from '../dtos/success-response.dto';
-
 
 @Controller('repos/:repoId/llm-config')
 @UseGuards(JwtAuthGuard, RolesGuard)

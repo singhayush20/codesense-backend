@@ -28,7 +28,7 @@ export class GithubPrApiService {
       );
 
       const response = await firstValueFrom(
-        this.httpService.get(
+        this.httpService.get<GithubPullRequestResponse>(
           `https://api.github.com/repos/${repository.fullName}/pulls/${prNumber}`,
           {
             headers: {
@@ -84,7 +84,7 @@ export class GithubPrApiService {
         repositoryName,
         prNumber,
         status: error.response?.status,
-        response: error.response?.data,
+        message: JSON.stringify(error.response?.data),
       });
 
       throw new AppException(

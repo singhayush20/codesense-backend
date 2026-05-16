@@ -5,7 +5,10 @@ import { AxiosError } from 'axios';
 
 import { AppException } from '../../../exception-handling/app-exception.exception';
 import { ExceptionCodes } from '../../../exception-handling/exception-codes';
-import { GithubInstallationReposResponse, GithubRepoDto } from '../dtos/github-api/github-installation-repos-api-response.dto';
+import {
+  GithubInstallationReposResponse,
+  GithubRepoDto,
+} from '../dtos/github-api/github-installation-repos-api-response.dto';
 
 @Injectable()
 export class GithubApiService {

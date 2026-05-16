@@ -32,10 +32,11 @@ export class GithubRepoService {
     jwtUser: JwtUser,
     installationId: string,
   ): Promise<SyncReposResponseDto> {
-    const installation: GithubInstallation | null  = await this.installationRepo.findOne({
-      where: { installationId },
-      relations: ['account', 'account.user'],
-    });
+    const installation: GithubInstallation | null =
+      await this.installationRepo.findOne({
+        where: { installationId },
+        relations: ['account', 'account.user'],
+      });
 
     if (!installation) {
       throw new AppException(
@@ -82,18 +83,22 @@ export class GithubRepoService {
       page++;
     }
 
-    const entities = allRepos.map((repo) : GithubRepository =>
-      this.githubRepoRepository.create({
-        githubRepoId: repo.id.toString(),
-        name: repo.name,
-        fullName: repo.full_name,
-        installation,
-        isPrivate: repo.private,
-        permissions: repo.permissions,
-      }),
+    const entities = allRepos.map(
+      (repo): GithubRepository =>
+        this.githubRepoRepository.create({
+          githubRepoId: repo.id.toString(),
+          name: repo.name,
+          fullName: repo.full_name,
+          installation,
+          isPrivate: repo.private,
+          permissions: repo.permissions,
+        }),
     );
 
-    await this.githubRepoRepository.upsert(entities, ['githubRepoId', 'installation']);
+    await this.githubRepoRepository.upsert(entities, [
+      'githubRepoId',
+      'installation',
+    ]);
 
     const savedRepos = await this.githubRepoRepository.find({
       where: {
@@ -101,7 +106,7 @@ export class GithubRepoService {
         githubRepoId: In(entities.map((e) => e.githubRepoId)),
       },
     });
-    
+
     const repos: GithubRepoResponseDto[] = savedRepos.map(
       (repo): GithubRepoResponseDto => ({
         id: repo.id,
@@ -112,14 +117,16 @@ export class GithubRepoService {
         permissions: repo.permissions,
       }),
     );
-  
+
     return {
       total: repos.length,
       repositories: repos,
     };
   }
 
-  async getRepositoryByGithubRepoId(githubRepoId: string): Promise<GithubRepository | null> {
+  async getRepositoryByGithubRepoId(
+    githubRepoId: string,
+  ): Promise<GithubRepository | null> {
     return this.githubRepoRepository.findOne({
       where: { githubRepoId },
       relations: ['installation'],

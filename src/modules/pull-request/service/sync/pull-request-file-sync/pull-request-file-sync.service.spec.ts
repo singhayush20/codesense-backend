@@ -9,7 +9,9 @@ describe('PullRequestFileSyncService', () => {
       providers: [PullRequestFileSyncService],
     }).compile();
 
-    service = module.get<PullRequestFileSyncService>(PullRequestFileSyncService);
+    service = module.get<PullRequestFileSyncService>(
+      PullRequestFileSyncService,
+    );
   });
 
   it('should be defined', () => {

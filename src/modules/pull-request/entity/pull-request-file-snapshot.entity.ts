@@ -1,5 +1,13 @@
-import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { PullRequestFile } from "./pull-request-file.entity";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { PullRequestFile } from './pull-request-file.entity';
 
 @Entity('pull_request_file_snapshots')
 @Index(['expiresAt'])

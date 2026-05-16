@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   CanActivate,
   ExecutionContext,
@@ -17,7 +19,7 @@ export class RefreshTokenGuard implements CanActivate {
 
     const refreshToken = request.cookies?.codesense_refresh_token;
 
-    if (!refreshToken) {
+    if (typeof refreshToken !== 'string' || refreshToken.length === 0) {
       throw new AppException(
         ExceptionCodes.REFREH_TOKEN_NOT_PRESENT,
         'Refresh token missing',

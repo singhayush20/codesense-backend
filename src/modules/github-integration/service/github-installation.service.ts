@@ -18,11 +18,10 @@ import { GithubAppAuthService } from './github-app-auth.service';
 import { CacheService } from '../../../cache/cache.service';
 import { User } from '../../user/entity/user.entity';
 import { ConnectGithubResponseDto } from '../dtos/connect-response.dto';
-import {
-  GithubUserResponse,
-} from '../dtos/github-auth.dto';
+import { GithubUserResponse } from '../dtos/github-auth.dto';
 import { GithubInstallationResponse } from '../dtos/github-installation-response.dto';
 import { GithubAccountResponseDto } from '../dtos/github-account-response.dto';
+import { GithubAccessTokenResponse } from '../dtos/github-api/github-access-token-response.dto';
 
 @Injectable()
 export class GithubInstallationService {
@@ -281,7 +280,7 @@ export class GithubInstallationService {
     try {
       // Step 1: Exchange code for access token
       const tokenResponse = await firstValueFrom(
-        this.http.post(
+        this.http.post<GithubAccessTokenResponse>(
           'https://github.com/login/oauth/access_token',
           {
             client_id: this.config.get<string>('GITHUB_CLIENT_ID'),
