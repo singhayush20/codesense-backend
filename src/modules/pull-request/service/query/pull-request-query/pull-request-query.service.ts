@@ -64,7 +64,7 @@ export class PullRequestQueryService {
     };
   }
 
-  async findById(id: string): Promise<PullRequestDetailsDto | {}> {
+  async findById(id: string): Promise<PullRequestDetailsDto> {
     const pullRequest = await this.pullRequestRepository.findOne({
       where: {
         id,
@@ -72,7 +72,7 @@ export class PullRequestQueryService {
     });
 
     if (!pullRequest) {
-      return {};
+      return new PullRequestDetailsDto();
     }
 
     return PullRequestQueryMapper.toDetailDto(pullRequest);

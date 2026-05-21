@@ -40,9 +40,7 @@ export class PullRequestFileQueryService {
     return { files: fileDtos };
   }
 
-  async findFileContent(
-    fileId: string,
-  ): Promise<PullRequestFileContentDto | {}> {
+  async findFileContent(fileId: string): Promise<PullRequestFileContentDto> {
     const snapshot = await this.snapshotRepository.findOne({
       where: {
         pullRequestFile: {

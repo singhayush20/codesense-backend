@@ -9,7 +9,9 @@ describe('PullRequestQueryController', () => {
       controllers: [PullRequestQueryController],
     }).compile();
 
-    controller = module.get<PullRequestQueryController>(PullRequestQueryController);
+    controller = module.get<PullRequestQueryController>(
+      PullRequestQueryController,
+    );
   });
 
   it('should be defined', () => {
