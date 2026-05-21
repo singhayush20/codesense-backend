@@ -4,23 +4,23 @@ import Redis from 'ioredis';
 
 @Injectable()
 export class RedisService implements OnModuleDestroy {
-    private client: Redis;
+  private client: Redis;
 
-    constructor(private readonly configService: ConfigService) {
-        this.client = new Redis({
-          host: configService.get<string>('cache.redis.host'),
-          port: configService.get<number>('cache.redis.port'),
-          maxRetriesPerRequest: 3,
-          enableReadyCheck: true,
-          retryStrategy: (times) => Math.min(times * 50, 2000),
-        });
-    }
+  constructor(private readonly configService: ConfigService) {
+    this.client = new Redis({
+      host: configService.get<string>('cache.redis.host'),
+      port: configService.get<number>('cache.redis.port'),
+      maxRetriesPerRequest: 3,
+      enableReadyCheck: true,
+      retryStrategy: (times) => Math.min(times * 50, 2000),
+    });
+  }
 
-    getClient(): Redis {
-        return this.client;
-    }
+  getClient(): Redis {
+    return this.client;
+  }
 
-    async onModuleDestroy() {
-        await this.client.quit();
-    }
+  async onModuleDestroy() {
+    await this.client.quit();
+  }
 }

@@ -5,7 +5,6 @@ import { AppException } from '../../../exception-handling/app-exception.exceptio
 import { ExceptionCodes } from '../../../exception-handling/exception-codes';
 import fs from 'fs';
 import path from 'path';
-import { log } from 'console';
 
 @Injectable()
 export class GithubAppAuthService {
@@ -18,14 +17,18 @@ export class GithubAppAuthService {
   }
 
   private readonly logger = new Logger(GithubAppAuthService.name);
-  private readonly githubAppKey;
+  private readonly githubAppKey: string;
 
   generateAppJwt(): string {
     const appId = this.configService.get<string>('github.appId');
 
     if (!appId) {
       this.logger.error('GitHub App credentials are not properly configured.');
-      throw new AppException(ExceptionCodes.GITHUB_APP_CREDENTIALS_NOT_CONFIGURED, 'GitHub App credentials are not properly configured.',HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new AppException(
+        ExceptionCodes.GITHUB_APP_CREDENTIALS_NOT_CONFIGURED,
+        'GitHub App credentials are not properly configured.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
 
     return JwtUtil.generateGithubAppJwt(appId, this.githubAppKey);

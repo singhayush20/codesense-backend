@@ -80,12 +80,10 @@ export class RepositoryFileContentSyncService {
         } catch (error) {
           this.logger.warn({
             message: 'error when fetching file content, skipping snapshot',
-
             repository: repository.fullName,
-
             pullRequestId: pullRequest.id,
-
             fileName: file.fileName,
+            error: error instanceof Error ? error.stack : undefined,
           });
 
           return null;

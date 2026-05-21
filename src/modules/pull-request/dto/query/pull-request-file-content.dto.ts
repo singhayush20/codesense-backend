@@ -1,7 +1,7 @@
-export interface PullRequestFileContentDto {
-    fileId: string;
+export class PullRequestFileContentDto {
+  fileId?: string;
 
-    content: string;
+  content?: string;
 
-    sha: string;
+  sha?: string;
 }

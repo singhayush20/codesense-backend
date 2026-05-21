@@ -167,8 +167,8 @@ export class GithubController {
 
   @Get('github-auth-token')
   @Roles(RoleTypes.ROLE_USER)
-  async getGithubAuthTokenForInstallationId(): Promise<{ authToken: string }> {
-    const token = await this.tokenService.generateAppJwt();
+  getGithubAuthTokenForInstallationId(): { authToken: string } {
+    const token = this.tokenService.generateAppJwt();
     return { authToken: token };
   }
 

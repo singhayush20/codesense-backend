@@ -27,7 +27,7 @@ export class UserRepository {
     return this.repo.save(user);
   }
 
-  async create(data: Partial<User>): Promise<User> {
+  create(data: Partial<User>): User {
     return this.repo.create(data);
   }
 }

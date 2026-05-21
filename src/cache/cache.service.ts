@@ -3,7 +3,7 @@ import { RedisService } from './redis/redis.service';
 
 @Injectable()
 export class CacheService {
-  private readonly logger;
+  private readonly logger: Logger;
 
   constructor(private readonly redisService: RedisService) {
     this.logger = new Logger(CacheService.name);
@@ -18,7 +18,7 @@ export class CacheService {
 
     if (data) {
       this.logger.debug(`[CACHE HIT] ${key}`);
-      return JSON.parse(data);
+      return JSON.parse(data) as T;
     }
 
     this.logger.debug(`[CACHE MISS] ${key}`);
@@ -37,7 +37,11 @@ export class CacheService {
     }
   }
 
-  async setIfNotExists(key: string, value: any, ttlSeconds?: number): Promise<boolean> {
+  async setIfNotExists(
+    key: string,
+    value: any,
+    ttlSeconds?: number,
+  ): Promise<boolean> {
     const serialized = JSON.stringify(value);
     let result;
 

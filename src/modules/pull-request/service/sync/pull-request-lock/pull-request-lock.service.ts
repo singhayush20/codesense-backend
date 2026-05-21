@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { CacheService } from '../../../../../cache/cache.service';
 
 /**
- * This service will be used to manage locks for pull request processing to ensure that only one process is handling a 
- * pull request at any given time. This is important to prevent race conditions and ensure data consistency when 
- * multiple events related to the same pull request are received in quick succession. This is important to manage 
+ * This service will be used to manage locks for pull request processing to ensure that only one process is handling a
+ * pull request at any given time. This is important to prevent race conditions and ensure data consistency when
+ * multiple events related to the same pull request are received in quick succession. This is important to manage
  * multiple events like:
  * 1. duplicate syncs
  * 2. concurrent ai processing

@@ -15,12 +15,13 @@ import { AuthTokenResponseDto } from '../dto/auth-token-response.dto';
 import { JwtAuthGuard } from '../guards/jwt.guard';
 import { RefreshTokenGuard } from '../guards/refresh-token.guard';
 import { AuthService } from '../service/auth/auth.service';
+import { AppConfig } from '../../../config/configuration';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService<AppConfig>,
   ) {}
 
   @Get('oauth2/google')
@@ -39,7 +40,11 @@ export class AuthController {
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ): Promise<AuthSuccessResponseDto> {
-    const refreshToken = request.cookies?.codesense_refresh_token;
+    const cookies = request.cookies as {
+      codesense_refresh_token?: string;
+    };
+
+    const refreshToken = cookies.codesense_refresh_token;
 
     const tokens = await this.authService.refresh(refreshToken);
     this.setAuthCookies(response, tokens);
@@ -54,7 +59,11 @@ export class AuthController {
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ): Promise<AuthSuccessResponseDto> {
-    const refreshToken = request.cookies?.codesense_refresh_token;
+    const cookies = request.cookies as {
+      codesense_refresh_token?: string;
+    };
+
+    const refreshToken = cookies.codesense_refresh_token;
 
     await this.authService.logout(refreshToken);
 
@@ -67,8 +76,11 @@ export class AuthController {
     response: Response,
     tokens: AuthTokenResponseDto,
   ): void {
-    const cookieConfig = this.configService.get('cookies');
-    const tokenMaxAge = this.configService.get('cookies.maxAge');
+    const cookieConfig = this.configService.get(
+      'cookies',
+    ) as AppConfig['cookies'];
+
+    const tokenMaxAge = cookieConfig.maxAge;
 
     const baseOptions = {
       httpOnly: true,
@@ -90,7 +102,9 @@ export class AuthController {
   }
 
   private clearAuthCookies(response: Response): void {
-    const cookieConfig = this.configService.get('cookies');
+    const cookieConfig = this.configService.get(
+      'cookies',
+    ) as AppConfig['cookies'];
 
     const options = {
       path: cookieConfig.path,

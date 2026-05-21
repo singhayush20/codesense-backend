@@ -3,7 +3,6 @@ import {
   PrimaryGeneratedColumn,
   ManyToOne,
   JoinColumn,
-  Column,
   Index,
   CreateDateColumn,
 } from 'typeorm';
@@ -18,7 +17,7 @@ export class UserRole {
 
   @ManyToOne(() => User, (user) => user.userRoles, {
     onDelete: 'CASCADE',
-    eager: true, 
+    eager: true,
   })
   @JoinColumn({ name: 'user_id' })
   user!: User;

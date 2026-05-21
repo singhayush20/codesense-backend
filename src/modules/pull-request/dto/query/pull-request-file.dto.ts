@@ -1,15 +1,15 @@
-import { PrFileState } from "../../enums/pr-file-state.enum";
+import { PrFileState } from '../../enums/pr-file-state.enum';
 
 export interface PullRequestFileDto {
-    id: string;
+  id: string;
 
-    fileName: string;
+  fileName: string;
 
-    status: PrFileState;
+  status: PrFileState;
 
-    additions: number;
+  additions: number;
 
-    deletions: number;
+  deletions: number;
 
-    patch?: string;
+  patch?: string;
 }

@@ -25,18 +25,15 @@ export class PullRequestFileSyncService {
       (file) => !this.prFileFilterService.shouldIgnore(file.filename),
     );
 
-    if(!filteredFiles.length) {
+    if (!filteredFiles.length) {
       return [];
     }
 
-    const entities = filteredFiles.map(
-        (file) => manager.create(
-            PullRequestFile,
-            PullRequestMapper.fileToEntity(
-                pullRequest,
-                file,
-            )
-        )
+    const entities = filteredFiles.map((file) =>
+      manager.create(
+        PullRequestFile,
+        PullRequestMapper.fileToEntity(pullRequest, file),
+      ),
     );
 
     return await manager.save(PullRequestFile, entities);

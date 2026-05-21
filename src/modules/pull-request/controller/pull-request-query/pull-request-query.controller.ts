@@ -19,7 +19,6 @@ import { PullRequestFileListDto } from '../../dto/query/pull-request-file-list.d
 export class PullRequestQueryController {
   constructor(
     private readonly pullRequestQueryService: PullRequestQueryService,
-
     private readonly pullRequestFileQueryService: PullRequestFileQueryService,
   ) {}
 
@@ -37,7 +36,7 @@ export class PullRequestQueryController {
   async findById(
     @Param('id')
     id: string,
-  ): Promise<PullRequestDetailsDto | {}> {
+  ): Promise<PullRequestDetailsDto> {
     return this.pullRequestQueryService.findById(id);
   }
 
@@ -46,7 +45,7 @@ export class PullRequestQueryController {
   async findFiles(
     @Param('id')
     id: string,
-  ) : Promise<PullRequestFileListDto> {
+  ): Promise<PullRequestFileListDto> {
     return this.pullRequestFileQueryService.findFilesByPullRequestId(id);
   }
 
@@ -55,7 +54,7 @@ export class PullRequestQueryController {
   async findFileContent(
     @Param('fileId')
     fileId: string,
-  ) : Promise<PullRequestFileContentDto | {}> {
+  ): Promise<PullRequestFileContentDto> {
     return this.pullRequestFileQueryService.findFileContent(fileId);
   }
 }

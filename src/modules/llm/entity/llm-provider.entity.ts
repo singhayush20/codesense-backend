@@ -1,7 +1,18 @@
-import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
-import { User } from "../../user/entity/user.entity";
-import { ProviderType } from "../enums/provider.type";
-import { LlmProviderCredential } from "./llm-provider-credential.entity";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  Unique,
+  UpdateDateColumn,
+} from 'typeorm';
+import { User } from '../../user/entity/user.entity';
+import { ProviderType } from '../enums/provider.type';
+import { LlmProviderCredential } from './llm-provider-credential.entity';
 
 @Entity('llm_providers')
 @Index('idx_llm_providers_user', ['user'])

@@ -51,7 +51,9 @@ export class GithubInstallationTokenService {
 
       responseData = response.data;
     } catch (error) {
-      this.logger.error(`Failed to generate installation token ${error instanceof Error ? error.message : 'unknown error'}`);
+      this.logger.error(
+        `Failed to generate installation token ${error instanceof Error ? error.message : 'unknown error'}`,
+      );
 
       throw new AppException(
         ExceptionCodes.GITHUB_API_ERROR,
@@ -59,7 +61,7 @@ export class GithubInstallationTokenService {
         HttpStatus.BAD_GATEWAY,
       );
     }
-    
+
     const token = responseData.token;
 
     // Calculate TTL dynamically (IMPORTANT)

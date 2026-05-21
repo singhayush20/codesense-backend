@@ -1,7 +1,7 @@
-import { HttpStatus, Injectable } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { AppException } from "../../../exception-handling/app-exception.exception";
-import { ExceptionCodes } from "../../../exception-handling/exception-codes";
+import { HttpStatus, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { AppException } from '../../../exception-handling/app-exception.exception';
+import { ExceptionCodes } from '../../../exception-handling/exception-codes';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -62,7 +62,7 @@ export class EncryptionService {
         decipher.final(), // performs the actual verification against the Auth Tag. If the tag doesn't match the data, it throws an error immediately.
       ]);
 
-      return JSON.parse(decrypted.toString()); // Converts the decrypted raw bytes back into a UTF-8 string, and parses that JSON string back into the original JavaScript object/type.
+      return JSON.parse(decrypted.toString()) as T; // Converts the decrypted raw bytes back into a UTF-8 string, and parses that JSON string back into the original JavaScript object/type.
     } catch {
       throw new AppException(
         ExceptionCodes.KEY_DECRYPTION_FAILED,

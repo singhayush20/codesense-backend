@@ -1,4 +1,4 @@
-import { PullRequestFileDto } from "./pull-request-file.dto";
+import { PullRequestFileDto } from './pull-request-file.dto';
 
 export interface PullRequestFileListDto {
   files: PullRequestFileDto[];

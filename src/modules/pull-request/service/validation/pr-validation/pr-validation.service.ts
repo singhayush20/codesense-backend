@@ -3,24 +3,32 @@ import { GithubSelectionService } from '../../../../github-integration/service/g
 
 @Injectable()
 export class PrValidationService {
-    private readonly logger = new Logger(PrValidationService.name);
+  private readonly logger = new Logger(PrValidationService.name);
 
-    constructor(
-        private readonly githubSelectionService: GithubSelectionService,
-    ) {}
+  constructor(
+    private readonly githubSelectionService: GithubSelectionService,
+  ) {}
 
-    async validatePullRequestRepoSelection(
-        installationId: string,
-        repositoryId: string,
-    ) : Promise<boolean> {
-        this.logger.debug(`Validation pull request repository selection for installation ${installationId} and repository ${repositoryId}`);
-        const isRepoSelectedInInstallation = await this.githubSelectionService.isRepoSelectedForInstallation(repositoryId, installationId);
+  async validatePullRequestRepoSelection(
+    installationId: string,
+    repositoryId: string,
+  ): Promise<boolean> {
+    this.logger.debug(
+      `Validation pull request repository selection for installation ${installationId} and repository ${repositoryId}`,
+    );
+    const isRepoSelectedInInstallation =
+      await this.githubSelectionService.isRepoSelectedForInstallation(
+        repositoryId,
+        installationId,
+      );
 
-        if(!isRepoSelectedInInstallation) {
-            this.logger.debug(`Repository ${repositoryId} is not selected for installation ${installationId}`);
-            return false;
-        }
-
-        return true;
+    if (!isRepoSelectedInInstallation) {
+      this.logger.debug(
+        `Repository ${repositoryId} is not selected for installation ${installationId}`,
+      );
+      return false;
     }
+
+    return true;
+  }
 }

@@ -32,30 +32,31 @@ export class LlmProviderService {
       relations: ['credential'],
     });
 
-    const mappedProviders: ProviderResponseDto[] = providers.map((provider: LLMProvider): ProviderResponseDto => ({
-      id: provider.publicId,
-      providerType: provider.providerType,
-      displayName: provider.displayName,
-      isActive: provider.isActive,
-      isValid: provider.credential?.isValid ?? false,
-      keyFingerprint: provider.credential?.keyFingerprint || null,
-    }));
-
-    const groupedByType = mappedProviders.reduce(
-      (acc, provider) => {
-        const existing = acc.find((g) => g.providerType === provider.providerType);
-        if (existing) {
-          existing.providers.push(provider);
-        } else {
-          acc.push({
-            providerType: provider.providerType,
-            providers: [provider],
-          });
-        }
-        return acc;
-      },
-      [] as ProviderListResponseDto[],
+    const mappedProviders: ProviderResponseDto[] = providers.map(
+      (provider: LLMProvider): ProviderResponseDto => ({
+        id: provider.publicId,
+        providerType: provider.providerType,
+        displayName: provider.displayName,
+        isActive: provider.isActive,
+        isValid: provider.credential?.isValid ?? false,
+        keyFingerprint: provider.credential?.keyFingerprint || null,
+      }),
     );
+
+    const groupedByType = mappedProviders.reduce((acc, provider) => {
+      const existing = acc.find(
+        (g) => g.providerType === provider.providerType,
+      );
+      if (existing) {
+        existing.providers.push(provider);
+      } else {
+        acc.push({
+          providerType: provider.providerType,
+          providers: [provider],
+        });
+      }
+      return acc;
+    }, [] as ProviderListResponseDto[]);
 
     return groupedByType;
   }

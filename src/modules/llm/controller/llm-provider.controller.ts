@@ -16,7 +16,10 @@ import { ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorator/roles.decorator';
 import { RoleTypes } from '../../user/enums/role-types.enums';
-import { ProviderListResponseDto, ProviderResponseDto } from '../dtos/provider-response.dto';
+import {
+  ProviderListResponseDto,
+  ProviderResponseDto,
+} from '../dtos/provider-response.dto';
 import { SuccessResponseDto } from '../dtos/success-response.dto';
 import * as currentUserDecorator from '../../auth/decorator/current-user.decorator';
 import { ProviderMapper } from '../mapper/provider-model-to-dto.mapper';

@@ -1,10 +1,10 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class PrProcessingTables1778316842730 implements MigrationInterface {
-    name = 'PrProcessingTables1778316842730'
+  name = 'PrProcessingTables1778316842730';
 
-    public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`
             CREATE TABLE "pull_request_reviews" (
                 "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
                 "provider" character varying NOT NULL,
@@ -16,7 +16,7 @@ export class PrProcessingTables1778316842730 implements MigrationInterface {
                 CONSTRAINT "PK_0087e7a1da7acd51cf61ab581fd" PRIMARY KEY ("id")
             )
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             CREATE TABLE "pull_requests" (
                 "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
                 "pr_number" integer NOT NULL,
@@ -34,7 +34,7 @@ export class PrProcessingTables1778316842730 implements MigrationInterface {
                 CONSTRAINT "PK_e8a8aa8710c3a9650a19a9c2e7b" PRIMARY KEY ("id")
             )
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             CREATE TABLE "pull_request_files" (
                 "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
                 "file_name" character varying(255) NOT NULL,
@@ -48,7 +48,7 @@ export class PrProcessingTables1778316842730 implements MigrationInterface {
                 CONSTRAINT "PK_cb948511c9f227222276ef4361a" PRIMARY KEY ("id")
             )
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             CREATE TABLE "github_webhook_events" (
                 "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
                 "delivery_id" character varying NOT NULL,
@@ -60,66 +60,65 @@ export class PrProcessingTables1778316842730 implements MigrationInterface {
                 CONSTRAINT "PK_87a04871aa8ff67de94ddf83d7c" PRIMARY KEY ("id")
             )
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             CREATE UNIQUE INDEX "IDX_6f84956d95adbb7d37ec68e544" ON "github_webhook_events" ("delivery_id")
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             ALTER TABLE "llm_providers"
             ALTER COLUMN "public_id" DROP DEFAULT
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             ALTER TABLE "llm_providers"
             ALTER COLUMN "public_id"
             SET DEFAULT gen_random_uuid()
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             ALTER TABLE "pull_request_reviews"
             ADD CONSTRAINT "FK_f1bb594f90bb45eb49852a59407" FOREIGN KEY ("pull_request_id") REFERENCES "pull_requests"("id") ON DELETE CASCADE ON UPDATE NO ACTION
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             ALTER TABLE "pull_requests"
             ADD CONSTRAINT "FK_292d27c87db892edc6e3a59bcdb" FOREIGN KEY ("repo_id") REFERENCES "github_repositories"("id") ON DELETE CASCADE ON UPDATE NO ACTION
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             ALTER TABLE "pull_request_files"
             ADD CONSTRAINT "FK_ec1c31cf4ed9f61552a51dfbef2" FOREIGN KEY ("pull_request_id") REFERENCES "pull_requests"("id") ON DELETE CASCADE ON UPDATE NO ACTION
         `);
-    }
+  }
 
-    public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`
             ALTER TABLE "pull_request_files" DROP CONSTRAINT "FK_ec1c31cf4ed9f61552a51dfbef2"
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             ALTER TABLE "pull_requests" DROP CONSTRAINT "FK_292d27c87db892edc6e3a59bcdb"
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             ALTER TABLE "pull_request_reviews" DROP CONSTRAINT "FK_f1bb594f90bb45eb49852a59407"
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             ALTER TABLE "llm_providers"
             ALTER COLUMN "public_id" DROP DEFAULT
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             ALTER TABLE "llm_providers"
             ALTER COLUMN "public_id"
             SET DEFAULT uuid_generate_v4()
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             DROP INDEX "public"."IDX_6f84956d95adbb7d37ec68e544"
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             DROP TABLE "github_webhook_events"
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             DROP TABLE "pull_request_files"
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             DROP TABLE "pull_requests"
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             DROP TABLE "pull_request_reviews"
         `);
-    }
-
+  }
 }

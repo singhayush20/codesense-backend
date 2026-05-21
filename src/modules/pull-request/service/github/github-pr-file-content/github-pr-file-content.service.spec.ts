@@ -9,7 +9,9 @@ describe('GithubPrFileContentService', () => {
       providers: [GithubPrFileContentService],
     }).compile();
 
-    service = module.get<GithubPrFileContentService>(GithubPrFileContentService);
+    service = module.get<GithubPrFileContentService>(
+      GithubPrFileContentService,
+    );
   });
 
   it('should be defined', () => {

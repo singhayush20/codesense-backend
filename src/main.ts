@@ -9,7 +9,6 @@ import cookieParser from 'cookie-parser';
 import * as bodyParser from 'body-parser';
 import * as express from 'express';
 
-
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
@@ -75,4 +74,8 @@ async function bootstrap() {
 
   await app.listen(process.env.PORT ?? 3000);
 }
-bootstrap();
+
+void bootstrap().catch((error: unknown) => {
+  console.error('Application failed to start', error);
+  process.exit(1);
+});

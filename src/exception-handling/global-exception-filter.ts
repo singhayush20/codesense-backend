@@ -6,7 +6,6 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { ExceptionCodes } from './exception-codes';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -21,12 +20,17 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
+
       const res = exception.getResponse();
 
-      if (typeof res === 'object') {
-        const r = res as any;
-        code = r.code || code;
-        message = r.message || message;
+      if (typeof res === 'object' && res !== null) {
+        const r = res as {
+          code?: string;
+          message?: string;
+        };
+
+        code = r.code ?? code;
+        message = r.message ?? message;
       } else {
         message = res;
       }

@@ -1,7 +1,17 @@
-import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { UserRepositorySelection } from "./user-repo-selection.entity";
-import { GithubInstallation } from "./github-installation.entity";
-import { PullRequest } from "../../pull-request/entity/pull-request.entity";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { UserRepositorySelection } from './user-repo-selection.entity';
+import { GithubInstallation } from './github-installation.entity';
+import { PullRequest } from '../../pull-request/entity/pull-request.entity';
 
 /**
  * Represents repositories accessible via a GitHub installation.

@@ -1,11 +1,11 @@
 export interface PaginatedResponseDto<T> {
-    items: T[];
+  items: T[];
 
-    total: number;
+  total: number;
 
-    page: number;
+  page: number;
 
-    limit: number;
+  limit: number;
 
-    totalPages: number;
+  totalPages: number;
 }
