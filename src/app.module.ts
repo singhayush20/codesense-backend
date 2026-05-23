@@ -13,6 +13,7 @@ import { QueueModule } from './queue/queue.module';
 import { LlmModule } from './modules/llm/llm.module';
 import { PullRequestModule } from './modules/pull-request/pull-request.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { CodeProcessingModule } from './modules/code-processing/code-processing.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     QueueModule,
     LlmModule,
     PullRequestModule,
+    CodeProcessingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

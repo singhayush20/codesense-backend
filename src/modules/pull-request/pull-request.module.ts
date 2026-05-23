@@ -22,6 +22,14 @@ import { PullRequestFileSnapshot } from './entity/pull-request-file-snapshot.ent
 import { PullRequestQueryService } from './service/query/pull-request-query/pull-request-query.service';
 import { PullRequestFileQueryService } from './service/query/pull-request-file-query/pull-request-file-query.service';
 import { PullRequestQueryController } from './controller/pull-request-query/pull-request-query.controller';
+import { DiffParserService } from './service/diff-parser/diff-parser.service';
+import { PrAstProcessingService } from './service/pr-ast-processing/pr-ast-processing.service';
+import { PrDiffMapperService } from './service/pr-diff-mapper/pr-diff-mapper.service';
+import { CodeProcessingModule } from '../code-processing/code-processing.module';
+import { RepositoryIndexingService } from './service/repository-indexer/repository-indexer.service';
+import { PrContextBuilderService } from './service/context-builder/context-builder.service';
+import { PrCodeParsingService } from './service/orchestration/pr-code-parsing/pr-code-parsing.service';
+import { CodeParserController } from './controller/code-parser/code-parser.controller';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -36,6 +44,7 @@ import { PullRequestQueryController } from './controller/pull-request-query/pull
     BullModule.registerQueue({
       name: 'code-review',
     }),
+    CodeProcessingModule,
   ],
   providers: [
     PrWorkflowService,
@@ -51,8 +60,14 @@ import { PullRequestQueryController } from './controller/pull-request-query/pull
     SnapshotCleanupCron,
     PullRequestQueryService,
     PullRequestFileQueryService,
+    DiffParserService,
+    PrAstProcessingService,
+    PrDiffMapperService,
+    RepositoryIndexingService,
+    PrContextBuilderService,
+    PrCodeParsingService,
   ],
-  controllers: [PullRequestQueryController],
+  controllers: [PullRequestQueryController, CodeParserController],
   exports: [PrWorkflowService],
 })
 export class PullRequestModule {}
