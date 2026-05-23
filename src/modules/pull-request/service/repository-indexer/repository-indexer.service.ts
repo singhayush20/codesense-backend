@@ -14,12 +14,14 @@ export class RepositoryIndexingService {
   async indexFile(filePath: string, source: string): Promise<void> {
     const parsed = await this.astParserService.parseFile(filePath, source);
 
-    const symbols = SymbolExtractorUtil.extractSymbols(
-      filePath,
-      parsed.language,
-      parsed.rootNode,
-    );
+    if (parsed && parsed.rootNode && parsed.language) {
+      const symbols = SymbolExtractorUtil.extractSymbols(
+        filePath,
+        parsed?.language,
+        parsed?.rootNode,
+      );
 
-    this.repositorySymbolIndexService.addSymbols(symbols);
+      this.repositorySymbolIndexService.addSymbols(symbols);
+    }
   }
 }

@@ -1,8 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { ParsedPrFileDto } from '../../../pull-request/dto/parsing/parsed-pr-file-data.dto';
-import { SymbolDefinitionDto } from '../../dtos/symbol-definition.dto';
-import { AstNodeUtil } from '../../utils/ast-node.util';
+
 import Parser from 'web-tree-sitter';
+
+import { ParsedPrFileDto } from '../../../pull-request/dto/parsing/parsed-pr-file-data.dto';
+
+import { SymbolDefinitionDto } from '../../dtos/symbol-definition.dto';
+
+import { AstNodeUtil } from '../../utils/ast-node.util';
 
 @Injectable()
 export class SymbolDefinitionService {
@@ -11,6 +15,13 @@ export class SymbolDefinitionService {
     parsedFiles: ParsedPrFileDto[],
   ): SymbolDefinitionDto | null {
     for (const file of parsedFiles) {
+      /**
+       * RAW_TEXT files do not have ASTs.
+       */
+      if (!file.rootNode) {
+        continue;
+      }
+
       const definition = this.searchNode(file, file.rootNode, symbolName);
 
       if (definition) {
@@ -31,10 +42,15 @@ export class SymbolDefinitionService {
     if (nameNode?.text === symbolName) {
       return {
         filePath: file.filePath,
+
         symbolName,
+
         nodeType: node.type,
+
         startLine: node.startPosition.row + 1,
+
         endLine: node.endPosition.row + 1,
+
         content: AstNodeUtil.getNodeText(file.source, node),
       };
     }

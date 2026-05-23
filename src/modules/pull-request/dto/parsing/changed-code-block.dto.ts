@@ -1,7 +1,7 @@
 export interface ChangedCodeBlockDto {
   filePath: string;
 
-  language: string;
+  language?: string | null;
 
   nodeType: string;
 

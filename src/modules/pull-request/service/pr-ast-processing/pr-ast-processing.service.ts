@@ -20,10 +20,10 @@ export class PrAstProcessingService {
     return {
       fileId: file.id,
       filePath: file.filePath,
-      language: parsed.language,
+      language: parsed?.language,
       source: file.content,
       patch: file.patch,
-      tree: parsed.tree,
+      tree: parsed?.tree,
       rootNode: parsed?.rootNode,
     };
   }

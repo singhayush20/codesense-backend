@@ -5,13 +5,13 @@ export interface ParsedPrFileDto {
 
   filePath: string;
 
-  language: string;
+  language?: string | null;
 
   source: string;
 
   patch?: string;
 
-  tree: Parser.Tree;
+  tree?: Parser.Tree | null;
 
-  rootNode: Parser.Node;
+  rootNode?: Parser.Node | null;
 }

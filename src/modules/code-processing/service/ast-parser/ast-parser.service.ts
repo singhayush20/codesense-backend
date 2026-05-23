@@ -4,6 +4,8 @@ import { LanguageDetectorService } from '../language-detector/language-detector.
 import { ParserRuntimeService } from '../runtime-parser/runtime-parser.service';
 import { Tree } from 'web-tree-sitter';
 import { AstParsingException } from '../../../../exception-handling/ast-parsing.exception';
+import { FileProcessingStrategy } from '../../enums/file-processing-strategy.enum';
+import { FileProcessingUtil } from '../../utils/file-processing-strategy.util';
 
 @Injectable()
 export class AstParserService {
@@ -12,7 +14,33 @@ export class AstParserService {
     private readonly parserRuntimeService: ParserRuntimeService,
   ) {}
 
-  async parseFile(filePath: string, source: string): Promise<ParsedFileDto> {
+  async parseFile(
+    filePath: string,
+    source: string,
+  ): Promise<ParsedFileDto | null> {
+    const processingStrategy =
+      FileProcessingUtil.determineProcessingStrategy(filePath);
+
+    if (processingStrategy === FileProcessingStrategy.SKIP) {
+      return null;
+    }
+
+    if (processingStrategy === FileProcessingStrategy.RAW_TEXT) {
+      return {
+        filePath,
+
+        language: 'text',
+
+        source,
+
+        tree: null,
+
+        rootNode: null,
+
+        hasErrors: false,
+      };
+    }
+
     await this.parserRuntimeService.initialize();
 
     const language = this.languageDetectorService.detectLanguage(

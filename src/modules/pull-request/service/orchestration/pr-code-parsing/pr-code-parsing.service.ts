@@ -50,11 +50,8 @@ export class PrCodeParsingService {
       const parsedFile = await this.prAstProcessingService.parsePullRequestFile(
         {
           id: file.id,
-
           filePath: file.fileName,
-
           content: latestSnapshot.content,
-
           patch: file.patch,
         },
       );
@@ -67,16 +64,13 @@ export class PrCodeParsingService {
 
       fileContexts.push({
         fileId: file.id,
-
         filePath: file.fileName,
-
         reviewContext,
       });
     }
 
     return {
       pullRequestId,
-
       files: fileContexts,
     };
   }

@@ -13,6 +13,17 @@ export class PrDiffMapperService {
   constructor(private readonly diffParserService: DiffParserService) {}
 
   extractChangedBlocks(parsedFile: ParsedPrFileDto): ChangedCodeBlockDto[] {
+    /**
+     * RAW_TEXT files or skipped files
+     * do not have AST nodes.
+     */
+    if (!parsedFile.rootNode) {
+      return [];
+    }
+
+    /**
+     * No patch available.
+     */
     if (!parsedFile.patch) {
       return [];
     }
@@ -46,7 +57,7 @@ export class PrDiffMapperService {
 
         blocks.set(key, {
           filePath: parsedFile.filePath,
-          language: parsedFile.language,
+          language: parsedFile?.language,
           nodeType: meaningfulNode.type,
           startLine: meaningfulNode.startPosition.row + 1,
           endLine: meaningfulNode.endPosition.row + 1,

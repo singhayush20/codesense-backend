@@ -25,6 +25,10 @@ export class LanguageDetectorService {
       return 'make';
     }
 
+    if (fileName == '.gitignore') {
+      return 'gitignore';
+    }
+
     // simple shebang detection
     if (content?.startsWith('#!/')) {
       if (content.includes('python')) {
