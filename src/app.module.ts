@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ClsModule } from 'nestjs-cls';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -14,6 +15,10 @@ import { LlmModule } from './modules/llm/llm.module';
 import { PullRequestModule } from './modules/pull-request/pull-request.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CodeProcessingModule } from './modules/code-processing/code-processing.module';
+import { AiModule } from './modules/ai/ai.module';
+import { RequestContextService } from './modules/request-context/service/request-context/request-context.service';
+import { randomUUID } from 'crypto';
+import { RequestContextModule } from './modules/request-context/request-context.module';
 
 @Module({
   imports: [
@@ -36,14 +41,37 @@ import { CodeProcessingModule } from './modules/code-processing/code-processing.
         username: config.get<string>('database.username'),
         password: config.get<string>('database.password'),
         database: config.get<string>('database.name'),
-
         autoLoadEntities: true,
-
         synchronize: false, // ALWAYS false (we use migrations)
         logging: ['error', 'warn'],
         retryAttempts: 1,
         retryDelay: 0,
       }),
+    }),
+    ClsModule.forRoot({
+      global: true,
+      middleware: {
+        mount: true,
+        setup: (cls, req: Request) => {
+          const rawHeader = req.headers['x-request-id'] as
+            | string
+            | string[]
+            | undefined;
+
+          let requestId: string | undefined;
+
+          if (typeof rawHeader === 'string') {
+            requestId = rawHeader;
+          } else if (
+            Array.isArray(rawHeader) &&
+            typeof rawHeader[0] === 'string'
+          ) {
+            requestId = rawHeader[0];
+          }
+
+          cls.set('requestId', requestId ?? randomUUID());
+        },
+      },
     }),
     UserModule,
     CacheModule,
@@ -53,8 +81,10 @@ import { CodeProcessingModule } from './modules/code-processing/code-processing.
     LlmModule,
     PullRequestModule,
     CodeProcessingModule,
+    AiModule,
+    RequestContextModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, RequestContextService],
 })
 export class AppModule {}

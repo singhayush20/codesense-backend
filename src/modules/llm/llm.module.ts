@@ -11,6 +11,9 @@ import { RepoLlmConfig } from './entity/repo-llm-config.entity';
 import { GithubIntegrationModule } from '../github-integration/github-integration.module';
 import { RepoLlmConfigService } from './service/repo-llm-config.service';
 import { RepoLlmConfigController } from './controller/repo-llm-config.controller';
+import { AiModule } from '../ai/ai.module';
+import { LlmCallsController } from './controller/llm-calls/llm-calls.controller';
+import { LlmService } from './service/llm-call.service';
 
 @Module({
   imports: [
@@ -20,14 +23,20 @@ import { RepoLlmConfigController } from './controller/repo-llm-config.controller
       RepoLlmConfig,
     ]),
     GithubIntegrationModule,
+    AiModule,
   ],
-  controllers: [LlmProviderController, RepoLlmConfigController],
+  controllers: [
+    LlmProviderController,
+    RepoLlmConfigController,
+    LlmCallsController,
+  ],
   providers: [
     EncryptionService,
     CredentialService,
     ProviderValidationService,
     LlmProviderService,
     RepoLlmConfigService,
+    LlmService,
   ],
 })
 export class LlmModule {}
