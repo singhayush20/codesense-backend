@@ -1,21 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
-
 import { generateText } from 'ai';
 import { createOllama } from 'ai-sdk-ollama';
-
 import { LlmExecutionContext } from '../dto/execution-context.dto';
 import { LlmRequest } from '../dto/llm-request.dto';
 import { LlmResponse } from '../dto/llm-response.dto';
 import { OllamaCredentials } from '../dto/provider-credentials.dto';
-
 import { LlmProviderAdapter } from './llm.adapter';
-
 import { ProviderType } from '../enums/provider.type';
-
 import { AiSdkMessageMapper } from '../mapper/ai-message.mapper';
-
 import { withTimeout } from '../util/llm-request-timeout.util';
-
 import { OllamaErrorMapper } from '../errors/ollama-error.mapper';
 
 @Injectable()
@@ -31,9 +24,12 @@ export class OllamaAdapter implements LlmProviderAdapter {
     try {
       const credentials = this.validateCredentials(context.credentials);
 
-      const ollama = createOllama({
+      const providerSettings: Parameters<typeof createOllama>[0] = {
         baseURL: credentials.baseUrl,
-      });
+        ...(credentials.apiKey ? { apiKey: credentials.apiKey } : {}),
+      };
+
+      const ollama = createOllama(providerSettings);
 
       const result = await withTimeout(async (signal) => {
         return generateText({
@@ -48,37 +44,23 @@ export class OllamaAdapter implements LlmProviderAdapter {
 
       return {
         provider: this.provider,
-
         model: request.model,
-
         text: result.text,
-
         finishReason: result.finishReason,
-
         usage: {
           promptTokens: result.usage?.inputTokens,
-
           completionTokens: result.usage?.outputTokens,
-
           totalTokens: result.usage?.totalTokens,
         },
-
-        raw: {
-          finishReason: result.finishReason,
-
-          warnings: result.warnings,
-        },
+        raw: result,
       };
     } catch (error) {
       const normalizedError = OllamaErrorMapper.map(error);
 
       this.logger.error({
         message: normalizedError.message,
-
         provider: this.provider,
-
         requestId: context.requestId,
-
         error: normalizedError,
       });
 

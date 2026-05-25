@@ -67,6 +67,7 @@ export class LlmService {
         'llm.finish_reason': response.finishReason ?? 'unknown',
         'llm.input_tokens': response.usage?.promptTokens ?? 0,
         'llm.output_tokens': response.usage?.completionTokens ?? 0,
+        'llm.response_text': response.text,
       });
 
       this.observability.recordSpanSuccess(span);
@@ -88,6 +89,7 @@ export class LlmService {
       span.setAttributes({
         'llm.error': normalizedError.message,
         'llm.error_type': normalizedError.constructor.name,
+        request_id: context.requestId ?? 'undefined',
       });
 
       this.observability.recordSpanFailure(span, normalizedError);

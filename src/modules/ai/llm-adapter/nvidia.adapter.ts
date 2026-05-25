@@ -57,7 +57,6 @@ export class NvidiaAdapter implements LlmProviderAdapter {
           completionTokens: result.usage?.outputTokens,
           totalTokens: result.usage?.totalTokens,
         },
-
         raw: result,
       };
     } catch (error) {

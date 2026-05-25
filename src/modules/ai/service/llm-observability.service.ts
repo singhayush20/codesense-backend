@@ -94,7 +94,7 @@ export class LlmObservabilityService {
     this.inputTokenCounter.add(params.inputTokens, labels);
     this.outputTokenCounter.add(params.outputTokens, labels);
 
-    this.logger.log({
+    this.logger.debug({
       event: 'llm_token_usage',
       provider: params.provider,
       model: params.model,

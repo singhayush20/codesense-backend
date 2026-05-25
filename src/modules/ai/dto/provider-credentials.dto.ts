@@ -19,6 +19,9 @@ export class OllamaCredentials {
   @IsString({ message: 'Base URL must be a string' })
   @IsNotEmpty({ message: "Base URL can't be empty" })
   baseUrl!: string;
+
+  @IsString({ message: 'API key must be a string' })
+  apiKey?: string;
 }
 
 export class NvidiaCredentials {
