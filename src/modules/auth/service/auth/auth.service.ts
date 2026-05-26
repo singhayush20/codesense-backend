@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import axios from 'axios';
@@ -15,6 +15,7 @@ import { GoogleTokenResponse } from '../../dto/google-token-response.dto';
 @Injectable()
 export class AuthService {
   private static readonly BEARER = 'Bearer';
+  private readonly logger = new Logger(AuthService.name);
 
   constructor(
     private readonly jwtService: JwtService,
@@ -41,8 +42,9 @@ export class AuthService {
       );
 
       const idToken = tokenResponse?.data?.id_token;
+      const googleAccessToken = tokenResponse?.data?.access_token;
 
-      if (!idToken) {
+      if (!idToken || !googleAccessToken) {
         throw new AppException(
           ExceptionCodes.GOOGLE_INVALID_TOKEN_RESPONSE,
           'Invalid token response from Google',
@@ -52,7 +54,12 @@ export class AuthService {
 
       // 2. Fetch user info
       const userInfoResponse = await axios.get<GoogleUserInfoResponse>(
-        `${this.config.get<string>('oauth.google.tokenInfoUrl')}${idToken}`,
+        `${this.config.get<string>('oauth.google.userInfoUrl')}`,
+        {
+          headers: {
+            Authorization: `${AuthService.BEARER} ${googleAccessToken}`,
+          },
+        },
       );
 
       const userInfo = userInfoResponse?.data;

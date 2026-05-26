@@ -5,9 +5,11 @@ import { GlobalExceptionFilter } from './exception-handling/global-exception-fil
 import { AppException } from './exception-handling/app-exception.exception';
 import { ExceptionCodes } from './exception-handling/exception-codes';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ValidationError } from 'class-validator';
 import cookieParser from 'cookie-parser';
 import * as bodyParser from 'body-parser';
 import * as express from 'express';
+import './observability/telemetry';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -23,10 +25,35 @@ async function bootstrap() {
       forbidUnknownValues: true,
       stopAtFirstError: false,
       disableErrorMessages: process.env.NODE_ENV === 'production',
-      exceptionFactory: (errors) => {
-        const message = errors
-          .map((err) => Object.values(err.constraints || {}).join(', '))
-          .join('; ');
+      exceptionFactory: (errors: ValidationError[]) => {
+        const extractMessages = (
+          validationErrors: ValidationError[],
+          depth = 0,
+        ): string[] => {
+          const messages: string[] = [];
+          const indent = '  '.repeat(depth);
+
+          for (const err of validationErrors) {
+            if (err.constraints) {
+              const constraintMessages = Object.values(err.constraints);
+              messages.push(
+                ...constraintMessages.map((msg: string) => `${indent}${msg}`),
+              );
+            }
+            if (err.children && Array.isArray(err.children)) {
+              messages.push(
+                ...extractMessages(err.children, depth + 1).map(
+                  (msg: string) => `${indent}${msg}`,
+                ),
+              );
+            }
+          }
+          return messages;
+        };
+
+        const messageList = extractMessages(errors);
+        const message =
+          messageList.length > 0 ? messageList.join('; ') : 'Validation failed';
 
         return new AppException(
           ExceptionCodes.METHOD_ARGUMENT_NOT_VALID,

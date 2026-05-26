@@ -34,7 +34,7 @@ export class LlmProviderController {
   ) {}
 
   @Post()
-  @Roles(RoleTypes.ROLE_USER)
+  @Roles(RoleTypes.ROLE_USER, RoleTypes.ROLE_ADMIN)
   @ApiOkResponse({ type: ProviderResponseDto })
   async create(
     @Body() dto: CreateProviderDto,
@@ -46,7 +46,7 @@ export class LlmProviderController {
   }
 
   @Get()
-  @Roles(RoleTypes.ROLE_USER)
+  @Roles(RoleTypes.ROLE_USER, RoleTypes.ROLE_ADMIN)
   @ApiOkResponse({ type: [ProviderListResponseDto] })
   async getAll(
     @currentUserDecorator.CurrentUser() user: currentUserDecorator.JwtUser,
@@ -57,7 +57,7 @@ export class LlmProviderController {
   }
 
   @Post(':id/credentials')
-  @Roles(RoleTypes.ROLE_USER)
+  @Roles(RoleTypes.ROLE_USER, RoleTypes.ROLE_ADMIN)
   @ApiOkResponse({ type: SuccessResponseDto })
   async addCredentials(
     @Param('id') id: string,
@@ -74,7 +74,7 @@ export class LlmProviderController {
   }
 
   @Delete(':id')
-  @Roles(RoleTypes.ROLE_USER)
+  @Roles(RoleTypes.ROLE_USER, RoleTypes.ROLE_ADMIN)
   @ApiOkResponse({ type: SuccessResponseDto })
   async delete(
     @Param('id') id: string,
