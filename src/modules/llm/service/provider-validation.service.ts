@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ProviderType } from '../enums/provider.type';
+import { ProviderType } from '../../ai/enums/provider.type';
 
 @Injectable()
 export class ProviderValidationService {

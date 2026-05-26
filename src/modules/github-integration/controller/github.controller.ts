@@ -44,7 +44,7 @@ export class GithubController {
   // STEP 1: OAuth URL
   // =========================
   @Get('oauth/url')
-  @Roles(RoleTypes.ROLE_USER)
+  @Roles(RoleTypes.ROLE_USER, RoleTypes.ROLE_ADMIN)
   getOAuthUrl(
     @currentUserDecorator.CurrentUser() user: currentUserDecorator.JwtUser,
   ): Promise<ConnectGithubResponseDto> {
@@ -55,7 +55,7 @@ export class GithubController {
   // STEP 2: OAuth Callback
   // =========================
   @Get('oauth/callback')
-  @Roles(RoleTypes.ROLE_USER)
+  @Roles(RoleTypes.ROLE_USER, RoleTypes.ROLE_ADMIN)
   async handleOAuthCallback(
     @Query('code') code: string,
     @Query('state') state: string,
@@ -68,7 +68,7 @@ export class GithubController {
   // STEP 3: Install App URL
   // =========================
   @Get('install/url')
-  @Roles(RoleTypes.ROLE_USER)
+  @Roles(RoleTypes.ROLE_USER, RoleTypes.ROLE_ADMIN)
   async getInstallUrl(
     @Query('accountId') accountId: string,
     @CurrentUser() user: currentUserDecorator.JwtUser,
@@ -84,7 +84,7 @@ export class GithubController {
   // STEP 4: Install Callback
   // =========================
   @Get('install/callback')
-  @Roles(RoleTypes.ROLE_USER)
+  @Roles(RoleTypes.ROLE_USER, RoleTypes.ROLE_ADMIN)
   async handleInstallCallback(
     @Query('installation_id') installationId: string,
     @currentUserDecorator.CurrentUser() user: currentUserDecorator.JwtUser,
@@ -96,7 +96,7 @@ export class GithubController {
   // ACCOUNTS
   // =========================
   @Get('accounts')
-  @Roles(RoleTypes.ROLE_USER)
+  @Roles(RoleTypes.ROLE_USER, RoleTypes.ROLE_ADMIN)
   async getAccounts(
     @currentUserDecorator.CurrentUser() user: currentUserDecorator.JwtUser,
   ): Promise<GithubAccountResponseDto[]> {
@@ -107,7 +107,7 @@ export class GithubController {
   // REPO SYNC
   // =========================
   @Post('repos/sync')
-  @Roles(RoleTypes.ROLE_USER)
+  @Roles(RoleTypes.ROLE_USER, RoleTypes.ROLE_ADMIN)
   async syncRepos(
     @currentUserDecorator.CurrentUser() user: currentUserDecorator.JwtUser,
     @Body() dto: { installationId: string },
@@ -122,7 +122,7 @@ export class GithubController {
   // REPO SELECTION
   // =========================
   @Post('repos/select')
-  @Roles(RoleTypes.ROLE_USER)
+  @Roles(RoleTypes.ROLE_USER, RoleTypes.ROLE_ADMIN)
   async selectRepos(
     @currentUserDecorator.CurrentUser() user: currentUserDecorator.JwtUser,
     @Body() dto: { installationId: string; repoIds: string[] },
@@ -135,7 +135,7 @@ export class GithubController {
   }
 
   @Patch('repos/unselect')
-  @Roles(RoleTypes.ROLE_USER)
+  @Roles(RoleTypes.ROLE_USER, RoleTypes.ROLE_ADMIN)
   async unselectRepos(
     @currentUserDecorator.CurrentUser() user: currentUserDecorator.JwtUser,
     @Body() dto: { installationId: string; repoIds: string[] },
@@ -148,7 +148,7 @@ export class GithubController {
   }
 
   @Get('repos/selected')
-  @Roles(RoleTypes.ROLE_USER)
+  @Roles(RoleTypes.ROLE_USER, RoleTypes.ROLE_ADMIN)
   async getSelectedRepos(
     @currentUserDecorator.CurrentUser() user: currentUserDecorator.JwtUser,
   ): Promise<SelectedRepoResponseDto[]> {
@@ -156,7 +156,7 @@ export class GithubController {
   }
 
   @Post('accounts/signout')
-  @Roles(RoleTypes.ROLE_USER)
+  @Roles(RoleTypes.ROLE_USER, RoleTypes.ROLE_ADMIN)
   async signout(
     @currentUserDecorator.CurrentUser() user: currentUserDecorator.JwtUser,
     @Body('accountId') accountId: string,
@@ -166,14 +166,14 @@ export class GithubController {
   }
 
   @Get('github-auth-token')
-  @Roles(RoleTypes.ROLE_USER)
+  @Roles(RoleTypes.ROLE_USER, RoleTypes.ROLE_ADMIN)
   getGithubAuthTokenForInstallationId(): { authToken: string } {
     const token = this.tokenService.generateAppJwt();
     return { authToken: token };
   }
 
   @Post('github-app-installation-token')
-  @Roles(RoleTypes.ROLE_USER)
+  @Roles(RoleTypes.ROLE_USER, RoleTypes.ROLE_ADMIN)
   async getGithubAppInstallationToken(
     @Body('installationId') installationId: string,
   ): Promise<{ token: string }> {

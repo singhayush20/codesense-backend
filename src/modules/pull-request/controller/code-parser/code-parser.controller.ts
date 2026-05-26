@@ -29,7 +29,7 @@ export class CodeParserController {
    * GET /debug/pull-requests/:pullRequestId/review-context
    */
   @Get(':pullRequestId/review-context')
-  @Roles(RoleTypes.ROLE_USER)
+  @Roles(RoleTypes.ROLE_USER, RoleTypes.ROLE_ADMIN)
   async generateReviewContext(
     @Param('pullRequestId')
     pullRequestId: string,
