@@ -11,7 +11,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { User } from '../../user/entity/user.entity';
-import { ProviderType } from '../../ai/enums/provider.type';
+import { ProviderType } from '../enums/provider.type';
 import { LlmProviderCredential } from './llm-provider-credential.entity';
 
 @Entity('llm_providers')

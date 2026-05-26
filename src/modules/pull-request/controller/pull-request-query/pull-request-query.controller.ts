@@ -23,7 +23,7 @@ export class PullRequestQueryController {
   ) {}
 
   @Get()
-  @Roles(RoleTypes.ROLE_USER, RoleTypes.ROLE_ADMIN)
+  @Roles(RoleTypes.ROLE_USER)
   async findAll(
     @Query()
     query: PullRequestQueryRequestDto,
@@ -32,7 +32,7 @@ export class PullRequestQueryController {
   }
 
   @Get(':id')
-  @Roles(RoleTypes.ROLE_USER, RoleTypes.ROLE_ADMIN)
+  @Roles(RoleTypes.ROLE_USER)
   async findById(
     @Param('id')
     id: string,
@@ -41,7 +41,7 @@ export class PullRequestQueryController {
   }
 
   @Get(':id/files')
-  @Roles(RoleTypes.ROLE_USER, RoleTypes.ROLE_ADMIN)
+  @Roles(RoleTypes.ROLE_USER)
   async findFiles(
     @Param('id')
     id: string,
@@ -50,7 +50,7 @@ export class PullRequestQueryController {
   }
 
   @Get('files/:fileId/content')
-  @Roles(RoleTypes.ROLE_USER, RoleTypes.ROLE_ADMIN)
+  @Roles(RoleTypes.ROLE_USER)
   async findFileContent(
     @Param('fileId')
     fileId: string,
