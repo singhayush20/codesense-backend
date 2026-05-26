@@ -8,7 +8,7 @@ import * as crypto from 'crypto';
 import { EncryptionService } from './encryption.service';
 import { AppException } from '../../../exception-handling/app-exception.exception';
 import { ExceptionCodes } from '../../../exception-handling/exception-codes';
-import { ProviderType } from '../../ai/enums/provider.type';
+import { ProviderType } from '../enums/provider.type';
 
 @Injectable()
 export class CredentialService {
@@ -73,20 +73,13 @@ export class CredentialService {
   }
 
   async getDecryptedConfig(
-    providerId: string,
+    providerId: number,
     userId: string,
   ): Promise<Record<string, string>> {
-    if (!providerId) {
-      throw new AppException(
-        ExceptionCodes.PROVIDER_NOT_FOUND,
-        `Provider not found for id: ${providerId}`,
-        HttpStatus.NOT_FOUND,
-      );
-    }
     const credential = await this.credentialRepo.findOne({
       where: {
         provider: {
-          publicId: providerId,
+          id: providerId,
           user: { userId: userId },
         },
       },

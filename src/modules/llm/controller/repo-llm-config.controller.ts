@@ -25,7 +25,7 @@ export class RepoLlmConfigController {
   constructor(private readonly service: RepoLlmConfigService) {}
 
   @Post()
-  @Roles(RoleTypes.ROLE_USER, RoleTypes.ROLE_ADMIN)
+  @Roles(RoleTypes.ROLE_USER)
   @ApiOkResponse({ type: RepoLlmConfigResponseDto })
   async upsert(
     @Param('repoId') repoId: string,
@@ -36,7 +36,7 @@ export class RepoLlmConfigController {
   }
 
   @Get()
-  @Roles(RoleTypes.ROLE_USER, RoleTypes.ROLE_ADMIN)
+  @Roles(RoleTypes.ROLE_USER)
   @ApiOkResponse({ type: RepoLlmConfigResponseDto })
   async get(
     @Param('repoId') repoId: string,
@@ -46,7 +46,7 @@ export class RepoLlmConfigController {
   }
 
   @Delete()
-  @Roles(RoleTypes.ROLE_USER, RoleTypes.ROLE_ADMIN)
+  @Roles(RoleTypes.ROLE_USER)
   @ApiOkResponse({ type: SuccessResponseDto })
   async delete(
     @Param('repoId') repoId: string,
