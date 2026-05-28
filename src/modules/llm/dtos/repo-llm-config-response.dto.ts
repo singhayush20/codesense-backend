@@ -1,9 +1,11 @@
+import { ProviderType } from '../../ai/enums/provider.type';
+
 export class RepoLlmConfigResponseDto {
   repoId!: string;
 
   providerId!: string;
 
-  providerType!: string;
+  providerType!: ProviderType;
 
   displayName!: string;
 

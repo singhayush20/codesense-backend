@@ -4,7 +4,7 @@ import { ChangedCodeBlockDto } from '../../dto/parsing/changed-code-block.dto';
 
 @Injectable()
 export class PrContextBuilderService {
-  buildReviewContext(blocks: ChangedCodeBlockDto[]): string {
+  buildReviewContextForFiles(blocks: ChangedCodeBlockDto[]): string {
     return blocks
       .map(
         (block) => `

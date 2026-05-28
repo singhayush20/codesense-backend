@@ -34,7 +34,40 @@ export class NvidiaCredentials {
   apiKey!: string;
 }
 
+export class OpenAICredentials {
+  @IsEnum([ProviderType.OPENAI], { message: "Provider must be 'openai'" })
+  @IsNotEmpty({ message: "Provider can't be empty" })
+  provider!: ProviderType.OPENAI;
+
+  @IsString({ message: 'API key must be a string' })
+  @IsNotEmpty({ message: "API key can't be empty" })
+  apiKey!: string;
+}
+
+export class AnthropicCredentials {
+  @IsEnum([ProviderType.ANTHROPIC], { message: "Provider must be 'anthropic'" })
+  @IsNotEmpty({ message: "Provider can't be empty" })
+  provider!: ProviderType.ANTHROPIC;
+
+  @IsString({ message: 'API key must be a string' })
+  @IsNotEmpty({ message: "API key can't be empty" })
+  apiKey!: string;
+}
+
+export class BedrockCredentials {
+  @IsEnum([ProviderType.BEDROCK], { message: "Provider must be 'bedrock'" })
+  @IsNotEmpty({ message: "Provider can't be empty" })
+  provider!: ProviderType.BEDROCK;
+
+  @IsString({ message: 'API key must be a string' })
+  @IsNotEmpty({ message: "API key can't be empty" })
+  apiKey!: string;
+}
+
 export type ProviderCredentials =
   | GeminiCredentials
   | OllamaCredentials
-  | NvidiaCredentials;
+  | NvidiaCredentials
+  | OpenAICredentials
+  | AnthropicCredentials
+  | BedrockCredentials;

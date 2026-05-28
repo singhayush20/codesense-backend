@@ -96,6 +96,25 @@ export class RepoLlmConfigService {
     return this.toDto(config, config.provider);
   }
 
+  async getRepoLlmConfigByRepositoryId(
+    repositoryId: string,
+  ): Promise<RepoLlmConfigResponseDto> {
+    const config = await this.repoConfigRepo
+      .createQueryBuilder('config')
+      .innerJoinAndSelect('config.repository', 'repo')
+      .innerJoinAndSelect('config.provider', 'provider')
+      .innerJoinAndSelect('provider.credential', 'credential')
+      .innerJoin('repo.installation', 'installation')
+      .innerJoin('installation.account', 'account')
+      .innerJoin('account.user', 'user')
+      .where('repo.id = :repoId', { repositoryId })
+      .getOne();
+
+    if (!config) return new RepoLlmConfigResponseDto(); // return empty DTO if no config found
+
+    return this.toDto(config, config.provider);
+  }
+
   /**
    * Delete repo config
    */

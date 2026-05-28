@@ -1,11 +1,13 @@
+export interface FileContextDto {
+  fileId: string;
+
+  filePath: string;
+
+  reviewContext: string;
+}
+
 export interface PullRequestReviewContextDto {
   pullRequestId: string;
 
-  files: Array<{
-    fileId: string;
-
-    filePath: string;
-
-    reviewContext: string;
-  }>;
+  files: FileContextDto[];
 }

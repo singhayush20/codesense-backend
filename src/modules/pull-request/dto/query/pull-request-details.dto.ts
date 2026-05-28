@@ -2,6 +2,7 @@ export class PullRequestDetailsDto {
   id?: string;
   prNumber?: number;
   title?: string;
+  body?: string;
   author?: string;
   state?: string;
   baseBranch?: string;
@@ -14,4 +15,5 @@ export class PullRequestDetailsDto {
   createdAt?: Date;
   updatedAt?: Date;
   mergedAt?: Date;
+  isMerged?: boolean;
 }

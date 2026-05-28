@@ -7,7 +7,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PullRequestFile } from '../../../entity/pull-request-file.entity';
 import { PullRequestFileSnapshot } from '../../../entity/pull-request-file-snapshot.entity';
-import { PullRequestReviewContextDto } from '../../../dto/review-context/pr-review-context.dto';
+import {
+  FileContextDto,
+  PullRequestReviewContextDto,
+} from '../../../dto/review-context/pr-review-context.dto';
 
 @Injectable()
 export class PrCodeParsingService {
@@ -26,7 +29,6 @@ export class PrCodeParsingService {
       where: {
         id: pullRequestId,
       },
-
       relations: {
         files: {
           snapshots: true,
@@ -38,9 +40,23 @@ export class PrCodeParsingService {
       throw new NotFoundException(`PR not found: ${pullRequestId}`);
     }
 
-    const fileContexts: PullRequestReviewContextDto['files'] = [];
+    const prFiles = pullRequest.files;
 
-    for (const file of pullRequest.files) {
+    const fileContexts: FileContextDto[] =
+      await this.generateContextFromPullRequestFiles(prFiles);
+
+    return {
+      pullRequestId,
+      files: fileContexts,
+    };
+  }
+
+  async generateContextFromPullRequestFiles(
+    prFiles: PullRequestFile[],
+  ): Promise<FileContextDto[]> {
+    const fileContexts: FileContextDto[] = [];
+
+    for (const file of prFiles) {
       const latestSnapshot = this.getLatestSnapshot(file);
 
       if (!latestSnapshot) {
@@ -60,7 +76,7 @@ export class PrCodeParsingService {
         this.prDiffMapperService.extractChangedBlocks(parsedFile);
 
       const reviewContext =
-        this.contextBuilderService.buildReviewContext(changedBlocks);
+        this.contextBuilderService.buildReviewContextForFiles(changedBlocks);
 
       fileContexts.push({
         fileId: file.id,
@@ -69,10 +85,7 @@ export class PrCodeParsingService {
       });
     }
 
-    return {
-      pullRequestId,
-      files: fileContexts,
-    };
+    return fileContexts;
   }
 
   private getLatestSnapshot(

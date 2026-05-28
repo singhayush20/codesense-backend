@@ -30,6 +30,7 @@ import { RepositoryIndexingService } from './service/repository-indexer/reposito
 import { PrContextBuilderService } from './service/context-builder/context-builder.service';
 import { PrCodeParsingService } from './service/orchestration/pr-code-parsing/pr-code-parsing.service';
 import { CodeParserController } from './controller/code-parser/code-parser.controller';
+import { AiReviewService } from './service/orchestration/ai-review/ai-review.service';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -66,6 +67,7 @@ import { CodeParserController } from './controller/code-parser/code-parser.contr
     RepositoryIndexingService,
     PrContextBuilderService,
     PrCodeParsingService,
+    AiReviewService,
   ],
   controllers: [PullRequestQueryController, CodeParserController],
   exports: [PrWorkflowService],

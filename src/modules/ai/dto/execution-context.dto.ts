@@ -12,6 +12,9 @@ import {
   GeminiCredentials,
   NvidiaCredentials,
   OllamaCredentials,
+  OpenAICredentials,
+  BedrockCredentials,
+  AnthropicCredentials,
 } from './provider-credentials.dto';
 import type { ProviderCredentials } from './provider-credentials.dto';
 
@@ -36,9 +39,18 @@ export class LlmExecutionContext {
       return OllamaCredentials;
     } else if (provider === ProviderType.NVIDIA || provider === 'nvidia') {
       return NvidiaCredentials;
-    } else {
-      return Object;
+    } else if (provider === ProviderType.OPENAI || provider === 'openai') {
+      return OpenAICredentials;
+    } else if (provider === ProviderType.BEDROCK || provider === 'bedrock') {
+      return BedrockCredentials;
+    } else if (
+      provider === ProviderType.ANTHROPIC ||
+      provider === 'anthropic'
+    ) {
+      return AnthropicCredentials;
     }
+
+    return Object;
   })
   credentials!: ProviderCredentials;
 

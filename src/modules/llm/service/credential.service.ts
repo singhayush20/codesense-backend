@@ -104,6 +104,35 @@ export class CredentialService {
     return this.encryptionService.decrypt(credential.encryptedConfig);
   }
 
+  async getDecryptedConfigByProviderId(
+    providerId: string,
+  ): Promise<Record<string, string>> {
+    if (!providerId) {
+      throw new AppException(
+        ExceptionCodes.PROVIDER_NOT_FOUND,
+        `Provider not found for id: ${providerId}`,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    const credential = await this.credentialRepo.findOne({
+      where: {
+        provider: {
+          publicId: providerId,
+        },
+      },
+    });
+
+    if (!credential) {
+      throw new AppException(
+        ExceptionCodes.CREDENTIAL_NOT_FOUND,
+        'Credential not found',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    return this.encryptionService.decrypt(credential.encryptedConfig);
+  }
+
   private generateFingerprint(
     providerType: ProviderType,
     config: Record<string, string>,

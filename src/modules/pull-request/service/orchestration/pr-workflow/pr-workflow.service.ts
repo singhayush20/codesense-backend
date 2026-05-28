@@ -76,7 +76,12 @@ export class PrWorkflowService {
         repositoryId,
         prNumber,
       });
-      await this.enqueueAiReview(pullRequest.id);
+
+      await this.enqueueAiReview(
+        pullRequest.id,
+        pullRequest.state,
+        job.repository.id,
+      );
     } catch (e) {
       this.logger.error(
         `Error processing PR workflow for repository ${repositoryId} and PR number ${prNumber}`,
@@ -87,11 +92,22 @@ export class PrWorkflowService {
     }
   }
 
-  private async enqueueAiReview(pullRequestId: string): Promise<void> {
+  private async enqueueAiReview(
+    pullRequestId: string,
+    state: string,
+    repositoryId: number,
+  ): Promise<void> {
+    // TODO: enque ai review based on the pr state - check for the possible states
+    if (state !== 'open') {
+      this.logger.log(`PR state is ${state}, skipping ai review`);
+      return;
+    }
+
     await this.aiReviewQueue.add(
-      'analyze-pr',
+      'pr-analyzer',
       {
         pullRequestId,
+        repositoryId,
       },
       {
         jobId: `ai-review-${pullRequestId}`,
