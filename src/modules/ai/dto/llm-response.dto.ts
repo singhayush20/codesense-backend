@@ -6,12 +6,12 @@ export interface TokenUsage {
   totalTokens?: number;
 }
 
-export interface LlmResponse {
+export interface LlmResponse<TResponse = string> {
   provider: ProviderType;
 
   model: string;
 
-  text: string;
+  response: TResponse; // this needs to be of the proper structured output type schemaToUse
 
   finishReason?: string;
 

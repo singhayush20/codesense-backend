@@ -6,8 +6,8 @@ import { LlmRequest } from '../../ai/dto/llm-request.dto';
 import { LlmResponse } from '../../ai/dto/llm-response.dto';
 import { LlmObservabilityService } from '../../ai/service/llm-observability.service';
 import { LlmRetryService } from '../../ai/service/llm-retry.service';
-import { LlmRequestValidatorService } from '../../ai/service/request-validator.service';
 import { RequestContextService } from '../../request-context/service/request-context/request-context.service';
+import { z } from 'zod';
 
 @Injectable()
 export class LlmService {
@@ -15,16 +15,16 @@ export class LlmService {
     private readonly registry: LlmProviderRegistry,
     private readonly retryService: LlmRetryService,
     private readonly observability: LlmObservabilityService,
-    private readonly requestValidatorService: LlmRequestValidatorService,
     private readonly contextService: RequestContextService,
   ) {}
 
-  async generate(
+  async generate<TSchema extends z.ZodTypeAny>(
     provider: ProviderType,
-    request: LlmRequest,
+    request: LlmRequest<TSchema>,
     context: LlmExecutionContext,
-  ): Promise<LlmResponse> {
-    const validatedRequest = this.requestValidatorService.validate(request);
+  ): Promise<
+    LlmResponse<TSchema extends z.ZodTypeAny ? z.infer<TSchema> : string>
+  > {
     const adapter = this.registry.get(provider);
     const span = this.observability.startSpan('llm.generate');
     const startTime = performance.now();
@@ -32,9 +32,9 @@ export class LlmService {
     try {
       span.setAttributes({
         'llm.provider': provider,
-        'llm.model': validatedRequest.model,
-        'llm.temperature': validatedRequest.temperature ?? 0,
-        'llm.max_tokens': validatedRequest.maxTokens ?? 0,
+        'llm.model': request.model,
+        'llm.temperature': request.temperature ?? 0,
+        'llm.max_tokens': request.maxTokens ?? 0,
         'llm.request_id':
           context.requestId ??
           this.contextService.getRequestId() ??
@@ -42,14 +42,14 @@ export class LlmService {
       });
 
       const response = await this.retryService.execute(() =>
-        adapter.generate(validatedRequest, context),
+        adapter.generate(request, context),
       );
 
       const latencyMs = performance.now() - startTime;
 
       this.observability.trackSuccess({
         provider,
-        model: validatedRequest.model,
+        model: request.model,
         latencyMs,
         requestId: context.requestId,
       });
@@ -57,7 +57,7 @@ export class LlmService {
       if (response.usage) {
         this.observability.trackTokenUsage({
           provider,
-          model: validatedRequest.model,
+          model: request.model,
           inputTokens: response.usage.promptTokens ?? 0,
           outputTokens: response.usage.completionTokens ?? 0,
         });
@@ -67,7 +67,7 @@ export class LlmService {
         'llm.finish_reason': response.finishReason ?? 'unknown',
         'llm.input_tokens': response.usage?.promptTokens ?? 0,
         'llm.output_tokens': response.usage?.completionTokens ?? 0,
-        'llm.response_text': response.text,
+        'llm.response_text': JSON.stringify(response.response),
       });
 
       this.observability.recordSpanSuccess(span);
@@ -79,7 +79,7 @@ export class LlmService {
 
       this.observability.trackFailure({
         provider,
-        model: validatedRequest.model,
+        model: request.model,
         error: normalizedError,
         requestId: context.requestId,
       });

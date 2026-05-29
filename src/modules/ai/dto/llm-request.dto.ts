@@ -10,8 +10,9 @@ import {
 } from 'class-validator';
 import { LlmMessage } from './llm-message.dto';
 import { Type } from 'class-transformer';
+import { z } from 'zod';
 
-export class LlmRequest {
+export class LlmRequest<TSchema extends z.ZodTypeAny | undefined = undefined> {
   @IsString({ message: 'Model must be a string' })
   @IsNotEmpty({ message: "Model can't be empty" })
   model!: string;
@@ -38,4 +39,6 @@ export class LlmRequest {
 
   @IsBoolean({ message: 'Stream must be a boolean' })
   stream?: boolean;
+
+  responseSchema?: TSchema;
 }
