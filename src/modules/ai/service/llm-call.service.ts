@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { LlmProviderRegistry } from '../../ai/registry/llm-provider.registry';
-import { ProviderType } from '../../ai/enums/provider.type';
-import { LlmExecutionContext } from '../../ai/dto/execution-context.dto';
-import { LlmRequest } from '../../ai/dto/llm-request.dto';
-import { LlmResponse } from '../../ai/dto/llm-response.dto';
-import { LlmObservabilityService } from '../../ai/service/llm-observability.service';
-import { LlmRetryService } from '../../ai/service/llm-retry.service';
+import { LlmProviderRegistry } from '../registry/llm-provider-registry.service';
+import { ProviderType } from '../enums/provider.type';
+import { LlmExecutionContext } from '../dto/execution-context.dto';
+import { LlmRequest } from '../dto/llm-request.dto';
+import { LlmResponse } from '../dto/llm-response.dto';
+import { LlmObservabilityService } from './llm-observability.service';
+import { LlmRetryService } from './llm-retry.service';
 import { RequestContextService } from '../../request-context/service/request-context/request-context.service';
 import { z } from 'zod';
 

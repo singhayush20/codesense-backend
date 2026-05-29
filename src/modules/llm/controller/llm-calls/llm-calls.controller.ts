@@ -5,10 +5,10 @@ import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { Roles } from '../../../auth/decorator/roles.decorator';
 import { RoleTypes } from '../../../user/enums/role-types.enums';
 import { CredentialService } from '../../service/credential.service';
-import { LlmService } from '../../service/llm-call.service';
 import * as currentUserDecorator from '../../../auth/decorator/current-user.decorator';
-import { LlmResponse } from '../../../ai/dto/llm-response.dto';
-import { LlmCallRequestDto } from '../../dtos/llm-call-request.dto';
+import { AiReviewService } from '../../../pull-request/service/orchestration/ai-review/ai-review.service';
+import type { PrAnalyzerDto } from '../../../pull-request/dto/queue-payload/pr-analyzer-payload.dto';
+import { LlmResponseDto } from '../../../ai/dto/llm-response.dto';
 
 @Controller('llm-calls')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -16,7 +16,7 @@ import { LlmCallRequestDto } from '../../dtos/llm-call-request.dto';
 export class LlmCallsController {
   constructor(
     private readonly llmCredsService: CredentialService,
-    private readonly llmCallService: LlmService,
+    private readonly aiReviewServcie: AiReviewService,
   ) {}
 
   // TODO : Remove this endpoint, as it can expose the credentials
@@ -34,11 +34,7 @@ export class LlmCallsController {
 
   @Post('call')
   @Roles(RoleTypes.ROLE_ADMIN)
-  async callLlm(@Body() llmRequest: LlmCallRequestDto): Promise<LlmResponse> {
-    return await this.llmCallService.generate(
-      llmRequest.providerType,
-      llmRequest.request,
-      llmRequest.context,
-    );
+  async callLlm(@Body() requestDto: PrAnalyzerDto): Promise<LlmResponseDto> {
+    return await this.aiReviewServcie.handleAiReview(requestDto);
   }
 }

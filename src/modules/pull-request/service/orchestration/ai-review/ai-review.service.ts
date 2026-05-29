@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrAnalyzerDto } from '../../../dto/queue-payload/pr-analyzer-payload.dto';
-import { LlmService } from '../../../../llm/service/llm-call.service';
+import { LlmService } from '../../../../ai/service/llm-call.service';
 import { PrCodeParsingService } from '../pr-code-parsing/pr-code-parsing.service';
 import { PullRequestQueryService } from '../../query/pull-request-query/pull-request-query.service';
 import { RepoLlmConfigService } from '../../../../llm/service/repo-llm-config.service';
@@ -20,7 +20,10 @@ import {
 } from '../../../dto/review/review-response.dto';
 import { CODE_REVIEW_SYSTEM_PROMPT } from '../../../util/prompt-utils';
 import { RepoLlmConfigResponseDto } from '../../../../llm/dtos/repo-llm-config-response.dto';
-import { LlmResponse } from '../../../../ai/dto/llm-response.dto';
+import {
+  LlmResponse,
+  LlmResponseDto,
+} from '../../../../ai/dto/llm-response.dto';
 import { z } from 'zod';
 
 @Injectable()
@@ -38,7 +41,7 @@ export class AiReviewService {
     private readonly credentialService: CredentialService,
   ) {}
 
-  async handleAiReview(prPayload: PrAnalyzerDto): Promise<void> {
+  async handleAiReview(prPayload: PrAnalyzerDto): Promise<LlmResponseDto> {
     const repositoryId = prPayload.repositoryId.toString();
     const pullRequestId = prPayload.pullRequestId;
 
@@ -48,7 +51,7 @@ export class AiReviewService {
       this.logger.warn(
         `Missing repositoryId or pullRequestId for job metadata.`,
       );
-      return;
+      return {};
     }
 
     const pullRequest =
@@ -57,14 +60,14 @@ export class AiReviewService {
       this.logger.warn(
         `PR entity records not found in database: ${pullRequestId}`,
       );
-      return;
+      return {};
     }
 
     if (pullRequest.isMerged) {
       this.logger.warn(
         `PR ${pullRequestId} already merged. Skipping review sequence.`,
       );
-      return;
+      return {};
     }
 
     const llmConfig =
@@ -78,7 +81,7 @@ export class AiReviewService {
       this.logger.warn(
         `LLM config for repository ${repositoryId} is inactive or invalid. Skipping review.`,
       );
-      return;
+      return {};
     }
 
     const decryptedLlmCredentials =
@@ -86,7 +89,6 @@ export class AiReviewService {
         llmConfig.providerId,
       );
 
-    // 1. Build context from Pull Request File Diff Patches
     const fileContext: PullRequestReviewContextDto =
       await this.prCodeParsingService.generateContextFromPullRequest(
         pullRequestId,
@@ -96,10 +98,9 @@ export class AiReviewService {
       this.logger.log(
         `No applicable code modifications found for review in PR ${pullRequestId}`,
       );
-      return;
+      return {};
     }
 
-    // 2. Set up Execution Context Credentials
     const providerCredentials: ProviderCredentials = {
       apiKey: decryptedLlmCredentials.apiKey,
       baseUrl: decryptedLlmCredentials.baseUrl,
@@ -110,7 +111,6 @@ export class AiReviewService {
       credentials: providerCredentials,
     };
 
-    // 3. Chunk code files into distinct pipeline batches
     const fileBatches = this.chunkFiles(
       fileContext.files,
       this.MAX_FILES_PER_BATCH,
@@ -119,7 +119,6 @@ export class AiReviewService {
       `PR ${pullRequestId} split into ${fileBatches.length} review execution batches.`,
     );
 
-    // 4. Fire concurrent batch evaluation runs
     const reviewPromises = fileBatches.map((batchFiles, index) =>
       this.reviewFileBatch(
         batchFiles,
@@ -132,15 +131,15 @@ export class AiReviewService {
 
     const batchResults = await Promise.all(reviewPromises);
 
-    // 5. Aggregate and clean up evaluations across batches
     const finalReview = this.consolidateBatchReviews(batchResults);
 
     this.logger.log(
       `Successfully completed code analysis processing for PR ${pullRequestId}. Found ${finalReview.comments.length} items.`,
     );
 
-    // 6. Push final compiled payload to GitHub
-    await this.publishCommentsToGithub(pullRequestId, finalReview);
+    // TODO: Enque the response for persistence and posting comments asynchronously using a queue
+
+    return { response: finalReview };
   }
 
   private chunkFiles(
@@ -245,22 +244,5 @@ ${JSON.stringify(files, null, 2)}
       summary: `### AI Code Analysis Review Summary\n\n${summaryTracks.join('\n')}`,
       comments: consolidatedComments,
     };
-  }
-
-  private async publishCommentsToGithub(
-    pullRequestId: string,
-    finalReview: AIReviewResponse,
-  ): Promise<void> {
-    this.logger.log(
-      `Dispatching aggregated comments list over to GitHub API for PR: ${pullRequestId}`,
-    );
-
-    // Explicitly reading finalReview to satisfy ESLint no-unused-vars
-    this.logger.debug(
-      `Aggregated review metrics ready: ${finalReview.comments.length} items collected.`,
-    );
-
-    // Temporary statement to satisfy ESLint require-await
-    await Promise.resolve();
   }
 }

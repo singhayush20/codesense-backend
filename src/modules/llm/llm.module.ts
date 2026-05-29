@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LlmProviderCredential } from './entity/llm-provider-credential.entity';
 import { LLMProvider } from './entity/llm-provider.entity';
@@ -13,7 +13,7 @@ import { RepoLlmConfigService } from './service/repo-llm-config.service';
 import { RepoLlmConfigController } from './controller/repo-llm-config.controller';
 import { AiModule } from '../ai/ai.module';
 import { LlmCallsController } from './controller/llm-calls/llm-calls.controller';
-import { LlmService } from './service/llm-call.service';
+import { PullRequestModule } from '../pull-request/pull-request.module';
 
 @Module({
   imports: [
@@ -22,7 +22,8 @@ import { LlmService } from './service/llm-call.service';
       LlmProviderCredential,
       RepoLlmConfig,
     ]),
-    GithubIntegrationModule,
+    forwardRef(() => GithubIntegrationModule),
+    forwardRef(() => PullRequestModule),
     AiModule,
   ],
   controllers: [
@@ -36,7 +37,7 @@ import { LlmService } from './service/llm-call.service';
     ProviderValidationService,
     LlmProviderService,
     RepoLlmConfigService,
-    LlmService,
   ],
+  exports: [RepoLlmConfigService, CredentialService],
 })
 export class LlmModule {}

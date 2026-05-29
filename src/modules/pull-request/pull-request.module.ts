@@ -22,17 +22,16 @@ import { PullRequestFileSnapshot } from './entity/pull-request-file-snapshot.ent
 import { PullRequestQueryService } from './service/query/pull-request-query/pull-request-query.service';
 import { PullRequestFileQueryService } from './service/query/pull-request-file-query/pull-request-file-query.service';
 import { PullRequestQueryController } from './controller/pull-request-query/pull-request-query.controller';
-import { DiffParserService } from './service/diff-parser/diff-parser.service';
-import { PrAstProcessingService } from './service/pr-ast-processing/pr-ast-processing.service';
-import { PrDiffMapperService } from './service/pr-diff-mapper/pr-diff-mapper.service';
-import { CodeProcessingModule } from '../code-processing/code-processing.module';
-import { RepositoryIndexingService } from './service/repository-indexer/repository-indexer.service';
 import { PrContextBuilderService } from './service/context-builder/context-builder.service';
 import { PrCodeParsingService } from './service/orchestration/pr-code-parsing/pr-code-parsing.service';
 import { CodeParserController } from './controller/code-parser/code-parser.controller';
 import { AiReviewService } from './service/orchestration/ai-review/ai-review.service';
+import { AiModule } from '../ai/ai.module';
+import { LlmModule } from '../llm/llm.module';
 @Module({
   imports: [
+    AiModule,
+    LlmModule,
     TypeOrmModule.forFeature([
       PullRequest,
       PullRequestReview,
@@ -45,7 +44,6 @@ import { AiReviewService } from './service/orchestration/ai-review/ai-review.ser
     BullModule.registerQueue({
       name: 'code-review',
     }),
-    CodeProcessingModule,
   ],
   providers: [
     PrWorkflowService,
@@ -61,15 +59,11 @@ import { AiReviewService } from './service/orchestration/ai-review/ai-review.ser
     SnapshotCleanupCron,
     PullRequestQueryService,
     PullRequestFileQueryService,
-    DiffParserService,
-    PrAstProcessingService,
-    PrDiffMapperService,
-    RepositoryIndexingService,
     PrContextBuilderService,
     PrCodeParsingService,
     AiReviewService,
   ],
   controllers: [PullRequestQueryController, CodeParserController],
-  exports: [PrWorkflowService],
+  exports: [PrWorkflowService, AiReviewService],
 })
 export class PullRequestModule {}
