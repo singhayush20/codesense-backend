@@ -20,11 +20,7 @@ import {
   LlmResponseDto,
 } from '../../../../ai/dto/llm-response.dto';
 import { z } from 'zod';
-import {
-  AIReviewComment,
-  AIReviewResponse,
-  AIReviewResponseSchema,
-} from '../../../../ai/schema/ai-review-comment.scehma';
+import { AIReviewResponseSchema } from '../../../../ai/schema/ai-review-comment.scehma';
 
 @Injectable()
 export class AiReviewService {
@@ -138,16 +134,41 @@ export class AiReviewService {
     });
 
     const batchResults = await Promise.all(reviewPromises);
-
-    const finalReview = this.consolidateBatchReviews(batchResults);
-
-    this.logger.log(
-      `Successfully completed code analysis processing for PR ${pullRequestId}. Found ${finalReview.comments.length} items.`,
+    const successfulBatchResults = batchResults.filter(
+      (result): result is LlmResponse<z.infer<typeof AIReviewResponseSchema>> =>
+        Boolean(result?.response),
     );
 
-    // TODO: Enque the response for persistence and posting comments asynchronously using a queue
+    if (successfulBatchResults.length === 0) {
+      return {};
+    }
 
-    return { response: finalReview };
+    const consolidatedSummary = successfulBatchResults
+      .map((result) => result.response.summary)
+      .filter(Boolean)
+      .join('\n\n');
+    const comments = successfulBatchResults.flatMap(
+      (result) => result.response.comments,
+    );
+
+    return {
+      totalTokenUsage: successfulBatchResults.reduce(
+        (total, result) => total + (result.usage?.totalTokens ?? 0),
+        0,
+      ),
+      toalInputTokens: successfulBatchResults.reduce(
+        (total, result) => total + (result.usage?.promptTokens ?? 0),
+        0,
+      ),
+      totalOutputTokens: successfulBatchResults.reduce(
+        (total, result) => total + (result.usage?.completionTokens ?? 0),
+        0,
+      ),
+      model: successfulBatchResults[0].model,
+      provider: successfulBatchResults[0].provider,
+      consolidatedSummary,
+      comments,
+    };
   }
 
   private chunkFiles(
@@ -171,7 +192,7 @@ export class AiReviewService {
     llmConfig: RepoLlmConfigResponseDto,
     providerConfig: LlmExecutionContext,
     batchId: number,
-  ): Promise<AIReviewResponse | null> {
+  ): Promise<LlmResponse<z.infer<typeof AIReviewResponseSchema>> | null> {
     this.logger.debug(`Executing batch evaluation pass #${batchId}`);
 
     const userPromptText = `
@@ -203,23 +224,20 @@ ${JSON.stringify(files, null, 2)}
     };
 
     try {
-      const response: LlmResponse<z.infer<typeof AIReviewResponseSchema>> =
+      const llmResponse: LlmResponse<z.infer<typeof AIReviewResponseSchema>> =
         await this.llmCallService.generate(
           llmConfig.providerType,
           llmRequest,
           providerConfig,
         );
 
-      // Access the provider-agnostic response text property directly from your custom interface
-      const responseText = response.response;
-
-      if (!responseText) {
+      if (!llmResponse.response) {
         throw new Error(
           'Received an empty text payload from the underlying LLM provider adapter.',
         );
       }
 
-      return response.response;
+      return llmResponse;
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
@@ -229,29 +247,5 @@ ${JSON.stringify(files, null, 2)}
 
       return null;
     }
-  }
-
-  private consolidateBatchReviews(
-    results: (AIReviewResponse | null)[],
-  ): AIReviewResponse {
-    const consolidatedComments: AIReviewComment[] = [];
-    const summaryTracks: string[] = [];
-
-    results.forEach((res, i) => {
-      if (!res) {
-        summaryTracks.push(
-          `[Batch ${i + 1}]: Evaluation step encountered an error.`,
-        );
-        return;
-      }
-
-      consolidatedComments.push(...res.comments);
-      summaryTracks.push(`[Batch ${i + 1}]: ${res.summary}`);
-    });
-
-    return {
-      summary: `### AI Code Analysis Review Summary\n\n${summaryTracks.join('\n')}`,
-      comments: consolidatedComments,
-    };
   }
 }

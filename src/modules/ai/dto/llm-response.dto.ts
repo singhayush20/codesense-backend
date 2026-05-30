@@ -1,5 +1,5 @@
 import { ProviderType } from '../enums/provider.type';
-import { AIReviewResponse } from '../schema/ai-review-comment.scehma';
+import { AIReviewComment } from '../schema/ai-review-comment.scehma';
 
 export interface TokenUsage {
   promptTokens?: number;
@@ -22,5 +22,11 @@ export interface LlmResponse<TResponse = string> {
 }
 
 export interface LlmResponseDto {
-  response?: AIReviewResponse;
+  totalTokenUsage?: number;
+  toalInputTokens?: number;
+  totalOutputTokens?: number;
+  model?: string;
+  provider?: ProviderType;
+  consolidatedSummary?: string;
+  comments?: AIReviewComment[];
 }
