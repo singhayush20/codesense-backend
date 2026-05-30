@@ -107,7 +107,9 @@ export class RepoLlmConfigService {
       .innerJoin('repo.installation', 'installation')
       .innerJoin('installation.account', 'account')
       .innerJoin('account.user', 'user')
-      .where('repo.id = :repoId', { repositoryId })
+      .where('repo.githubRepoId = :repositoryId', {
+        repositoryId,
+      })
       .getOne();
 
     if (!config) return new RepoLlmConfigResponseDto(); // return empty DTO if no config found

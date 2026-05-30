@@ -28,6 +28,7 @@ import { CodeParserController } from './controller/code-parser/code-parser.contr
 import { AiReviewService } from './service/orchestration/ai-review/ai-review.service';
 import { AiModule } from '../ai/ai.module';
 import { LlmModule } from '../llm/llm.module';
+import { PullRequestAnalyzerProcessor } from './processor/pull-request-analyzer.processor';
 @Module({
   imports: [
     AiModule,
@@ -62,6 +63,7 @@ import { LlmModule } from '../llm/llm.module';
     PrContextBuilderService,
     PrCodeParsingService,
     AiReviewService,
+    PullRequestAnalyzerProcessor,
   ],
   controllers: [PullRequestQueryController, CodeParserController],
   exports: [PrWorkflowService, AiReviewService],

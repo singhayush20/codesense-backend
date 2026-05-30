@@ -141,7 +141,11 @@ export class GithubWebhookService {
       return;
     }
 
-    if (!['opened', 'synchronize', 'closed', 'reopened'].includes(action)) {
+    if (
+      !['opened', 'synchronize', 'closed', 'reopened', 'edited'].includes(
+        action,
+      )
+    ) {
       this.logger.debug(`Ignoring PR action: ${action}`);
       return;
     }

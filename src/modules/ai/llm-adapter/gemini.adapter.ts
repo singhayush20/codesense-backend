@@ -34,6 +34,7 @@ export class GeminiAdapter implements LlmProviderAdapter {
       const result = await withTimeout(async (signal) => {
         return generateText({
           model: google.languageModel(request.model),
+          system: request.systemPrompt,
           messages: AiSdkMessageMapper.toModelMessages(request.messages),
           temperature: request.temperature,
           maxOutputTokens: request.maxTokens,

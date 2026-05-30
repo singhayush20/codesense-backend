@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrContextBuilderService } from '../../context-builder/context-builder.service';
 import { PullRequest } from '../../../entity/pull-request.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -10,6 +10,8 @@ import {
 
 @Injectable()
 export class PrCodeParsingService {
+  private readonly logger = new Logger(PrCodeParsingService.name);
+
   constructor(
     @InjectRepository(PullRequest)
     private readonly pullRequestRepository: Repository<PullRequest>,
@@ -19,6 +21,10 @@ export class PrCodeParsingService {
   async generateContextFromPullRequest(
     pullRequestId: string,
   ): Promise<PullRequestReviewContextDto> {
+    this.logger.log(
+      `Generating review context from files for PR: ${pullRequestId}`,
+    );
+
     const pullRequest = await this.pullRequestRepository.findOne({
       where: { id: pullRequestId },
       relations: {
@@ -40,6 +46,10 @@ export class PrCodeParsingService {
         reviewContext,
       };
     });
+
+    this.logger.log(
+      `Generated review context from files for PR: ${pullRequestId}, number of files: ${filesContext.length}`,
+    );
 
     return {
       pullRequestId,

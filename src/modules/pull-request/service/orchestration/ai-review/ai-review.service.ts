@@ -13,11 +13,6 @@ import {
   PullRequestMetadataDto,
   PullRequestReviewContextDto,
 } from '../../../dto/review/pr-review-context.dto';
-import {
-  AIReviewComment,
-  AIReviewResponse,
-  AIReviewResponseSchema,
-} from '../../../dto/review/review-response.dto';
 import { CODE_REVIEW_SYSTEM_PROMPT } from '../../../util/prompt-utils';
 import { RepoLlmConfigResponseDto } from '../../../../llm/dtos/repo-llm-config-response.dto';
 import {
@@ -25,6 +20,11 @@ import {
   LlmResponseDto,
 } from '../../../../ai/dto/llm-response.dto';
 import { z } from 'zod';
+import {
+  AIReviewComment,
+  AIReviewResponse,
+  AIReviewResponseSchema,
+} from '../../../../ai/schema/ai-review-comment.scehma';
 
 @Injectable()
 export class AiReviewService {
@@ -45,7 +45,9 @@ export class AiReviewService {
     const repositoryId = prPayload.repositoryId.toString();
     const pullRequestId = prPayload.pullRequestId;
 
-    this.logger.log(`Processing PR analyzer job: ${pullRequestId}`);
+    this.logger.log(
+      `Handling ai review for PR: ${pullRequestId}, repositoryId: ${repositoryId}`,
+    );
 
     if (!repositoryId || !pullRequestId) {
       this.logger.warn(
@@ -107,27 +109,33 @@ export class AiReviewService {
       provider: llmConfig.providerType,
     };
 
-    const llmProviderConfig: LlmExecutionContext = {
-      credentials: providerCredentials,
-    };
-
     const fileBatches = this.chunkFiles(
       fileContext.files,
       this.MAX_FILES_PER_BATCH,
     );
+
     this.logger.log(
       `PR ${pullRequestId} split into ${fileBatches.length} review execution batches.`,
     );
 
-    const reviewPromises = fileBatches.map((batchFiles, index) =>
-      this.reviewFileBatch(
+    const reviewPromises = fileBatches.map((batchFiles, index) => {
+      this.logger.log(
+        `Initiating review for batch #${index + 1} with ${batchFiles.length} files for PR ${pullRequestId}.`,
+      );
+
+      const llmProviderConfig: LlmExecutionContext = {
+        credentials: providerCredentials,
+        requestId: `repoId:${repositoryId} | prId:${pullRequestId} | batch:${index + 1} | ${Date.now()}`,
+      };
+
+      return this.reviewFileBatch(
         batchFiles,
         fileContext.prMetadata,
         llmConfig,
         llmProviderConfig,
         index + 1,
-      ),
-    );
+      );
+    });
 
     const batchResults = await Promise.all(reviewPromises);
 
@@ -150,6 +158,10 @@ export class AiReviewService {
     for (let i = 0; i < files.length; i += size) {
       chunks.push(files.slice(i, i + size));
     }
+
+    this.logger.log(
+      `Splitting PR files into ${chunks.length} review execution batches.`,
+    );
     return chunks;
   }
 
@@ -176,17 +188,14 @@ ${JSON.stringify(files, null, 2)}
 
     const llmRequest: LlmRequest<typeof AIReviewResponseSchema> = {
       model: llmConfig.model,
+      systemPrompt: CODE_REVIEW_SYSTEM_PROMPT,
       messages: [
-        {
-          role: 'system',
-          content: [{ type: 'text', text: CODE_REVIEW_SYSTEM_PROMPT }],
-        },
         {
           role: 'user',
           content: [{ type: 'text', text: userPromptText }],
         },
       ],
-      temperature: 0.1, // Drastically cut randomness to protect line-number integrity
+      temperature: 0.1,
       maxTokens: 3000,
       topP: 0.9,
       stream: false,
@@ -217,7 +226,7 @@ ${JSON.stringify(files, null, 2)}
       this.logger.error(
         `Critical parsing error encountered on batch processing step #${batchId}: ${errorMessage}`,
       );
-      // Return null so an anomaly in a single file doesn't crash the entire PR execution flow
+
       return null;
     }
   }

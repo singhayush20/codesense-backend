@@ -17,6 +17,10 @@ export class LlmRequest<TSchema extends z.ZodTypeAny | undefined = undefined> {
   @IsNotEmpty({ message: "Model can't be empty" })
   model!: string;
 
+  @IsString({ message: 'System prompt must be a string' })
+  @IsNotEmpty({ message: "System prompt can't be empty" })
+  systemPrompt!: string;
+
   @IsArray({ message: 'Messages must be an array' })
   @ValidateNested({ each: true, always: true })
   @Type(() => LlmMessage)

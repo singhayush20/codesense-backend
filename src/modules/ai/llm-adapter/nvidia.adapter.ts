@@ -41,6 +41,7 @@ export class NvidiaAdapter implements LlmProviderAdapter {
       const result = await withTimeout(async (signal) => {
         return generateText({
           model: nvidia.chatModel(request.model),
+          system: request.systemPrompt,
           messages: AiSdkMessageMapper.toModelMessages(request.messages),
           temperature: request.temperature,
           maxOutputTokens: request.maxTokens,

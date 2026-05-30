@@ -1,11 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
 import { metrics, Counter, Histogram, Meter, Span } from '@opentelemetry/api';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 
 @Injectable()
 export class LlmObservabilityService {
-  private readonly logger = new Logger(LlmObservabilityService.name);
   private readonly tracer = trace.getTracer('llm-observability');
   private readonly meter: Meter;
   private readonly requestCounter: Counter;
@@ -45,14 +44,6 @@ export class LlmObservabilityService {
     this.requestCounter.add(1, labels);
 
     this.latencyHistogram.record(params.latencyMs, labels);
-
-    this.logger.log({
-      event: 'llm_request_success',
-      provider: params.provider,
-      model: params.model,
-      latencyMs: params.latencyMs,
-      requestId: params.requestId,
-    });
   }
 
   trackFailure(params: {
@@ -68,15 +59,6 @@ export class LlmObservabilityService {
     };
 
     this.failureCounter.add(1, labels);
-
-    this.logger.error({
-      event: 'llm_request_failure',
-      provider: params.provider,
-      model: params.model,
-      requestId: params.requestId,
-      error: params.error.message,
-      stack: params.error.stack,
-    });
   }
 
   trackTokenUsage(params: {
@@ -93,14 +75,6 @@ export class LlmObservabilityService {
 
     this.inputTokenCounter.add(params.inputTokens, labels);
     this.outputTokenCounter.add(params.outputTokens, labels);
-
-    this.logger.debug({
-      event: 'llm_token_usage',
-      provider: params.provider,
-      model: params.model,
-      inputTokens: params.inputTokens,
-      outputTokens: params.outputTokens,
-    });
   }
 
   recordSpanSuccess(span: Span): void {

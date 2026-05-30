@@ -26,7 +26,9 @@ export class LlmService {
     LlmResponse<TSchema extends z.ZodTypeAny ? z.infer<TSchema> : string>
   > {
     const adapter = this.registry.get(provider);
-    const span = this.observability.startSpan('llm.generate');
+    const span = this.observability.startSpan(
+      `llm.generate: ${context.requestId ?? 'unknown_request_id'}`,
+    );
     const startTime = performance.now();
 
     try {
@@ -39,6 +41,7 @@ export class LlmService {
           context.requestId ??
           this.contextService.getRequestId() ??
           'undefined',
+        'llm.request': JSON.stringify(request),
       });
 
       const response = await this.retryService.execute(() =>

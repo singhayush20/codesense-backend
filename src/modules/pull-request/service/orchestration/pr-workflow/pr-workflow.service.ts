@@ -6,6 +6,7 @@ import { GithubRepoService } from '../../../../github-integration/service/github
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { GithubPullRequestEventPayload } from '../../../../github-integration/dtos/pr-handling/github-pr.dto';
+import { PrAnalyzerDto } from '../../../dto/queue-payload/pr-analyzer-payload.dto';
 
 @Injectable()
 export class PrWorkflowService {
@@ -102,13 +103,14 @@ export class PrWorkflowService {
       this.logger.log(`PR state is ${state}, skipping ai review`);
       return;
     }
+    const payload: PrAnalyzerDto = {
+      pullRequestId,
+      repositoryId,
+    };
 
     await this.aiReviewQueue.add(
-      'pr-analyzer',
-      {
-        pullRequestId,
-        repositoryId,
-      },
+      `pr-analysis:${pullRequestId}:${Date.now()}`,
+      payload,
       {
         jobId: `ai-review-${pullRequestId}`,
         attempts: 5,
