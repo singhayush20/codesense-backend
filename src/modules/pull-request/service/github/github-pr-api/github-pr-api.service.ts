@@ -53,22 +53,35 @@ export class GithubPrApiService {
     );
 
     try {
-      const response = await firstValueFrom(
-        this.httpService.get<GithubPullRequestFileResponse[]>(
-          `https://api.github.com/repos/${repository.fullName}/pulls/${prNumber}/files`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              Accept: 'application/vnd.github+json',
-            },
-            params: {
-              per_page: 100,
-            },
-          },
-        ),
-      );
+      const perPage = 100;
+      let page = 1;
+      const files: GithubPullRequestFileResponse[] = [];
 
-      return response.data;
+      while (true) {
+        const response = await firstValueFrom(
+          this.httpService.get<GithubPullRequestFileResponse[]>(
+            `https://api.github.com/repos/${repository.fullName}/pulls/${prNumber}/files`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: 'application/vnd.github+json',
+              },
+              params: {
+                per_page: perPage,
+                page,
+              },
+            },
+          ),
+        );
+
+        files.push(...response.data);
+
+        if (response.data.length < perPage) {
+          return files;
+        }
+
+        page++;
+      }
     } catch (error) {
       this.handleGithubError(error, repository.fullName, prNumber);
     }

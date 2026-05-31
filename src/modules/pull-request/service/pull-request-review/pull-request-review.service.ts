@@ -39,6 +39,20 @@ export class PullRequestReviewService {
     );
 
     return this.dataSource.transaction(async (manager) => {
+      const existingReviewJob = await manager.findOne(PullRequestReviewJob, {
+        where: {
+          runId,
+        },
+        relations: ['result'],
+      });
+
+      if (existingReviewJob?.result) {
+        this.logger.debug(
+          `Pull request review already saved. runId=${runId}, reviewJobId=${existingReviewJob.id}`,
+        );
+        return existingReviewJob;
+      }
+
       const pullRequest = await manager.findOne(PullRequest, {
         where: {
           id: pullRequestId,
@@ -49,19 +63,20 @@ export class PullRequestReviewService {
         throw new NotFoundException(`Pull request not found: ${pullRequestId}`);
       }
 
-      const reviewJob = manager.create(PullRequestReviewJob, {
-        runId,
-        pullRequest,
-        providerType: provider,
-        status: PullRequestReviewStatus.SUCCESS,
-      });
-
-      const savedReviewJob = await manager.save(
-        PullRequestReviewJob,
-        reviewJob,
-      );
+      const savedReviewJob =
+        existingReviewJob ??
+        (await manager.save(
+          PullRequestReviewJob,
+          manager.create(PullRequestReviewJob, {
+            runId,
+            pullRequest,
+            providerType: provider,
+            status: PullRequestReviewStatus.SUCCESS,
+          }),
+        ));
 
       const reviewResult = manager.create(PullRequestReviewJobResult, {
+        id: savedReviewJob.id,
         job: savedReviewJob,
         totalInputTokens: result.totalInputTokens ?? 0,
         totalOutputTokens: result.totalOutputTokens ?? 0,
