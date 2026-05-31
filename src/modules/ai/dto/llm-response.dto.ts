@@ -23,7 +23,7 @@ export interface LlmResponse<TResponse = string> {
 
 export interface LlmResponseDto {
   totalTokenUsage?: number;
-  toalInputTokens?: number;
+  totalInputTokens?: number;
   totalOutputTokens?: number;
   model?: string;
   provider?: ProviderType;

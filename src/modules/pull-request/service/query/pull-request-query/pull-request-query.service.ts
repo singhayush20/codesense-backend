@@ -77,4 +77,17 @@ export class PullRequestQueryService {
 
     return PullRequestQueryMapper.toDetailDto(pullRequest);
   }
+
+  async findPullRequestByIdWithRepositoryAndInstallation(
+    id: string,
+  ): Promise<PullRequest | null> {
+    const pullRequest = await this.pullRequestRepository.findOne({
+      where: {
+        id,
+      },
+      relations: ['repository', 'repository.installation'],
+    });
+
+    return pullRequest;
+  }
 }

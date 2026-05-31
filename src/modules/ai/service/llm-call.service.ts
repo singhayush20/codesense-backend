@@ -8,6 +8,8 @@ import { LlmObservabilityService } from './llm-observability.service';
 import { LlmRetryService } from './llm-retry.service';
 import { RequestContextService } from '../../request-context/service/request-context/request-context.service';
 import { z } from 'zod';
+import { AiTools } from '../tools/file-fetch-tool.service';
+import { ToolSet } from 'ai';
 
 @Injectable()
 export class LlmService {
@@ -16,6 +18,7 @@ export class LlmService {
     private readonly retryService: LlmRetryService,
     private readonly observability: LlmObservabilityService,
     private readonly contextService: RequestContextService,
+    private readonly toolUtilityService: AiTools,
   ) {}
 
   async generate<TSchema extends z.ZodTypeAny>(
@@ -44,8 +47,12 @@ export class LlmService {
         'llm.request': JSON.stringify(request),
       });
 
+      const toolSet: ToolSet = {
+        fileContentTool: this.toolUtilityService.getFileContentTool,
+      };
+
       const response = await this.retryService.execute(() =>
-        adapter.generate(request, context),
+        adapter.generate(request, context, toolSet),
       );
 
       const latencyMs = performance.now() - startTime;

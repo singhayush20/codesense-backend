@@ -1,5 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { PullRequestReview } from './entity/pull-request-review.entity';
+import { PullRequestReviewJob } from './entity/pull-request-review-job.entity';
 import { PullRequest } from './entity/pull-request.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PullRequestFile } from './entity/pull-request-file.entity';
@@ -29,13 +29,20 @@ import { AiReviewService } from './service/orchestration/ai-review/ai-review.ser
 import { AiModule } from '../ai/ai.module';
 import { LlmModule } from '../llm/llm.module';
 import { PullRequestAnalyzerProcessor } from './processor/pull-request-analyzer.processor';
+import { PrToolsUtilityService } from './service/pr-tools-utility/pr-tools-utility.service';
+import { PrReviewResultService } from './service/orchestration/pr-review-result/pr-review-result.service';
+import { PullRequestReviewService } from './service/pull-request-review/pull-request-review.service';
+import { PullRequestReviewJobResult } from './entity/pull-request-review-job-result.entity';
+import { GithubPrReviewCommentService } from './service/github/github-pr-review-comment/github-pr-review-comment.service';
+import { PullRequestReviewResultsProcessor } from './processor/pull-request-review-resuls.processor';
 @Module({
   imports: [
     AiModule,
     LlmModule,
     TypeOrmModule.forFeature([
       PullRequest,
-      PullRequestReview,
+      PullRequestReviewJob,
+      PullRequestReviewJobResult,
       PullRequestFile,
       PullRequestFileSnapshot,
     ]),
@@ -44,6 +51,9 @@ import { PullRequestAnalyzerProcessor } from './processor/pull-request-analyzer.
     CacheModule,
     BullModule.registerQueue({
       name: 'code-review',
+    }),
+    BullModule.registerQueue({
+      name: 'pull-request-review-results',
     }),
   ],
   providers: [
@@ -64,6 +74,11 @@ import { PullRequestAnalyzerProcessor } from './processor/pull-request-analyzer.
     PrCodeParsingService,
     AiReviewService,
     PullRequestAnalyzerProcessor,
+    PrToolsUtilityService,
+    PrReviewResultService,
+    PullRequestReviewService,
+    GithubPrReviewCommentService,
+    PullRequestReviewResultsProcessor,
   ],
   controllers: [PullRequestQueryController, CodeParserController],
   exports: [PrWorkflowService, AiReviewService],

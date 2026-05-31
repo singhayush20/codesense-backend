@@ -21,12 +21,13 @@ import {
 } from '../../../../ai/dto/llm-response.dto';
 import { z } from 'zod';
 import { AIReviewResponseSchema } from '../../../../ai/schema/ai-review-comment.scehma';
+import { Queue } from 'bullmq';
+import { InjectQueue } from '@nestjs/bullmq';
+import { ReviewResultsPayloadDto } from '../../../dto/review/review-results-payload.dto';
 
 @Injectable()
 export class AiReviewService {
   private readonly logger = new Logger(AiReviewService.name);
-
-  // Balance between context concentration and performance token consumption
   private readonly MAX_FILES_PER_BATCH = 3;
 
   constructor(
@@ -35,17 +36,21 @@ export class AiReviewService {
     private readonly pullRequestQueryService: PullRequestQueryService,
     private readonly repoLlmConfig: RepoLlmConfigService,
     private readonly credentialService: CredentialService,
+    @InjectQueue('pull-request-review-results')
+    private readonly pullRequestReviewQueue: Queue,
   ) {}
 
   async handleAiReview(prPayload: PrAnalyzerDto): Promise<LlmResponseDto> {
-    const repositoryId = prPayload.repositoryId.toString();
+    const githubRepositoryId = prPayload.repositoryId.toString();
     const pullRequestId = prPayload.pullRequestId;
 
+    const runId = `pr-review:${pullRequestId}:${Date.now()}`;
+
     this.logger.log(
-      `Handling ai review for PR: ${pullRequestId}, repositoryId: ${repositoryId}`,
+      `Handling ai review for PR: ${pullRequestId}, repositoryId: ${githubRepositoryId}`,
     );
 
-    if (!repositoryId || !pullRequestId) {
+    if (!githubRepositoryId || !pullRequestId) {
       this.logger.warn(
         `Missing repositoryId or pullRequestId for job metadata.`,
       );
@@ -53,13 +58,21 @@ export class AiReviewService {
     }
 
     const pullRequest =
-      await this.pullRequestQueryService.findById(pullRequestId);
+      await this.pullRequestQueryService.findPullRequestByIdWithRepositoryAndInstallation(
+        pullRequestId,
+      );
+
     if (!pullRequest) {
       this.logger.warn(
         `PR entity records not found in database: ${pullRequestId}`,
       );
       return {};
     }
+
+    const pullRequestNumber = pullRequest.prNumber ?? 0;
+    const headBranchSha = pullRequest.headSha ?? '';
+    const installationId = pullRequest.repository.installation.installationId;
+    const repositoryFullName = pullRequest.repository.fullName;
 
     if (pullRequest.isMerged) {
       this.logger.warn(
@@ -69,7 +82,9 @@ export class AiReviewService {
     }
 
     const llmConfig =
-      await this.repoLlmConfig.getRepoLlmConfigByRepositoryId(repositoryId);
+      await this.repoLlmConfig.getRepoLlmConfigByRepositoryId(
+        githubRepositoryId,
+      );
     if (
       !llmConfig ||
       llmConfig.isActive === false ||
@@ -77,7 +92,7 @@ export class AiReviewService {
       !llmConfig.model
     ) {
       this.logger.warn(
-        `LLM config for repository ${repositoryId} is inactive or invalid. Skipping review.`,
+        `LLM config for repository ${githubRepositoryId} is inactive or invalid. Skipping review.`,
       );
       return {};
     }
@@ -121,7 +136,7 @@ export class AiReviewService {
 
       const llmProviderConfig: LlmExecutionContext = {
         credentials: providerCredentials,
-        requestId: `repoId:${repositoryId} | prId:${pullRequestId} | batch:${index + 1} | ${Date.now()}`,
+        requestId: `repoId:${githubRepositoryId} | prId:${pullRequestId} | batch:${index + 1} | ${Date.now()}`,
       };
 
       return this.reviewFileBatch(
@@ -130,6 +145,10 @@ export class AiReviewService {
         llmConfig,
         llmProviderConfig,
         index + 1,
+        pullRequestNumber,
+        headBranchSha,
+        installationId,
+        repositoryFullName,
       );
     });
 
@@ -140,6 +159,9 @@ export class AiReviewService {
     );
 
     if (successfulBatchResults.length === 0) {
+      this.logger.warn(
+        `No successful review batches for PR ${pullRequestId}. Skipping review result queue enqueue.`,
+      );
       return {};
     }
 
@@ -151,12 +173,12 @@ export class AiReviewService {
       (result) => result.response.comments,
     );
 
-    return {
+    const result: LlmResponseDto = {
       totalTokenUsage: successfulBatchResults.reduce(
         (total, result) => total + (result.usage?.totalTokens ?? 0),
         0,
       ),
-      toalInputTokens: successfulBatchResults.reduce(
+      totalInputTokens: successfulBatchResults.reduce(
         (total, result) => total + (result.usage?.promptTokens ?? 0),
         0,
       ),
@@ -169,6 +191,39 @@ export class AiReviewService {
       consolidatedSummary,
       comments,
     };
+
+    const queuePayload: ReviewResultsPayloadDto = {
+      runId: runId,
+      provider: llmConfig.providerType,
+      pullRequestId,
+      githubRepositoryId,
+      result,
+    };
+
+    this.logger.log(
+      `Queueing pull request review result for PR ${pullRequestId}, runId=${runId}`,
+    );
+
+    const queuedJob = await this.pullRequestReviewQueue.add(
+      'pull-request-review-results',
+      queuePayload,
+      {
+        jobId: `pull-request-review-results-${pullRequestId}-${Date.now()}`,
+        attempts: 5,
+        backoff: {
+          type: 'exponential',
+          delay: 3000,
+        },
+        removeOnComplete: 1000,
+        removeOnFail: 5000,
+      },
+    );
+
+    this.logger.log(
+      `Queued pull request review result job ${queuedJob.id} for PR ${pullRequestId}`,
+    );
+
+    return result;
   }
 
   private chunkFiles(
@@ -192,6 +247,10 @@ export class AiReviewService {
     llmConfig: RepoLlmConfigResponseDto,
     providerConfig: LlmExecutionContext,
     batchId: number,
+    pullRequestNumber: number,
+    headBranchSha: string,
+    installationId: string,
+    repositoryFullName: string,
   ): Promise<LlmResponse<z.infer<typeof AIReviewResponseSchema>> | null> {
     this.logger.debug(`Executing batch evaluation pass #${batchId}`);
 
@@ -221,6 +280,10 @@ ${JSON.stringify(files, null, 2)}
       topP: 0.9,
       stream: false,
       responseSchema: AIReviewResponseSchema,
+      headBranchSha: headBranchSha,
+      pullRequestNumber: pullRequestNumber,
+      installationId: installationId,
+      repositoryFullName: repositoryFullName,
     };
 
     try {

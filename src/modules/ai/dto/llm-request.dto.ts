@@ -45,4 +45,23 @@ export class LlmRequest<TSchema extends z.ZodTypeAny | undefined = undefined> {
   stream?: boolean;
 
   responseSchema?: TSchema;
+
+  @IsString({ message: 'Repository full name must be a string' })
+  @IsNotEmpty({ message: "Repository full name can't be empty" })
+  repositoryFullName?: string;
+
+  @IsString({ message: 'Installation ID must be a string' })
+  @IsNotEmpty({ message: "Installation ID can't be empty" })
+  installationId?: string;
+
+  @IsNumber(
+    { allowNaN: false },
+    { message: 'Pull request number must be a number' },
+  )
+  @IsNotEmpty({ message: "Pull request number can't be empty" })
+  pullRequestNumber?: number;
+
+  @IsString({ message: 'Head branch SHA must be a string' })
+  @IsNotEmpty({ message: "Head branch SHA can't be empty" })
+  headBranchSha?: string;
 }

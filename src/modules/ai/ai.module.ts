@@ -7,6 +7,7 @@ import { LlmRetryService } from './service/llm-retry.service';
 import { NvidiaAdapter } from './llm-adapter/nvidia.adapter';
 import { LlmService } from './service/llm-call.service';
 import { RequestContextModule } from '../request-context/request-context.module';
+import { AiTools } from './tools/file-fetch-tool.service';
 
 @Module({
   imports: [RequestContextModule],
@@ -18,6 +19,7 @@ import { RequestContextModule } from '../request-context/request-context.module'
     LlmObservabilityService,
     LlmRetryService,
     LlmService,
+    AiTools,
   ],
   exports: [LlmService],
 })
