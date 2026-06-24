@@ -1,38 +1,34 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrAstProcessingService } from '../../pr-ast-processing/pr-ast-processing.service';
-import { PrDiffMapperService } from '../../pr-diff-mapper/pr-diff-mapper.service';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrContextBuilderService } from '../../context-builder/context-builder.service';
 import { PullRequest } from '../../../entity/pull-request.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { PullRequestFile } from '../../../entity/pull-request-file.entity';
-import { PullRequestFileSnapshot } from '../../../entity/pull-request-file-snapshot.entity';
 import {
   FileContextDto,
   PullRequestReviewContextDto,
-} from '../../../dto/review-context/pr-review-context.dto';
+} from '../../../dto/review/pr-review-context.dto';
 
 @Injectable()
 export class PrCodeParsingService {
+  private readonly logger = new Logger(PrCodeParsingService.name);
+
   constructor(
     @InjectRepository(PullRequest)
     private readonly pullRequestRepository: Repository<PullRequest>,
-    private readonly prAstProcessingService: PrAstProcessingService,
-    private readonly prDiffMapperService: PrDiffMapperService,
     private readonly contextBuilderService: PrContextBuilderService,
   ) {}
 
   async generateContextFromPullRequest(
     pullRequestId: string,
   ): Promise<PullRequestReviewContextDto> {
+    this.logger.log(
+      `Generating review context from files for PR: ${pullRequestId}`,
+    );
+
     const pullRequest = await this.pullRequestRepository.findOne({
-      where: {
-        id: pullRequestId,
-      },
+      where: { id: pullRequestId },
       relations: {
-        files: {
-          snapshots: true,
-        },
+        files: true,
       },
     });
 
@@ -40,63 +36,30 @@ export class PrCodeParsingService {
       throw new NotFoundException(`PR not found: ${pullRequestId}`);
     }
 
-    const prFiles = pullRequest.files;
-
-    const fileContexts: FileContextDto[] =
-      await this.generateContextFromPullRequestFiles(prFiles);
-
-    return {
-      pullRequestId,
-      files: fileContexts,
-    };
-  }
-
-  async generateContextFromPullRequestFiles(
-    prFiles: PullRequestFile[],
-  ): Promise<FileContextDto[]> {
-    const fileContexts: FileContextDto[] = [];
-
-    for (const file of prFiles) {
-      const latestSnapshot = this.getLatestSnapshot(file);
-
-      if (!latestSnapshot) {
-        continue;
-      }
-
-      const parsedFile = await this.prAstProcessingService.parsePullRequestFile(
-        {
-          id: file.id,
-          filePath: file.fileName,
-          content: latestSnapshot.content,
-          patch: file.patch,
-        },
-      );
-
-      const changedBlocks =
-        this.prDiffMapperService.extractChangedBlocks(parsedFile);
-
+    const filesContext: FileContextDto[] = pullRequest.files.map((file) => {
       const reviewContext =
-        this.contextBuilderService.buildReviewContextForFiles(changedBlocks);
+        this.contextBuilderService.buildReviewContextForFile(file);
 
-      fileContexts.push({
+      return {
         fileId: file.id,
         filePath: file.fileName,
         reviewContext,
-      });
-    }
+      };
+    });
 
-    return fileContexts;
-  }
+    this.logger.log(
+      `Generated review context from files for PR: ${pullRequestId}, number of files: ${filesContext.length}`,
+    );
 
-  private getLatestSnapshot(
-    file: PullRequestFile,
-  ): PullRequestFileSnapshot | null {
-    if (!file.snapshots.length) {
-      return null;
-    }
-
-    return [...file.snapshots].sort(
-      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
-    )[0];
+    return {
+      pullRequestId,
+      prMetadata: {
+        title: pullRequest.title,
+        body: pullRequest.body || 'No description provided.',
+        baseBranch: pullRequest.baseBranch,
+        headBranch: pullRequest.headBranch,
+      },
+      files: filesContext,
+    };
   }
 }

@@ -1,5 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { PullRequestReview } from './entity/pull-request-review.entity';
+import { PullRequestReviewJob } from './entity/pull-request-review-job.entity';
 import { PullRequest } from './entity/pull-request.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PullRequestFile } from './entity/pull-request-file.entity';
@@ -22,20 +22,27 @@ import { PullRequestFileSnapshot } from './entity/pull-request-file-snapshot.ent
 import { PullRequestQueryService } from './service/query/pull-request-query/pull-request-query.service';
 import { PullRequestFileQueryService } from './service/query/pull-request-file-query/pull-request-file-query.service';
 import { PullRequestQueryController } from './controller/pull-request-query/pull-request-query.controller';
-import { DiffParserService } from './service/diff-parser/diff-parser.service';
-import { PrAstProcessingService } from './service/pr-ast-processing/pr-ast-processing.service';
-import { PrDiffMapperService } from './service/pr-diff-mapper/pr-diff-mapper.service';
-import { CodeProcessingModule } from '../code-processing/code-processing.module';
-import { RepositoryIndexingService } from './service/repository-indexer/repository-indexer.service';
 import { PrContextBuilderService } from './service/context-builder/context-builder.service';
 import { PrCodeParsingService } from './service/orchestration/pr-code-parsing/pr-code-parsing.service';
 import { CodeParserController } from './controller/code-parser/code-parser.controller';
 import { AiReviewService } from './service/orchestration/ai-review/ai-review.service';
+import { AiModule } from '../ai/ai.module';
+import { LlmModule } from '../llm/llm.module';
+import { PullRequestAnalyzerProcessor } from './processor/pull-request-analyzer.processor';
+import { PrToolsUtilityService } from './service/pr-tools-utility/pr-tools-utility.service';
+import { PrReviewResultService } from './service/orchestration/pr-review-result/pr-review-result.service';
+import { PullRequestReviewService } from './service/pull-request-review/pull-request-review.service';
+import { PullRequestReviewJobResult } from './entity/pull-request-review-job-result.entity';
+import { GithubPrReviewCommentService } from './service/github/github-pr-review-comment/github-pr-review-comment.service';
+import { PullRequestReviewResultsProcessor } from './processor/pull-request-review-resuls.processor';
 @Module({
   imports: [
+    AiModule,
+    LlmModule,
     TypeOrmModule.forFeature([
       PullRequest,
-      PullRequestReview,
+      PullRequestReviewJob,
+      PullRequestReviewJobResult,
       PullRequestFile,
       PullRequestFileSnapshot,
     ]),
@@ -45,7 +52,9 @@ import { AiReviewService } from './service/orchestration/ai-review/ai-review.ser
     BullModule.registerQueue({
       name: 'code-review',
     }),
-    CodeProcessingModule,
+    BullModule.registerQueue({
+      name: 'pull-request-review-results',
+    }),
   ],
   providers: [
     PrWorkflowService,
@@ -61,15 +70,17 @@ import { AiReviewService } from './service/orchestration/ai-review/ai-review.ser
     SnapshotCleanupCron,
     PullRequestQueryService,
     PullRequestFileQueryService,
-    DiffParserService,
-    PrAstProcessingService,
-    PrDiffMapperService,
-    RepositoryIndexingService,
     PrContextBuilderService,
     PrCodeParsingService,
     AiReviewService,
+    PullRequestAnalyzerProcessor,
+    PrToolsUtilityService,
+    PrReviewResultService,
+    PullRequestReviewService,
+    GithubPrReviewCommentService,
+    PullRequestReviewResultsProcessor,
   ],
   controllers: [PullRequestQueryController, CodeParserController],
-  exports: [PrWorkflowService],
+  exports: [PrWorkflowService, AiReviewService],
 })
 export class PullRequestModule {}

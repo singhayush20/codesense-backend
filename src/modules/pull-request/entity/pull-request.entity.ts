@@ -9,7 +9,7 @@ import {
 } from 'typeorm';
 import { GithubRepository } from '../../github-integration/entity/github-repo.entity';
 import { PrState } from '../enums/pr-state.enum';
-import { PullRequestReview } from './pull-request-review.entity';
+import { PullRequestReviewJob } from './pull-request-review-job.entity';
 import { PullRequestFile } from './pull-request-file.entity';
 
 @Entity('pull_requests')
@@ -29,10 +29,10 @@ export class PullRequest {
   })
   files!: PullRequestFile[];
 
-  @OneToMany(() => PullRequestReview, (review) => review.pullRequest, {
+  @OneToMany(() => PullRequestReviewJob, (review) => review.pullRequest, {
     cascade: true,
   })
-  reviews!: PullRequestReview[];
+  reviews!: PullRequestReviewJob[];
 
   @Column({ name: 'pr_number', nullable: false })
   prNumber!: number;

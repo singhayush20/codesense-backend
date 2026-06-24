@@ -14,7 +14,6 @@ import { QueueModule } from './queue/queue.module';
 import { LlmModule } from './modules/llm/llm.module';
 import { PullRequestModule } from './modules/pull-request/pull-request.module';
 import { ScheduleModule } from '@nestjs/schedule';
-import { CodeProcessingModule } from './modules/code-processing/code-processing.module';
 import { AiModule } from './modules/ai/ai.module';
 import { RequestContextService } from './modules/request-context/service/request-context/request-context.service';
 import { randomUUID } from 'crypto';
@@ -80,7 +79,6 @@ import { RequestContextModule } from './modules/request-context/request-context.
     QueueModule,
     LlmModule,
     PullRequestModule,
-    CodeProcessingModule,
     AiModule,
     RequestContextModule,
   ],

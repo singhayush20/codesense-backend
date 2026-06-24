@@ -11,7 +11,7 @@ export class LlmRetryService {
 
   async execute<T>(operation: () => Promise<T>): Promise<T> {
     return pRetry(operation, {
-      retries: 3,
+      retries: 1,
       factor: 2,
       minTimeout: 500,
       maxTimeout: 5000,

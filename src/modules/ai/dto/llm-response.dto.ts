@@ -1,4 +1,5 @@
 import { ProviderType } from '../enums/provider.type';
+import { AIReviewComment } from '../schema/ai-review-comment.schema';
 
 export interface TokenUsage {
   promptTokens?: number;
@@ -6,16 +7,26 @@ export interface TokenUsage {
   totalTokens?: number;
 }
 
-export interface LlmResponse {
+export interface LlmResponse<TResponse = string> {
   provider: ProviderType;
 
   model: string;
 
-  text: string;
+  response: TResponse; // this needs to be of the proper structured output type schemaToUse
 
   finishReason?: string;
 
   usage?: TokenUsage;
 
   raw?: unknown;
+}
+
+export interface LlmResponseDto {
+  totalTokenUsage?: number;
+  totalInputTokens?: number;
+  totalOutputTokens?: number;
+  model?: string;
+  provider?: ProviderType;
+  consolidatedSummary?: string;
+  comments?: AIReviewComment[];
 }
