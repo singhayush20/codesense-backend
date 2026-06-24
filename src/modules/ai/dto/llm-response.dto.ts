@@ -1,5 +1,5 @@
 import { ProviderType } from '../enums/provider.type';
-import { AIReviewComment } from '../schema/ai-review-comment.scehma';
+import { AIReviewComment } from '../schema/ai-review-comment.schema';
 
 export interface TokenUsage {
   promptTokens?: number;

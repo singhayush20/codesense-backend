@@ -11,7 +11,7 @@ import { PullRequestQueryService } from '../../query/pull-request-query/pull-req
 import { GithubPullRequestReviewComment } from '../../../dto/review/pr-review-comment.dto';
 import { GithubPrApiService } from '../github-pr-api/github-pr-api.service';
 import { GithubPullRequestFileResponse } from '../../../dto/pull-request/github-pull-request-file-response.dto';
-import { AIReviewComment } from '../../../../ai/schema/ai-review-comment.scehma';
+import { AIReviewComment } from '../../../../ai/schema/ai-review-comment.schema';
 
 interface ReviewCommentBuildContext {
   pullRequestId: string;

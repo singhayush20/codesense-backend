@@ -20,7 +20,7 @@ import {
   LlmResponseDto,
 } from '../../../../ai/dto/llm-response.dto';
 import { z } from 'zod';
-import { AIReviewResponseSchema } from '../../../../ai/schema/ai-review-comment.scehma';
+import { AIReviewResponseSchema } from '../../../../ai/schema/ai-review-comment.schema';
 import { Queue } from 'bullmq';
 import { InjectQueue } from '@nestjs/bullmq';
 import { ReviewResultsPayloadDto } from '../../../dto/review/review-results-payload.dto';
