@@ -1,0 +1,7 @@
+node_modules/
+.husky/
+.vscode/
+.env.*
+docs/
+dist/
+github-app.pem

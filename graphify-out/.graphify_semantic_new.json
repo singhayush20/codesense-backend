@@ -1,0 +1,978 @@
+{
+  "nodes": [
+    {
+      "id": "README_codesense_backend",
+      "label": "CodeSense Backend",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "AGENTS_nestjs",
+      "label": "NestJS 11",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "AGENTS_typescript_lang",
+      "label": "TypeScript",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "AGENTS_postgresql",
+      "label": "PostgreSQL",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "AGENTS_typeorm",
+      "label": "TypeORM",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "AGENTS_redis_cache",
+      "label": "Redis",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "AGENTS_bullmq",
+      "label": "BullMQ",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "AGENTS_google_oauth",
+      "label": "Google OAuth 2.0",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "AGENTS_jwt_auth",
+      "label": "JWT Authentication",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "AGENTS_passportjs",
+      "label": "Passport.js",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "AGENTS_vercel_ai_sdk",
+      "label": "Vercel AI SDK",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "AGENTS_opentelemetry",
+      "label": "OpenTelemetry",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "AGENTS_github_app",
+      "label": "GitHub App",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "AGENTS_auth_module",
+      "label": "Auth Module",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "AGENTS_github_integration_module",
+      "label": "GitHub Integration Module",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "AGENTS_pull_request_module",
+      "label": "Pull Request Module",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "AGENTS_ai_module",
+      "label": "AI Module",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "AGENTS_exception_handling",
+      "label": "Exception Handling",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "AGENTS_async_processing",
+      "label": "Async Processing",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "AGENTS_idempotency_pattern",
+      "label": "Idempotency Pattern",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "docker-compose_jaeger",
+      "label": "Jaeger",
+      "file_type": "document",
+      "source_file": "docker-compose.yaml",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "docker-compose_pgvector",
+      "label": "pgvector",
+      "file_type": "document",
+      "source_file": "docker-compose.yaml",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "docker-compose_redis_stack",
+      "label": "Redis Stack",
+      "file_type": "document",
+      "source_file": "docker-compose.yaml",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "README_github_webhook",
+      "label": "GitHub Webhook",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "README_pr_processing_pipeline",
+      "label": "PR Processing Pipeline",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "PullRequestIngestionPlan_layer_separation_principle",
+      "label": "Layer Separation Principle",
+      "file_type": "document",
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "PullRequestIngestionPlan_orchestration_layer",
+      "label": "Orchestration Layer",
+      "file_type": "document",
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "PullRequestIngestionPlan_github_api_layer",
+      "label": "GitHub API Layer",
+      "file_type": "document",
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "PullRequestIngestionPlan_sync_layer",
+      "label": "Sync Layer",
+      "file_type": "document",
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "PullRequestIngestionPlan_query_layer",
+      "label": "Query Layer",
+      "file_type": "document",
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "PullRequestIngestionPlan_ingestion_layer",
+      "label": "Ingestion Layer",
+      "file_type": "document",
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "PullRequestIngestionPlan_ai_review_layer",
+      "label": "AI Review Layer",
+      "file_type": "document",
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "PullRequestIngestionPlan_cache_layer",
+      "label": "Cache Layer",
+      "file_type": "document",
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "PullRequestIngestionPlan_internal_utility_services",
+      "label": "Internal Utility Services",
+      "file_type": "document",
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "PullRequestIngestionPlan_pr_workflow_service",
+      "label": "PrWorkflowService",
+      "file_type": "document",
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "PullRequestIngestionPlan_repository_context_service",
+      "label": "RepositoryContextService",
+      "file_type": "document",
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "PullRequestIngestionPlan_code_chunking_service",
+      "label": "CodeChunkingService",
+      "file_type": "document",
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "PullRequestIngestionPlan_ast_analysis_service",
+      "label": "AstAnalysisService",
+      "file_type": "document",
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "PullRequestIngestionPlan_ai_review_prompt_service",
+      "label": "AiReviewPromptService",
+      "file_type": "document",
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "PullRequestIngestionPlan_ai_provider_router_service",
+      "label": "AiProviderRouterService",
+      "file_type": "document",
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "README_codesense_backend",
+      "target": "AGENTS_nestjs",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "README_codesense_backend",
+      "target": "AGENTS_typescript_lang",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "README_codesense_backend",
+      "target": "AGENTS_postgresql",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "README_codesense_backend",
+      "target": "AGENTS_typeorm",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "README_codesense_backend",
+      "target": "AGENTS_redis_cache",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "README_codesense_backend",
+      "target": "AGENTS_bullmq",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "README_codesense_backend",
+      "target": "AGENTS_google_oauth",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "README_codesense_backend",
+      "target": "AGENTS_jwt_auth",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "README_codesense_backend",
+      "target": "AGENTS_passportjs",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "README_codesense_backend",
+      "target": "AGENTS_vercel_ai_sdk",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "README_codesense_backend",
+      "target": "AGENTS_opentelemetry",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "README_codesense_backend",
+      "target": "AGENTS_github_app",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "README_codesense_backend",
+      "target": "AGENTS_auth_module",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "README_codesense_backend",
+      "target": "AGENTS_github_integration_module",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "README_codesense_backend",
+      "target": "AGENTS_pull_request_module",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "README_codesense_backend",
+      "target": "AGENTS_ai_module",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "README_codesense_backend",
+      "target": "AGENTS_exception_handling",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "README_codesense_backend",
+      "target": "AGENTS_async_processing",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "README_codesense_backend",
+      "target": "AGENTS_idempotency_pattern",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "README_codesense_backend",
+      "target": "README_github_webhook",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "README_codesense_backend",
+      "target": "README_pr_processing_pipeline",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "AGENTS_postgresql",
+      "target": "AGENTS_typeorm",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "AGENTS_redis_cache",
+      "target": "AGENTS_bullmq",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "AGENTS_google_oauth",
+      "target": "AGENTS_passportjs",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "AGENTS_jwt_auth",
+      "target": "AGENTS_passportjs",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docker-compose_jaeger",
+      "target": "AGENTS_opentelemetry",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docker-compose.yaml",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docker-compose_pgvector",
+      "target": "AGENTS_postgresql",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docker-compose.yaml",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docker-compose_redis_stack",
+      "target": "AGENTS_redis_cache",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docker-compose.yaml",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "README_github_webhook",
+      "target": "README_pr_processing_pipeline",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "README_pr_processing_pipeline",
+      "target": "AGENTS_bullmq",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "AGENTS_pull_request_module",
+      "target": "PullRequestIngestionPlan_layer_separation_principle",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.7,
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "PullRequestIngestionPlan_layer_separation_principle",
+      "target": "PullRequestIngestionPlan_orchestration_layer",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "PullRequestIngestionPlan_layer_separation_principle",
+      "target": "PullRequestIngestionPlan_github_api_layer",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "PullRequestIngestionPlan_layer_separation_principle",
+      "target": "PullRequestIngestionPlan_sync_layer",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "PullRequestIngestionPlan_layer_separation_principle",
+      "target": "PullRequestIngestionPlan_query_layer",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "PullRequestIngestionPlan_layer_separation_principle",
+      "target": "PullRequestIngestionPlan_ingestion_layer",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "PullRequestIngestionPlan_layer_separation_principle",
+      "target": "PullRequestIngestionPlan_ai_review_layer",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "PullRequestIngestionPlan_layer_separation_principle",
+      "target": "PullRequestIngestionPlan_cache_layer",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "PullRequestIngestionPlan_layer_separation_principle",
+      "target": "PullRequestIngestionPlan_internal_utility_services",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "PullRequestIngestionPlan_orchestration_layer",
+      "target": "PullRequestIngestionPlan_pr_workflow_service",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "PullRequestIngestionPlan_ingestion_layer",
+      "target": "PullRequestIngestionPlan_repository_context_service",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "PullRequestIngestionPlan_ingestion_layer",
+      "target": "PullRequestIngestionPlan_code_chunking_service",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "PullRequestIngestionPlan_ingestion_layer",
+      "target": "PullRequestIngestionPlan_ast_analysis_service",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "PullRequestIngestionPlan_ai_review_layer",
+      "target": "PullRequestIngestionPlan_ai_review_prompt_service",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "PullRequestIngestionPlan_ai_review_layer",
+      "target": "PullRequestIngestionPlan_ai_provider_router_service",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "PullRequestIngestionPlan_pr_workflow_service",
+      "target": "PullRequestIngestionPlan_sync_layer",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "PullRequestIngestionPlan_pr_workflow_service",
+      "target": "PullRequestIngestionPlan_ai_review_layer",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "README_pr_processing_pipeline",
+      "target": "PullRequestIngestionPlan_layer_separation_principle",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.6,
+      "source_file": "docs/PullRequestIngestionPlan.md",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "infrastructure_stack",
+      "label": "Infrastructure Stack",
+      "nodes": [
+        "AGENTS_postgresql",
+        "docker-compose_pgvector",
+        "AGENTS_redis_cache",
+        "docker-compose_redis_stack",
+        "docker-compose_jaeger",
+        "AGENTS_opentelemetry"
+      ],
+      "relation": "participate_in",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "docker-compose.yaml"
+    },
+    {
+      "id": "pr_processing_architecture",
+      "label": "PR Processing Architecture",
+      "nodes": [
+        "PullRequestIngestionPlan_orchestration_layer",
+        "PullRequestIngestionPlan_github_api_layer",
+        "PullRequestIngestionPlan_sync_layer",
+        "PullRequestIngestionPlan_query_layer",
+        "PullRequestIngestionPlan_ingestion_layer",
+        "PullRequestIngestionPlan_ai_review_layer",
+        "PullRequestIngestionPlan_cache_layer",
+        "PullRequestIngestionPlan_internal_utility_services"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/PullRequestIngestionPlan.md"
+    },
+    {
+      "id": "authentication_system",
+      "label": "Authentication System",
+      "nodes": [
+        "AGENTS_google_oauth",
+        "AGENTS_jwt_auth",
+        "AGENTS_passportjs",
+        "AGENTS_auth_module"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

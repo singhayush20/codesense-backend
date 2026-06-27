@@ -1,0 +1,36 @@
+{
+    "$schema": "https://opencode.ai/config.json",
+    "plugin": ["superpowers@git+https://github.com/obra/superpowers.git"],
+    "permission": {
+        "edit": {
+            "dist/**": "deny",
+            "node_modules/**": "deny",
+            ".env.*": "deny"
+        },
+        "read": {
+            "dist/**": "deny",
+            "node_modules/**": "deny",
+            ".env.*": "deny"
+        },
+        "write": {
+            "dist/**": "deny",
+            "node_modules/**": "deny",
+            ".env.*": "deny"
+        },
+        "grep": {
+            "dist/**": "deny",
+            "node_modules/**": "deny",
+            ".env.*": "deny"
+        },
+        "glob": {
+            "dist/**": "deny",
+            "node_modules/**": "deny",
+            ".env.*": "deny"
+        },
+        "bash": {
+            "dist/**": "deny",
+            "node_modules/**": "deny",
+            ".env.*": "deny"
+        }
+    }
+}
