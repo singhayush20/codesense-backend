@@ -20,4 +20,6 @@ export class LlmTimeoutError extends LlmProviderError {}
 
 export class LlmValidationError extends LlmProviderError {}
 
+export class LlmCancelledError extends LlmProviderError {}
+
 export class LlmInternalError extends LlmProviderError {}

@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import pRetry from 'p-retry';
 import {
   LlmAuthenticationError,
+  LlmCancelledError,
   LlmValidationError,
 } from '../errors/llm-provider.error';
 
@@ -27,6 +28,10 @@ export class LlmRetryService {
         }
 
         if (error instanceof LlmValidationError) {
+          return false;
+        }
+
+        if (error instanceof LlmCancelledError) {
           return false;
         }
 

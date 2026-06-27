@@ -1,17 +1,17 @@
 import { ProviderType } from '../enums/provider.type';
 import {
+  LlmCancelledError,
   LlmInternalError,
   LlmProviderError,
-  LlmTimeoutError,
-} from '../errors/llm-provider.error';
+} from './llm-provider.error';
 
 export class OllamaErrorMapper {
   static map(error: unknown): Error {
     if (error instanceof Error && error.name === 'AbortError') {
-      return new LlmTimeoutError(
-        'Ollama request timed out',
+      return new LlmCancelledError(
+        'Ollama request was cancelled',
         ProviderType.OLLAMA,
-        true,
+        false,
         error,
       );
     }

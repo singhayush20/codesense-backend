@@ -3,6 +3,7 @@ import { LlmResponseDto } from '../../../../ai/dto/llm-response.dto';
 import { ProviderType } from '../../../../ai/enums/provider.type';
 import { GithubPrReviewCommentService } from '../../github/github-pr-review-comment/github-pr-review-comment.service';
 import { PullRequestReviewService } from '../../pull-request-review/pull-request-review.service';
+import { PullRequestReviewStatus } from '../../../enums/pull-request-review-status.enum';
 
 @Injectable()
 export class PrReviewResultService {
@@ -32,6 +33,17 @@ export class PrReviewResultService {
     this.logger.debug(
       `Saved pull request review job with ID: ${pullRequestReviewJob.id}, runId: ${pullRequestReviewJob.runId}`,
     );
+
+    if (
+      pullRequestReviewJob.status !== PullRequestReviewStatus.SUCCESS ||
+      !pullRequestReviewJob.result
+    ) {
+      this.logger.log(
+        `Skipping comment posting for review run ${runId} with status ${pullRequestReviewJob.status}`,
+      );
+      return;
+    }
+
     await this.githubPrReviewCommentService.postReviewComments(
       pullRequestId,
       result,

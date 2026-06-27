@@ -5,6 +5,9 @@ import { PrCodeParsingService } from '../pr-code-parsing/pr-code-parsing.service
 import { PullRequestQueryService } from '../../query/pull-request-query/pull-request-query.service';
 import { RepoLlmConfigService } from '../../../../llm/service/repo-llm-config.service';
 import { CredentialService } from '../../../../llm/service/credential.service';
+import { PullRequestReviewService } from '../../../service/pull-request-review/pull-request-review.service';
+import { ReviewCancellationService } from './review-cancellation.service';
+import { LlmCancelledError } from '../../../../ai/errors/llm-provider.error';
 import { LlmExecutionContext } from '../../../../ai/dto/execution-context.dto';
 import { LlmRequest } from '../../../../ai/dto/llm-request.dto';
 import { ProviderCredentials } from '../../../../ai/dto/provider-credentials.dto';
@@ -36,6 +39,8 @@ export class AiReviewService {
     private readonly pullRequestQueryService: PullRequestQueryService,
     private readonly repoLlmConfig: RepoLlmConfigService,
     private readonly credentialService: CredentialService,
+    private readonly pullRequestReviewService: PullRequestReviewService,
+    private readonly reviewCancellationService: ReviewCancellationService,
     @InjectQueue('pull-request-review-results')
     private readonly pullRequestReviewQueue: Queue,
   ) {}
@@ -118,6 +123,22 @@ export class AiReviewService {
       return {};
     }
 
+    const { supersededRunIds } =
+      await this.pullRequestReviewService.createInProgressReviewJob(
+        pullRequestId,
+        llmConfig.providerType,
+        runId,
+      );
+
+    for (const supersededRunId of supersededRunIds) {
+      this.logger.log(
+        `Superseding earlier review run ${supersededRunId} for PR ${pullRequestId}`,
+      );
+      await this.reviewCancellationService.publishCancellation(supersededRunId);
+    }
+
+    const abortSignal = this.reviewCancellationService.register(runId);
+
     const providerCredentials: ProviderCredentials = {
       apiKey: decryptedLlmCredentials.apiKey,
       baseUrl: decryptedLlmCredentials.baseUrl,
@@ -141,6 +162,7 @@ export class AiReviewService {
       const llmProviderConfig: LlmExecutionContext = {
         credentials: providerCredentials,
         requestId: `repoId:${githubRepositoryId} | prId:${pullRequestId} | batch:${index + 1} | ${Date.now()}`,
+        abortSignal,
       };
 
       return this.reviewFileBatch(
@@ -156,8 +178,17 @@ export class AiReviewService {
       );
     });
 
-    const batchResults = await Promise.all(reviewPromises);
-    const successfulBatchResults = batchResults.filter(
+    let batchResults:
+      | Array<LlmResponse<z.infer<typeof AIReviewResponseSchema>> | null>
+      | undefined;
+
+    try {
+      batchResults = await Promise.all(reviewPromises);
+    } finally {
+      this.reviewCancellationService.deregister(runId);
+    }
+
+    const successfulBatchResults = (batchResults ?? []).filter(
       (result): result is LlmResponse<z.infer<typeof AIReviewResponseSchema>> =>
         Boolean(result?.response),
     );
@@ -306,6 +337,13 @@ ${JSON.stringify(files, null, 2)}
 
       return llmResponse;
     } catch (error: unknown) {
+      if (error instanceof LlmCancelledError) {
+        this.logger.warn(
+          `Review batch #${batchId} cancelled for PR ${pullRequestNumber}`,
+        );
+        return null;
+      }
+
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(
