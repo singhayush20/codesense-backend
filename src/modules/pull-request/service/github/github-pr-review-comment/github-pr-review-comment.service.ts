@@ -8,7 +8,10 @@ import { ExceptionCodes } from '../../../../../exception-handling/exception-code
 import { GithubInstallationTokenService } from '../../../../github-integration/service/github-installation-token.service';
 import { LlmResponseDto } from '../../../../ai/dto/llm-response.dto';
 import { PullRequestQueryService } from '../../query/pull-request-query/pull-request-query.service';
-import { GithubPullRequestReviewComment } from '../../../dto/review/pr-review-comment.dto';
+import {
+  GithubExistingReviewComment,
+  GithubPullRequestReviewComment,
+} from '../../../dto/review/pr-review-comment.dto';
 import { GithubPrApiService } from '../github-pr-api/github-pr-api.service';
 import { GithubPullRequestFileResponse } from '../../../dto/pull-request/github-pull-request-file-response.dto';
 import { AIReviewComment } from '../../../../ai/schema/ai-review-comment.schema';
@@ -78,6 +81,31 @@ export class GithubPrReviewCommentService {
       return;
     }
 
+    const existingComments =
+      await this.githubPrApiService.fetchPullRequestReviewComments(
+        repository,
+        pullRequest.prNumber,
+      );
+
+    const commentsToPost = this.removeExistingComments(
+      comments,
+      existingComments,
+    );
+
+    if (commentsToPost.length === 0) {
+      this.logger.warn({
+        message:
+          'Skipping GitHub review creation because every generated comment already exists.',
+        pullRequestId,
+        repositoryName: repository.fullName,
+        prNumber: pullRequest.prNumber,
+        headSha: pullRequest.headSha,
+        existingCommentCount: existingComments.length,
+        generatedCommentCount: comments.length,
+      });
+      return;
+    }
+
     const token = await this.githubInstallationTokenService.getToken(
       repository.installation.installationId,
     );
@@ -89,7 +117,7 @@ export class GithubPrReviewCommentService {
           {
             commit_id: pullRequest.headSha,
             event: 'COMMENT',
-            comments,
+            comments: commentsToPost,
           },
           {
             headers: {
@@ -102,7 +130,7 @@ export class GithubPrReviewCommentService {
       );
 
       this.logger.debug(
-        `Posted ${comments.length} GitHub review comments for pullRequestId=${pullRequestId}`,
+        `Posted ${commentsToPost.length} GitHub review comments for pullRequestId=${pullRequestId}`,
       );
     } catch (error) {
       this.handleGithubError(error, repository.fullName, pullRequest.prNumber);
@@ -225,6 +253,49 @@ export class GithubPrReviewCommentService {
     }
 
     return lineNumbers;
+  }
+
+  private removeExistingComments(
+    generatedComments: GithubPullRequestReviewComment[],
+    existingComments: GithubExistingReviewComment[],
+  ): GithubPullRequestReviewComment[] {
+    // For the time the logic is to consider a comment as duplicate if it has the same path and line number, regardless of the content. This is because the content may change due to LLM updates, but we want to avoid posting multiple comments on the same line of code.
+    // This can be improved in the future by considering the content of the comment as well, but for now, we will keep it simple and avoid duplicates based on location only.
+
+    const existingLocations = new Set(
+      existingComments
+        .filter((comment) => comment.line !== null)
+        .map((comment) => `${comment.path}:${comment.line}`),
+    );
+
+    const filteredComments: GithubPullRequestReviewComment[] = [];
+    let duplicateCount = 0;
+
+    for (const comment of generatedComments) {
+      const locationKey = `${comment.path}:${comment.line}`;
+
+      if (existingLocations.has(locationKey)) {
+        duplicateCount++;
+        this.logger.debug({
+          message: 'Skipping duplicate review comment',
+          path: comment.path,
+          line: comment.line,
+        });
+        continue;
+      }
+
+      filteredComments.push(comment);
+    }
+
+    this.logger.debug({
+      message: 'Filtered duplicate GitHub review comments',
+      existingCommentCount: existingComments.length,
+      generatedCommentCount: generatedComments.length,
+      duplicateCommentCount: duplicateCount,
+      commentsRemaining: filteredComments.length,
+    });
+
+    return filteredComments;
   }
 
   private handleGithubError(

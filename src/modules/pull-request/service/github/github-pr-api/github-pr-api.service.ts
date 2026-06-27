@@ -8,6 +8,7 @@ import { AppException } from '../../../../../exception-handling/app-exception.ex
 import { ExceptionCodes } from '../../../../../exception-handling/exception-codes';
 import { AxiosError } from 'axios';
 import { GithubPullRequestFileResponse } from '../../../dto/pull-request/github-pull-request-file-response.dto';
+import { GithubExistingReviewComment } from '../../../dto/review/pr-review-comment.dto';
 
 @Injectable()
 export class GithubPrApiService {
@@ -78,6 +79,49 @@ export class GithubPrApiService {
 
         if (response.data.length < perPage) {
           return files;
+        }
+
+        page++;
+      }
+    } catch (error) {
+      this.handleGithubError(error, repository.fullName, prNumber);
+    }
+  }
+
+  async fetchPullRequestReviewComments(
+    repository: GithubRepository,
+    prNumber: number,
+  ): Promise<GithubExistingReviewComment[]> {
+    const token = await this.githubInstallationTokenService.getToken(
+      repository.installation.installationId,
+    );
+
+    try {
+      const perPage = 100;
+      let page = 1;
+      const comments: GithubExistingReviewComment[] = [];
+
+      while (true) {
+        const response = await firstValueFrom(
+          this.httpService.get<GithubExistingReviewComment[]>(
+            `https://api.github.com/repos/${repository.fullName}/pulls/${prNumber}/comments`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: 'application/vnd.github+json',
+              },
+              params: {
+                per_page: perPage,
+                page,
+              },
+            },
+          ),
+        );
+
+        comments.push(...response.data);
+
+        if (response.data.length < perPage) {
+          return comments;
         }
 
         page++;

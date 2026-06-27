@@ -2,19 +2,19 @@ import { ProviderType } from '../enums/provider.type';
 
 import {
   LlmAuthenticationError,
+  LlmCancelledError,
   LlmInternalError,
   LlmProviderError,
   LlmRateLimitError,
-  LlmTimeoutError,
 } from './llm-provider.error';
 
 export class NvidiaErrorMapper {
   static map(error: unknown): Error {
     if (error instanceof Error && error.name === 'AbortError') {
-      return new LlmTimeoutError(
-        'NVIDIA request timed out',
+      return new LlmCancelledError(
+        'NVIDIA request was cancelled',
         ProviderType.NVIDIA,
-        true,
+        false,
         error,
       );
     }

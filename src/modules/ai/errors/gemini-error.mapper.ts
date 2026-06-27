@@ -1,19 +1,19 @@
 import { ProviderType } from '../enums/provider.type';
 import {
   LlmAuthenticationError,
+  LlmCancelledError,
   LlmInternalError,
   LlmProviderError,
   LlmRateLimitError,
-  LlmTimeoutError,
 } from './llm-provider.error';
 
 export class GeminiErrorMapper {
   static map(error: unknown): Error {
     if (error instanceof Error && error.name === 'AbortError') {
-      return new LlmTimeoutError(
-        'Gemini request timed out',
+      return new LlmCancelledError(
+        'Gemini request was cancelled',
         ProviderType.GEMINI,
-        true,
+        false,
         error,
       );
     }

@@ -1,6 +1,5 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource } from 'typeorm';
 
 import { PullRequestReviewJob } from '../../entity/pull-request-review-job.entity';
 import { PullRequest } from '../../entity/pull-request.entity';
@@ -14,19 +13,19 @@ import { PullRequestReviewStatus } from '../../enums/pull-request-review-status.
 export class PullRequestReviewService {
   private readonly logger = new Logger(PullRequestReviewService.name);
 
-  constructor(
-    private readonly dataSource: DataSource,
+  /**
+   * The service uses DataSource directly because these operations require
+   * explicit transaction management for atomic review job state updates.
+   *
+   * Using a Transactional EntityManager here ensures that superseding
+   * existing in-progress jobs and creating the new job happen together.
+   */
+  constructor(private readonly dataSource: DataSource) {}
 
-    @InjectRepository(PullRequestReviewJob)
-    private readonly pullRequestReviewRepository: Repository<PullRequestReviewJob>,
-
-    @InjectRepository(PullRequest)
-    private readonly pullRequestRepository: Repository<PullRequest>,
-
-    @InjectRepository(PullRequestReviewJobResult)
-    private readonly pullRequestReviewResultRepository: Repository<PullRequestReviewJobResult>,
-  ) {}
-
+  /**
+   * Persist a completed review result only if the review job is still active.
+   * Old or cancelled review jobs must not overwrite the current PR review state.
+   */
   async savePullRequestReview(
     runId: string,
     pullRequestId: string,
@@ -39,33 +38,27 @@ export class PullRequestReviewService {
     );
 
     return this.dataSource.transaction(async (manager) => {
-      const existingReviewJob = await manager.findOne(PullRequestReviewJob, {
+      let existingReviewJob = await manager.findOne(PullRequestReviewJob, {
         where: {
           runId,
         },
         relations: ['result'],
       });
 
-      if (existingReviewJob?.result) {
-        this.logger.debug(
-          `Pull request review already saved. runId=${runId}, reviewJobId=${existingReviewJob.id}`,
-        );
-        return existingReviewJob;
-      }
+      if (!existingReviewJob) {
+        const pullRequest = await manager.findOne(PullRequest, {
+          where: {
+            id: pullRequestId,
+          },
+        });
 
-      const pullRequest = await manager.findOne(PullRequest, {
-        where: {
-          id: pullRequestId,
-        },
-      });
+        if (!pullRequest) {
+          throw new NotFoundException(
+            `Pull request not found: ${pullRequestId}`,
+          );
+        }
 
-      if (!pullRequest) {
-        throw new NotFoundException(`Pull request not found: ${pullRequestId}`);
-      }
-
-      const savedReviewJob =
-        existingReviewJob ??
-        (await manager.save(
+        existingReviewJob = await manager.save(
           PullRequestReviewJob,
           manager.create(PullRequestReviewJob, {
             runId,
@@ -73,11 +66,34 @@ export class PullRequestReviewService {
             providerType: provider,
             status: PullRequestReviewStatus.SUCCESS,
           }),
-        ));
+        );
+      }
+
+      if (existingReviewJob.result) {
+        this.logger.debug(
+          `Pull request review already saved. runId=${runId}, reviewJobId=${existingReviewJob.id}`,
+        );
+        return existingReviewJob;
+      }
+
+      if (
+        existingReviewJob.status === PullRequestReviewStatus.SUPERSEDED ||
+        existingReviewJob.status === PullRequestReviewStatus.CANCELLED
+      ) {
+        this.logger.debug(
+          `Skipping save for non-active review job. runId=${runId}, status=${existingReviewJob.status}`,
+        );
+        return existingReviewJob;
+      }
+
+      if (existingReviewJob.status !== PullRequestReviewStatus.SUCCESS) {
+        existingReviewJob.status = PullRequestReviewStatus.SUCCESS;
+        await manager.save(PullRequestReviewJob, existingReviewJob);
+      }
 
       const reviewResult = manager.create(PullRequestReviewJobResult, {
-        id: savedReviewJob.id,
-        job: savedReviewJob,
+        id: existingReviewJob.id,
+        job: existingReviewJob,
         totalInputTokens: result.totalInputTokens ?? 0,
         totalOutputTokens: result.totalOutputTokens ?? 0,
         totalTokens: result.totalTokenUsage ?? 0,
@@ -90,9 +106,65 @@ export class PullRequestReviewService {
         reviewResult,
       );
 
-      savedReviewJob.result = savedReviewResult;
+      existingReviewJob.result = savedReviewResult;
 
-      return savedReviewJob;
+      return existingReviewJob;
+    });
+  }
+
+  /**
+   * Atomically create a new in-progress review job and supersede any prior active run.
+   * Returns the new job plus any superseded run IDs so callers can cancel them.
+   */
+  async createInProgressReviewJob(
+    pullRequestId: string,
+    provider: ProviderType,
+    runId: string,
+  ): Promise<{ reviewJob: PullRequestReviewJob; supersededRunIds: string[] }> {
+    return this.dataSource.transaction(async (manager) => {
+      const pullRequest = await manager.findOne(PullRequest, {
+        where: {
+          id: pullRequestId,
+        },
+      });
+
+      if (!pullRequest) {
+        throw new NotFoundException(`Pull request not found: ${pullRequestId}`);
+      }
+
+      const existingInProgressJobs = await manager
+        .createQueryBuilder(PullRequestReviewJob, 'review')
+        .innerJoin('review.pullRequest', 'pullRequest')
+        .where('pullRequest.id = :pullRequestId', { pullRequestId })
+        .andWhere('review.status = :status', {
+          status: PullRequestReviewStatus.IN_PROGRESS,
+        })
+        .getMany();
+
+      const supersededRunIds: string[] = [];
+
+      for (const existingJob of existingInProgressJobs) {
+        existingJob.status = PullRequestReviewStatus.SUPERSEDED;
+        await manager.save(PullRequestReviewJob, existingJob);
+        supersededRunIds.push(existingJob.runId);
+      }
+
+      const reviewJob = manager.create(PullRequestReviewJob, {
+        runId,
+        pullRequest,
+        providerType: provider,
+        status: PullRequestReviewStatus.IN_PROGRESS,
+      });
+
+      const savedReviewJob = await manager.save(
+        PullRequestReviewJob,
+        reviewJob,
+      );
+
+      return {
+        reviewJob: savedReviewJob,
+        supersededRunIds,
+      };
     });
   }
 }

@@ -42,59 +42,63 @@ export class NvidiaAdapter implements LlmProviderAdapter {
         baseURL: NvidiaAdapter.nvidiaBaseUrl,
       });
 
-      const result = await withTimeout(async (signal) => {
-        return generateText({
-          model: nvidia.chatModel(request.model),
-          system: request.systemPrompt,
-          messages: AiSdkMessageMapper.toModelMessages(request.messages),
-          temperature: request.temperature,
-          maxOutputTokens: request.maxTokens,
-          topP: request.topP,
-          abortSignal: signal,
-          output: request.responseSchema
-            ? Output.object({
-                schema: request.responseSchema,
-              })
-            : undefined,
-          tools: toolSet,
-          experimental_onToolCallStart(event) {
-            const toolName = event.toolCall.toolName;
-            const toolCallId = event.toolCall.toolCallId;
-            const input = event.toolCall.input as unknown;
+      const result = await withTimeout(
+        async (signal) => {
+          return generateText({
+            model: nvidia.chatModel(request.model),
+            system: request.systemPrompt,
+            messages: AiSdkMessageMapper.toModelMessages(request.messages),
+            temperature: request.temperature,
+            maxOutputTokens: request.maxTokens,
+            topP: request.topP,
+            abortSignal: signal,
+            output: request.responseSchema
+              ? Output.object({
+                  schema: request.responseSchema,
+                })
+              : undefined,
+            tools: toolSet,
+            experimental_onToolCallStart(event) {
+              const toolName = event.toolCall.toolName;
+              const toolCallId = event.toolCall.toolCallId;
+              const input = event.toolCall.input as unknown;
 
-            activeSpan?.addEvent('tool.call.start', {
-              'tool.name': toolName,
-              'tool.call.id': toolCallId,
-              'tool.input': JSON.stringify(input),
-            });
-          },
-          experimental_onToolCallFinish(event) {
-            const { toolName, toolCallId } = event.toolCall;
-            const { output, error, durationMs } = event;
-
-            if (event.error) {
-              activeSpan?.addEvent('tool.call.error', {
+              activeSpan?.addEvent('tool.call.start', {
                 'tool.name': toolName,
                 'tool.call.id': toolCallId,
-                'tool.duration.ms': event.durationMs,
-                'tool.error': JSON.stringify(error),
+                'tool.input': JSON.stringify(input),
               });
+            },
+            experimental_onToolCallFinish(event) {
+              const { toolName, toolCallId } = event.toolCall;
+              const { output, error, durationMs } = event;
 
-              activeSpan?.setStatus({
-                code: SpanStatusCode.ERROR,
-                message: JSON.stringify(error),
-              });
-            } else {
-              activeSpan?.addEvent('tool.call.finish', {
-                'tool.name': toolName,
-                'tool.call.id': toolCallId,
-                'tool.duration.ms': durationMs,
-                'tool.output': JSON.stringify(output),
-              });
-            }
-          },
-        });
-      }, context.timeoutMs ?? 30_000);
+              if (event.error) {
+                activeSpan?.addEvent('tool.call.error', {
+                  'tool.name': toolName,
+                  'tool.call.id': toolCallId,
+                  'tool.duration.ms': event.durationMs,
+                  'tool.error': JSON.stringify(error),
+                });
+
+                activeSpan?.setStatus({
+                  code: SpanStatusCode.ERROR,
+                  message: JSON.stringify(error),
+                });
+              } else {
+                activeSpan?.addEvent('tool.call.finish', {
+                  'tool.name': toolName,
+                  'tool.call.id': toolCallId,
+                  'tool.duration.ms': durationMs,
+                  'tool.output': JSON.stringify(output),
+                });
+              }
+            },
+          });
+        },
+        context.timeoutMs ?? 30_000,
+        context.abortSignal,
+      );
 
       return {
         provider: this.provider,

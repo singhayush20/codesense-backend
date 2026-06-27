@@ -32,6 +32,7 @@ import { PullRequestAnalyzerProcessor } from './processor/pull-request-analyzer.
 import { PrToolsUtilityService } from './service/pr-tools-utility/pr-tools-utility.service';
 import { PrReviewResultService } from './service/orchestration/pr-review-result/pr-review-result.service';
 import { PullRequestReviewService } from './service/pull-request-review/pull-request-review.service';
+import { ReviewCancellationService } from './service/orchestration/ai-review/review-cancellation.service';
 import { PullRequestReviewJobResult } from './entity/pull-request-review-job-result.entity';
 import { GithubPrReviewCommentService } from './service/github/github-pr-review-comment/github-pr-review-comment.service';
 import { PullRequestReviewResultsProcessor } from './processor/pull-request-review-resuls.processor';
@@ -77,6 +78,7 @@ import { PullRequestReviewResultsProcessor } from './processor/pull-request-revi
     PrToolsUtilityService,
     PrReviewResultService,
     PullRequestReviewService,
+    ReviewCancellationService,
     GithubPrReviewCommentService,
     PullRequestReviewResultsProcessor,
   ],

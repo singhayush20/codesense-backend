@@ -61,4 +61,6 @@ export class LlmExecutionContext {
   @IsOptional()
   @IsString({ message: 'Request ID must be a string' })
   requestId?: string;
+
+  abortSignal?: AbortSignal;
 }
