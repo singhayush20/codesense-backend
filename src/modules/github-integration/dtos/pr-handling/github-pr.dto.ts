@@ -24,6 +24,12 @@ export interface GithubPullRequestEventPayload {
   };
   pull_request: {
     number: number;
+    head: {
+      sha: string;
+    };
+    base: {
+      sha: string;
+    };
   };
 }
 
@@ -37,5 +43,13 @@ export interface GithubPullRequestPayload {
   action: string;
   installation: { id: number };
   repository: { full_name: string; id: number };
-  pull_request: { number: number };
+  pull_request: {
+    number: number;
+    head: {
+      sha: string;
+    };
+    base: {
+      sha: string;
+    };
+  };
 }

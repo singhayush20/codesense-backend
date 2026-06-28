@@ -120,6 +120,8 @@ export class PullRequestReviewService {
     pullRequestId: string,
     provider: ProviderType,
     runId: string,
+    headSha: string,
+    baseSha: string,
   ): Promise<{ reviewJob: PullRequestReviewJob; supersededRunIds: string[] }> {
     return this.dataSource.transaction(async (manager) => {
       const pullRequest = await manager.findOne(PullRequest, {
@@ -154,6 +156,8 @@ export class PullRequestReviewService {
         pullRequest,
         providerType: provider,
         status: PullRequestReviewStatus.IN_PROGRESS,
+        headSha,
+        baseSha,
       });
 
       const savedReviewJob = await manager.save(

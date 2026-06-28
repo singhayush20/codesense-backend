@@ -8,13 +8,63 @@ import { PullRequest } from '../../../entity/pull-request.entity';
 import { PullRequestQueryMapper } from '../../../mapper/pull-request-query.mapper';
 import { PullRequestQueryRequestDto } from '../../../dto/query/pull-request-query-request.dto';
 import { PullRequestDetailsDto } from '../../../dto/query/pull-request-details.dto';
+import { PullRequestReviewJob } from '../../../entity/pull-request-review-job.entity';
+import {
+  ReviewCommentResponseDto,
+  ReviewResultsResponseDto,
+} from '../../../dto/review/pr-review-comment.dto';
 
 @Injectable()
 export class PullRequestQueryService {
   constructor(
     @InjectRepository(PullRequest)
     private readonly pullRequestRepository: Repository<PullRequest>,
+    @InjectRepository(PullRequestReviewJob)
+    private readonly pullRequestReviewJobRepository: Repository<PullRequestReviewJob>,
   ) {}
+
+  async getReviewsForPullRequest(
+    pullRequestId: string,
+  ): Promise<ReviewResultsResponseDto[]> {
+    const reviews: PullRequestReviewJob[] =
+      await this.pullRequestReviewJobRepository.find({
+        where: {
+          pullRequest: {
+            id: pullRequestId,
+          },
+        },
+        relations: ['result', 'pullRequest'],
+        order: {
+          createdAt: 'DESC',
+        },
+      });
+
+    return reviews.map(
+      (review: PullRequestReviewJob): ReviewResultsResponseDto => ({
+        runId: review.runId,
+        provider: review.providerType,
+        pullRequestId: review.pullRequest.id,
+        reviewStatus: review.status,
+        totalInputTokens: review.result?.totalInputTokens,
+        totalOutputTokens: review.result?.totalOutputTokens,
+        totalTokens: review.result?.totalTokens,
+        summary: review.result?.summary || '',
+        headSha: review.headSha,
+        baseSha: review.baseSha,
+        comments:
+          review.result?.comments?.map(
+            (comment: Record<string, any>): ReviewCommentResponseDto => ({
+              filePath: comment.filePath as string,
+              startLine: comment.startLine as number,
+              endLine: comment.endLine as number,
+              severity: comment.severity as string,
+              category: comment.category as string,
+              message: comment.message as string,
+            }),
+          ) || [],
+      }),
+    );
+  }
 
   async findAll(
     query: PullRequestQueryRequestDto,

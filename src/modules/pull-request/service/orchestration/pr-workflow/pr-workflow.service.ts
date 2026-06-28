@@ -25,6 +25,12 @@ export class PrWorkflowService {
     const installationId = job.installation.id.toString();
     const repositoryId = job.repository.id.toString();
     const prNumber = job.pull_request.number;
+    const prHeadSha = job.pull_request.head.sha;
+    const prBaseSha = job.pull_request.base.sha;
+
+    this.logger.debug(
+      `Processing PR for prNumber: ${prNumber}, repositoryId: ${repositoryId}, installationId: ${installationId}, headSha: ${prHeadSha}, baseSha: ${prBaseSha}`,
+    );
 
     const lockKey = this.pullRequestLockService.buildLockKey(
       repositoryId,
@@ -82,6 +88,8 @@ export class PrWorkflowService {
         pullRequest.id,
         pullRequest.state,
         job.repository.id,
+        prHeadSha,
+        prBaseSha,
       );
     } catch (e) {
       this.logger.error(
@@ -97,6 +105,8 @@ export class PrWorkflowService {
     pullRequestId: string,
     state: string,
     repositoryId: number,
+    headSha: string,
+    baseSha: string,
   ): Promise<void> {
     // TODO: enque ai review based on the pr state - check for the possible states
     if (state !== 'open') {
@@ -106,21 +116,34 @@ export class PrWorkflowService {
     const payload: PrAnalyzerDto = {
       pullRequestId,
       repositoryId,
+      headSha,
+      baseSha,
     };
 
-    await this.aiReviewQueue.add(
-      `pr-analysis:${pullRequestId}:${Date.now()}`,
-      payload,
-      {
-        jobId: `ai-review-${pullRequestId}`,
-        attempts: 5,
-        backoff: {
-          type: 'exponential',
-          delay: 3000, // base delay is 3 seconds, therefore retries will happen at 3s, 6s, 12s, 24s, etc.
+    try {
+      this.logger.debug(
+        `Enqueuing AI review for pullRequestId: ${pullRequestId}, repositoryId: ${repositoryId}, headSha: ${headSha}, baseSha: ${baseSha}`,
+      );
+
+      await this.aiReviewQueue.add(
+        `pr-analysis:${pullRequestId}:${Date.now()}`,
+        payload,
+        {
+          jobId: `ai-review-${pullRequestId}`,
+          attempts: 5,
+          backoff: {
+            type: 'exponential',
+            delay: 3000, // base delay is 3 seconds, therefore retries will happen at 3s, 6s, 12s, 24s, etc.
+          },
+          removeOnComplete: 1000, // keep successful jobs for upto 1000 entries, then start removing old ones
+          removeOnFail: 5000, // keep failed jobs for upto 5000 entries for debugging purposes, then start removing old ones
         },
-        removeOnComplete: 1000, // keep successful jobs for upto 1000 entries, then start removing old ones
-        removeOnFail: 5000, // keep failed jobs for upto 5000 entries for debugging purposes, then start removing old ones
-      },
-    );
+      );
+    } catch (e) {
+      this.logger.error(
+        `Failed to enqueue AI review for pullRequestId: ${pullRequestId}, repositoryId: ${repositoryId}`,
+        e,
+      );
+    }
   }
 }

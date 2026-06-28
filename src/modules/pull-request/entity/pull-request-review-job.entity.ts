@@ -45,6 +45,12 @@ export class PullRequestReviewJob {
   })
   status!: PullRequestReviewStatus;
 
+  @Column({ name: 'head_sha', type: 'varchar', nullable: true })
+  headSha?: string;
+
+  @Column({ name: 'base_sha', type: 'varchar', nullable: true })
+  baseSha?: string;
+
   @CreateDateColumn({ name: 'created_at', nullable: false })
   createdAt!: Date;
 }
