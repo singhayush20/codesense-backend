@@ -129,7 +129,7 @@ export class PrWorkflowService {
         `pr-analysis:${pullRequestId}:${Date.now()}`,
         payload,
         {
-          jobId: `ai-review-${pullRequestId}`,
+          jobId: `ai-review-${pullRequestId}-${Date.now()}`,
           attempts: 5,
           backoff: {
             type: 'exponential',
