@@ -53,8 +53,6 @@ export class GithubPrReviewCommentService {
 
     const repository = pullRequest.repository;
 
-    // TODO: refactor to make the handling more robust for cases where remote file changed during pr review, this can give a different version of file content than what was used for generating comments, which can make the comments unpostable. In that case either log, or update job run status, to handle elegantly and let the user know about it, instead of just skipping posting comments.
-
     const pullRequestFiles =
       await this.githubPrApiService.fetchPullRequestFiles(
         repository,

@@ -12,6 +12,7 @@ import { PullRequestListItemDto } from '../../dto/query/pull-request-list-item.d
 import { PullRequestDetailsDto } from '../../dto/query/pull-request-details.dto';
 import { PullRequestFileContentDto } from '../../dto/query/pull-request-file-content.dto';
 import { PullRequestFileListDto } from '../../dto/query/pull-request-file-list.dto';
+import { ReviewResultsResponseDto } from '../../dto/review/pr-review-comment.dto';
 
 @Controller('pull-requests')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -56,5 +57,15 @@ export class PullRequestQueryController {
     fileId: string,
   ): Promise<PullRequestFileContentDto> {
     return this.pullRequestFileQueryService.findFileContent(fileId);
+  }
+
+  @Get(':id/reviews')
+  @Roles(RoleTypes.ROLE_ADMIN, RoleTypes.ROLE_USER)
+  async getReviewsForPullRequest(
+    @Param('id') pullRequestId: string,
+  ): Promise<ReviewResultsResponseDto[]> {
+    return await this.pullRequestQueryService.getReviewsForPullRequest(
+      pullRequestId,
+    );
   }
 }

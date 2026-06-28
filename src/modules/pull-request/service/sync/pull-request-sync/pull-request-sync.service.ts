@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { GithubPrApiService } from '../../github/github-pr-api/github-pr-api.service';
 import { PullRequestFileSyncService } from '../pull-request-file-sync/pull-request-file-sync.service';
 import { DataSource, EntityManager } from 'typeorm';
@@ -10,6 +10,8 @@ import { RepositoryFileContentSyncService } from '../repository-file-content-syn
 
 @Injectable()
 export class PullRequestSyncService {
+  private readonly logger = new Logger(PullRequestSyncService.name);
+
   constructor(
     private readonly githubPrApiService: GithubPrApiService,
     private readonly pullRequestFileSyncService: PullRequestFileSyncService,
@@ -21,6 +23,9 @@ export class PullRequestSyncService {
     repository: GithubRepository,
     prNumber: number,
   ): Promise<PullRequest> {
+    this.logger.debug(
+      `Syncing PR for prNumber: ${prNumber}, repositoryId: ${repository.id}, installationId: ${repository.installation.installationId}`,
+    );
     const [prResponse, fileResponses] = await Promise.all([
       this.githubPrApiService.fetchPullRequest(repository, prNumber),
 

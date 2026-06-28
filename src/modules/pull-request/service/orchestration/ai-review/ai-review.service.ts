@@ -49,6 +49,8 @@ export class AiReviewService {
     // TODO: Check how review works for moved files or renamed files
     const githubRepositoryId = prPayload.repositoryId.toString();
     const pullRequestId = prPayload.pullRequestId;
+    const headSha = prPayload.headSha;
+    const baseSha = prPayload.baseSha;
 
     const runId = `pr-review:${pullRequestId}:${Date.now()}`;
 
@@ -125,6 +127,8 @@ export class AiReviewService {
         pullRequestId,
         llmConfig.providerType,
         runId,
+        headSha,
+        baseSha,
       );
 
     for (const supersededRunId of supersededRunIds) {

@@ -15,8 +15,11 @@ export class PrProcessor extends WorkerHost {
   async process(
     job: Job<{ payload: GithubPullRequestEventPayload }>,
   ): Promise<void> {
-    this.logger.log(`Processing PR job: ${job.id}`);
-
-    await this.prWorkflowService.processPullRequest(job.data.payload);
+    try {
+      await this.prWorkflowService.processPullRequest(job.data.payload);
+    } catch (error) {
+      this.logger.error('PR workflow failed', error);
+      throw error;
+    }
   }
 }
