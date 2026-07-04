@@ -13,21 +13,6 @@ import { PullRequestReviewContextDto } from '../../dto/review/pr-review-context.
 export class CodeParserController {
   constructor(private readonly prCodeParsingService: PrCodeParsingService) {}
 
-  /**
-   * Executes the complete AST review pipeline for a PR.
-   *
-   * Flow:
-   * 1. Load PR from DB
-   * 2. Load PR files
-   * 3. Load latest snapshots
-   * 4. Parse AST
-   * 5. Parse diff hunks
-   * 6. Map changed lines → AST nodes
-   * 7. Build review context
-   *
-   * Example:
-   * GET /debug/pull-requests/:pullRequestId/review-context
-   */
   @Get(':pullRequestId/review-context')
   @Roles(RoleTypes.ROLE_USER, RoleTypes.ROLE_ADMIN)
   async generateReviewContext(

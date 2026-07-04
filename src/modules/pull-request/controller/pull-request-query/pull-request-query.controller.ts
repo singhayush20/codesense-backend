@@ -68,4 +68,12 @@ export class PullRequestQueryController {
       pullRequestId,
     );
   }
+
+  @Get(':id/sync')
+  @Roles(RoleTypes.ROLE_ADMIN, RoleTypes.ROLE_USER)
+  async syncPullRequest(
+    @Param('id') pullRequestId: string,
+  ): Promise<PullRequestDetailsDto> {
+    return await this.pullRequestQueryService.syncPullRequest(pullRequestId);
+  }
 }

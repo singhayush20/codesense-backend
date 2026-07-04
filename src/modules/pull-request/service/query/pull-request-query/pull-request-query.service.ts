@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PaginatedResponseDto } from '../../../../../dtos/paginated-response.dto';
@@ -13,6 +13,9 @@ import {
   ReviewCommentResponseDto,
   ReviewResultsResponseDto,
 } from '../../../dto/review/pr-review-comment.dto';
+import { PullRequestSyncService } from '../../sync/pull-request-sync/pull-request-sync.service';
+import { AppException } from '../../../../../exception-handling/app-exception.exception';
+import { ExceptionCodes } from '../../../../../exception-handling/exception-codes';
 
 @Injectable()
 export class PullRequestQueryService {
@@ -21,6 +24,7 @@ export class PullRequestQueryService {
     private readonly pullRequestRepository: Repository<PullRequest>,
     @InjectRepository(PullRequestReviewJob)
     private readonly pullRequestReviewJobRepository: Repository<PullRequestReviewJob>,
+    private readonly pullRequestSyncService: PullRequestSyncService,
   ) {}
 
   async getReviewsForPullRequest(
@@ -139,5 +143,28 @@ export class PullRequestQueryService {
     });
 
     return pullRequest;
+  }
+
+  async syncPullRequest(pullRequestId: string): Promise<PullRequestDetailsDto> {
+    const pullRequest =
+      await this.findPullRequestByIdWithRepositoryAndInstallation(
+        pullRequestId,
+      );
+
+    if (pullRequest === null) {
+      throw new AppException(
+        ExceptionCodes.PULL_REQUEST_NOT_FOUND,
+        'Pull request not found',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    const updatedPullRequest =
+      await this.pullRequestSyncService.syncPullRequest(
+        pullRequest?.repository,
+        pullRequest?.prNumber,
+      );
+
+    return PullRequestQueryMapper.toDetailDto(updatedPullRequest);
   }
 }
