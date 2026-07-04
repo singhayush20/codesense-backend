@@ -59,4 +59,6 @@ An example of a response is:
   }
 
 11. Always ensure that the start line is always less than or equal to the end line. For single-line comments, set startLine and endLine to the same line number. For multi-line comments, set startLine to the line number of the first line of the code issue and endLine to the line number of the last line of the code issue. The start line and end line are required for generating github style comments.
+
+12. Tool Usage: You may be provided with one or more tools. When the available context is insufficient to confidently complete the task, use the appropriate tool instead of making assumptions. Do not invent information that can be obtained from a tool. Only report findings after gathering enough context to reach a high-confidence conclusion.
 `;
