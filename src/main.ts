@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { HttpStatus, ValidationPipe, VersioningType } from '@nestjs/common';
 import { GlobalExceptionFilter } from './exception-handling/global-exception-filter';
+import { LoggerService } from './common/logger/logger.service';
 import { AppException } from './exception-handling/app-exception.exception';
 import { ExceptionCodes } from './exception-handling/exception-codes';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -13,6 +14,9 @@ import './observability/telemetry';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  const logger = await app.resolve(LoggerService);
+  app.useLogger(logger);
 
   // Enable cookie parsing
   app.use(cookieParser());
@@ -103,6 +107,7 @@ async function bootstrap() {
 }
 
 void bootstrap().catch((error: unknown) => {
-  console.error('Application failed to start', error);
+  const logger = new LoggerService();
+  logger.fatal(error, 'Application failed to start');
   process.exit(1);
 });

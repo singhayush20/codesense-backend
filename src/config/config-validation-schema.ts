@@ -18,4 +18,9 @@ export const configValidationSchema = Joi.object({
   GOOGLE_USER_INFO_URL: Joi.string().uri().required(),
   GOOGLE_TOKEN_INFO_URL: Joi.string().uri().required(),
   GOOGLE_AUTH_URL: Joi.string().uri().required(),
+  OTEL_EXPORTER_OTLP_ENDPOINT: Joi.string().uri().optional(),
+  OTEL_ENABLED: Joi.boolean().default(true),
+  LOG_LEVEL: Joi.string()
+    .valid('trace', 'debug', 'info', 'warn', 'error', 'fatal')
+    .default('info'),
 });

@@ -58,6 +58,13 @@ const configuration = () => {
       clientSecret: process.env.GITHUB_CLIENT_SECRET,
       oauthRedirectUri: process.env.GITHUB_OAUTH_REDIRECT_URI,
     },
+    observability: {
+      otelEndpoint:
+        process.env.OTEL_EXPORTER_OTLP_ENDPOINT ??
+        'https://otlp.grafana.net:4318',
+      otelEnabled: process.env.OTEL_ENABLED !== 'false',
+      logLevel: process.env.LOG_LEVEL ?? 'info',
+    },
   };
 };
 

@@ -18,6 +18,7 @@ import { AiModule } from './modules/ai/ai.module';
 import { RequestContextService } from './modules/request-context/service/request-context/request-context.service';
 import { randomUUID } from 'crypto';
 import { RequestContextModule } from './modules/request-context/request-context.module';
+import { LoggerModule } from './common/logger/logger.module';
 
 @Module({
   imports: [
@@ -81,6 +82,7 @@ import { RequestContextModule } from './modules/request-context/request-context.
     PullRequestModule,
     AiModule,
     RequestContextModule,
+    LoggerModule,
   ],
   controllers: [AppController],
   providers: [AppService, RequestContextService],
