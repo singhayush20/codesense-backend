@@ -19,6 +19,11 @@ export interface LlmResponse<TResponse = string> {
   usage?: TokenUsage;
 
   raw?: unknown;
+
+  toolUsage?: {
+    calls?: unknown[];
+    results?: unknown[];
+  };
 }
 
 export interface LlmResponseDto {

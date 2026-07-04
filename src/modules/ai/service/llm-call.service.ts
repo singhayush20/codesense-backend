@@ -78,6 +78,7 @@ export class LlmService {
         'llm.input_tokens': response.usage?.promptTokens ?? 0,
         'llm.output_tokens': response.usage?.completionTokens ?? 0,
         'llm.response_text': JSON.stringify(response.response),
+        'llm.tool_usage': JSON.stringify(response.toolUsage ?? {}),
       });
 
       this.observability.recordSpanSuccess(span);

@@ -106,6 +106,10 @@ export class GeminiAdapter implements LlmProviderAdapter {
           totalTokens: result.usage?.totalTokens,
         },
         raw: result,
+        toolUsage: {
+          calls: result.toolCalls,
+          results: result.toolResults,
+        },
       };
     } catch (error) {
       const normalizedError = GeminiErrorMapper.map(error);
