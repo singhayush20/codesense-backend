@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { PullRequestFileQueryService } from '../../service/query/pull-request-file-query/pull-request-file-query.service';
 import { PullRequestQueryService } from '../../service/query/pull-request-query/pull-request-query.service';
 import { PullRequestQueryRequestDto } from '../../dto/query/pull-request-query-request.dto';
@@ -69,7 +69,7 @@ export class PullRequestQueryController {
     );
   }
 
-  @Get(':id/sync')
+  @Post(':id/sync')
   @Roles(RoleTypes.ROLE_ADMIN, RoleTypes.ROLE_USER)
   async syncPullRequest(
     @Param('id') pullRequestId: string,
