@@ -1,4 +1,4 @@
-import { Module, OnModuleInit } from '@nestjs/common';
+import { forwardRef, Module, OnModuleInit } from '@nestjs/common';
 import { GeminiAdapter } from './llm-adapter/gemini.adapter';
 import { OllamaAdapter } from './llm-adapter/ollama.adapter';
 import { LlmProviderRegistry } from './registry/llm-provider-registry.service';
@@ -8,9 +8,10 @@ import { NvidiaAdapter } from './llm-adapter/nvidia.adapter';
 import { LlmService } from './service/llm-call.service';
 import { RequestContextModule } from '../request-context/request-context.module';
 import { AiTools } from './tools/llm-tools';
+import { PullRequestModule } from '../pull-request/pull-request.module';
 
 @Module({
-  imports: [RequestContextModule],
+  imports: [RequestContextModule, forwardRef(() => PullRequestModule)],
   providers: [
     GeminiAdapter,
     OllamaAdapter,

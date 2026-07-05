@@ -108,26 +108,43 @@ export class PrToolsUtilityService {
   ): Promise<PullRequestChangedFile[]> {
     try {
       const token = await this.githubTokenService.getToken(installationId);
+      const perPage = 100;
+      let page = 1;
+      const files: PullRequestChangedFile[] = [];
 
-      const response = await firstValueFrom(
-        this.httpService.get<GithubPullRequestFilesResponse>(
-          `https://api.github.com/repos/${repositoryFullName}/pulls/${pullRequestNumber}/files`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              Accept: 'application/vnd.github+json',
+      while (true) {
+        const response = await firstValueFrom(
+          this.httpService.get<GithubPullRequestFilesResponse>(
+            `https://api.github.com/repos/${repositoryFullName}/pulls/${pullRequestNumber}/files`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: 'application/vnd.github+json',
+              },
+              params: {
+                per_page: perPage,
+                page,
+              },
             },
-          },
-        ),
-      );
+          ),
+        );
 
-      return response.data.map((file) => ({
-        filePath: file.filename,
-        status: file.status,
-        additions: file.additions,
-        deletions: file.deletions,
-        changes: file.changes,
-      }));
+        files.push(
+          ...response.data.map((file) => ({
+            filePath: file.filename,
+            status: file.status,
+            additions: file.additions,
+            deletions: file.deletions,
+            changes: file.changes,
+          })),
+        );
+
+        if (response.data.length < perPage) {
+          return files;
+        }
+
+        page++;
+      }
     } catch (error) {
       this.logger.error('Unable to list changed files', error);
 
