@@ -5,7 +5,6 @@ import { PrCodeParsingService } from '../pr-code-parsing/pr-code-parsing.service
 import { PullRequestQueryService } from '../../query/pull-request-query/pull-request-query.service';
 import { RepoLlmConfigService } from '../../../../llm/service/repo-llm-config.service';
 import { CredentialService } from '../../../../llm/service/credential.service';
-import { PullRequestReviewService } from '../../../service/pull-request-review/pull-request-review.service';
 import { ReviewCancellationService } from './review-cancellation.service';
 import { LlmCancelledError } from '../../../../ai/errors/llm-provider.error';
 import { LlmExecutionContext } from '../../../../ai/dto/execution-context.dto';
@@ -27,6 +26,8 @@ import { AIReviewResponseSchema } from '../../../../ai/schema/ai-review-comment.
 import { Queue } from 'bullmq';
 import { InjectQueue } from '@nestjs/bullmq';
 import { ReviewResultsPayloadDto } from '../../../dto/review/review-results-payload.dto';
+import { ReviewWorkflowService } from '../review-workflow/review-workflow.service';
+import { ReviewWorkflowStep } from '../../../enums/review-workflow-step.enum';
 
 @Injectable()
 export class AiReviewService {
@@ -39,8 +40,8 @@ export class AiReviewService {
     private readonly pullRequestQueryService: PullRequestQueryService,
     private readonly repoLlmConfig: RepoLlmConfigService,
     private readonly credentialService: CredentialService,
-    private readonly pullRequestReviewService: PullRequestReviewService,
     private readonly reviewCancellationService: ReviewCancellationService,
+    private readonly reviewWorkflowService: ReviewWorkflowService,
     @InjectQueue('pull-request-review-results')
     private readonly pullRequestReviewQueue: Queue,
   ) {}
@@ -110,26 +111,13 @@ export class AiReviewService {
         llmConfig.providerId,
       );
 
-    const fileContext: PullRequestReviewContextDto =
-      await this.prCodeParsingService.generateContextFromPullRequest(
-        pullRequestId,
-      );
-
-    if (!fileContext.files || fileContext.files.length === 0) {
-      this.logger.log(
-        `No applicable code modifications found for review in PR ${pullRequestId}`,
-      );
-      return {};
-    }
-
-    const { supersededRunIds } =
-      await this.pullRequestReviewService.createInProgressReviewJob(
-        pullRequestId,
-        llmConfig.providerType,
-        runId,
-        headSha,
-        baseSha,
-      );
+    const { supersededRunIds } = await this.reviewWorkflowService.startRun({
+      pullRequestId,
+      provider: llmConfig.providerType,
+      runId,
+      headSha,
+      baseSha,
+    });
 
     for (const supersededRunId of supersededRunIds) {
       this.logger.log(
@@ -140,126 +128,174 @@ export class AiReviewService {
 
     const abortSignal = this.reviewCancellationService.register(runId);
 
-    const providerCredentials: ProviderCredentials = {
-      apiKey: decryptedLlmCredentials.apiKey,
-      baseUrl: decryptedLlmCredentials.baseUrl,
-      provider: llmConfig.providerType,
-    };
-
-    const fileBatches = this.chunkFiles(
-      fileContext.files,
-      this.MAX_FILES_PER_BATCH,
-    );
-
-    this.logger.log(
-      `PR ${pullRequestId} split into ${fileBatches.length} review execution batches.`,
-    );
-
-    const reviewPromises = fileBatches.map((batchFiles, index) => {
-      this.logger.log(
-        `Initiating review for batch #${index + 1} with ${batchFiles.length} files for PR ${pullRequestId}.`,
+    try {
+      await this.executeWorkflowStep(
+        runId,
+        ReviewWorkflowStep.INITIALIZING,
+        () => Promise.resolve(undefined),
       );
 
-      const llmProviderConfig: LlmExecutionContext = {
-        credentials: providerCredentials,
-        requestId: `repoId:${githubRepositoryId} | prId:${pullRequestId} | batch:${index + 1} | ${Date.now()}`,
-        abortSignal,
+      await this.executeWorkflowStep(
+        runId,
+        ReviewWorkflowStep.FETCHING_PULL_REQUEST,
+        () => Promise.resolve(undefined),
+      );
+
+      const fileContext: PullRequestReviewContextDto =
+        await this.executeWorkflowStep(
+          runId,
+          ReviewWorkflowStep.BUILDING_REVIEW_CONTEXT,
+          () =>
+            this.prCodeParsingService.generateContextFromPullRequest(
+              pullRequestId,
+            ),
+        );
+
+      if (!fileContext.files || fileContext.files.length === 0) {
+        this.logger.log(
+          `No applicable code modifications found for review in PR ${pullRequestId}`,
+        );
+        await this.reviewWorkflowService.cancelRun(
+          runId,
+          'No applicable code modifications found for review.',
+        );
+        return {};
+      }
+
+      const providerCredentials: ProviderCredentials = {
+        apiKey: decryptedLlmCredentials.apiKey,
+        baseUrl: decryptedLlmCredentials.baseUrl,
+        provider: llmConfig.providerType,
       };
 
-      return this.reviewFileBatch(
-        batchFiles,
-        fileContext.prMetadata,
-        llmConfig,
-        llmProviderConfig,
-        index + 1,
-        pullRequestNumber,
-        headBranchSha,
-        installationId,
-        repositoryFullName,
+      const fileBatches = this.chunkFiles(
+        fileContext.files,
+        this.MAX_FILES_PER_BATCH,
       );
-    });
 
-    let batchResults:
-      | Array<LlmResponse<z.infer<typeof AIReviewResponseSchema>> | null>
-      | undefined;
+      this.logger.log(
+        `PR ${pullRequestId} split into ${fileBatches.length} review execution batches.`,
+      );
 
-    try {
-      batchResults = await Promise.all(reviewPromises);
+      const batchResults = await this.executeWorkflowStep(
+        runId,
+        ReviewWorkflowStep.GENERATING_REVIEW,
+        async () => {
+          const reviewPromises = fileBatches.map((batchFiles, index) => {
+            this.logger.log(
+              `Initiating review for batch #${index + 1} with ${batchFiles.length} files for PR ${pullRequestId}.`,
+            );
+
+            const llmProviderConfig: LlmExecutionContext = {
+              credentials: providerCredentials,
+              requestId: `repoId:${githubRepositoryId} | prId:${pullRequestId} | batch:${index + 1} | ${Date.now()}`,
+              abortSignal,
+            };
+
+            return this.reviewFileBatch(
+              batchFiles,
+              fileContext.prMetadata,
+              llmConfig,
+              llmProviderConfig,
+              index + 1,
+              pullRequestNumber,
+              headBranchSha,
+              installationId,
+              repositoryFullName,
+            );
+          });
+
+          return Promise.all(reviewPromises);
+        },
+      );
+
+      const successfulBatchResults = (batchResults ?? []).filter(
+        (
+          result,
+        ): result is LlmResponse<z.infer<typeof AIReviewResponseSchema>> =>
+          Boolean(result?.response),
+      );
+
+      if (successfulBatchResults.length === 0) {
+        this.logger.warn(
+          `No successful review batches for PR ${pullRequestId}. Skipping review result queue enqueue.`,
+        );
+        if (!abortSignal.aborted) {
+          await this.reviewWorkflowService.failRun(
+            runId,
+            new Error('No successful review batches were generated.'),
+          );
+        }
+        return {};
+      }
+
+      const consolidatedSummary = successfulBatchResults
+        .map((result) => result.response.summary)
+        .filter(Boolean)
+        .join('\n\n');
+      const comments = successfulBatchResults.flatMap(
+        (result) => result.response.comments,
+      );
+
+      const result: LlmResponseDto = {
+        totalTokenUsage: successfulBatchResults.reduce(
+          (total, result) => total + (result.usage?.totalTokens ?? 0),
+          0,
+        ),
+        totalInputTokens: successfulBatchResults.reduce(
+          (total, result) => total + (result.usage?.promptTokens ?? 0),
+          0,
+        ),
+        totalOutputTokens: successfulBatchResults.reduce(
+          (total, result) => total + (result.usage?.completionTokens ?? 0),
+          0,
+        ),
+        model: successfulBatchResults[0].model,
+        provider: successfulBatchResults[0].provider,
+        consolidatedSummary,
+        comments,
+      };
+
+      const queuePayload: ReviewResultsPayloadDto = {
+        runId: runId,
+        provider: llmConfig.providerType,
+        pullRequestId,
+        githubRepositoryId,
+        result,
+      };
+
+      this.logger.log(
+        `Queueing pull request review result for PR ${pullRequestId}, runId=${runId}`,
+      );
+
+      const queuedJob = await this.pullRequestReviewQueue.add(
+        'pull-request-review-results',
+        queuePayload,
+        {
+          jobId: `pull-request-review-results-${pullRequestId}-${Date.now()}`,
+          attempts: 5,
+          backoff: {
+            type: 'exponential',
+            delay: 3000,
+          },
+          removeOnComplete: 1000,
+          removeOnFail: 5000,
+        },
+      );
+
+      this.logger.log(
+        `Queued pull request review result job ${queuedJob.id} for PR ${pullRequestId}`,
+      );
+
+      return result;
+    } catch (error) {
+      if (!abortSignal.aborted) {
+        await this.reviewWorkflowService.failRun(runId, error);
+      }
+      throw error;
     } finally {
       this.reviewCancellationService.deregister(runId);
     }
-
-    const successfulBatchResults = (batchResults ?? []).filter(
-      (result): result is LlmResponse<z.infer<typeof AIReviewResponseSchema>> =>
-        Boolean(result?.response),
-    );
-
-    if (successfulBatchResults.length === 0) {
-      this.logger.warn(
-        `No successful review batches for PR ${pullRequestId}. Skipping review result queue enqueue.`,
-      );
-      return {};
-    }
-
-    const consolidatedSummary = successfulBatchResults
-      .map((result) => result.response.summary)
-      .filter(Boolean)
-      .join('\n\n');
-    const comments = successfulBatchResults.flatMap(
-      (result) => result.response.comments,
-    );
-
-    const result: LlmResponseDto = {
-      totalTokenUsage: successfulBatchResults.reduce(
-        (total, result) => total + (result.usage?.totalTokens ?? 0),
-        0,
-      ),
-      totalInputTokens: successfulBatchResults.reduce(
-        (total, result) => total + (result.usage?.promptTokens ?? 0),
-        0,
-      ),
-      totalOutputTokens: successfulBatchResults.reduce(
-        (total, result) => total + (result.usage?.completionTokens ?? 0),
-        0,
-      ),
-      model: successfulBatchResults[0].model,
-      provider: successfulBatchResults[0].provider,
-      consolidatedSummary,
-      comments,
-    };
-
-    const queuePayload: ReviewResultsPayloadDto = {
-      runId: runId,
-      provider: llmConfig.providerType,
-      pullRequestId,
-      githubRepositoryId,
-      result,
-    };
-
-    this.logger.log(
-      `Queueing pull request review result for PR ${pullRequestId}, runId=${runId}`,
-    );
-
-    const queuedJob = await this.pullRequestReviewQueue.add(
-      'pull-request-review-results',
-      queuePayload,
-      {
-        jobId: `pull-request-review-results-${pullRequestId}-${Date.now()}`,
-        attempts: 5,
-        backoff: {
-          type: 'exponential',
-          delay: 3000,
-        },
-        removeOnComplete: 1000,
-        removeOnFail: 5000,
-      },
-    );
-
-    this.logger.log(
-      `Queued pull request review result job ${queuedJob.id} for PR ${pullRequestId}`,
-    );
-
-    return result;
   }
 
   private chunkFiles(
@@ -352,6 +388,23 @@ ${JSON.stringify(files, null, 2)}
       );
 
       return null;
+    }
+  }
+
+  private async executeWorkflowStep<T>(
+    runId: string,
+    step: ReviewWorkflowStep,
+    action: () => Promise<T>,
+  ): Promise<T> {
+    await this.reviewWorkflowService.startStep(runId, step);
+
+    try {
+      const result = await action();
+      await this.reviewWorkflowService.completeStep(runId, step);
+      return result;
+    } catch (error) {
+      await this.reviewWorkflowService.failStep(runId, step, error);
+      throw error;
     }
   }
 }

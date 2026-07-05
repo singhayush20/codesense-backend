@@ -4,6 +4,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -11,6 +12,7 @@ import { PullRequestReviewStatus } from '../enums/pull-request-review-status.enu
 import { PullRequest } from './pull-request.entity';
 import { ProviderType } from '../../ai/enums/provider.type';
 import { PullRequestReviewJobResult } from './pull-request-review-job-result.entity';
+import { PullRequestReviewStep } from './pull-request-review-step.entity';
 
 @Entity('pull_request_review_jobs')
 export class PullRequestReviewJob {
@@ -28,6 +30,11 @@ export class PullRequestReviewJob {
     cascade: true,
   })
   result?: PullRequestReviewJobResult;
+
+  @OneToMany(() => PullRequestReviewStep, (step) => step.job, {
+    cascade: true,
+  })
+  steps?: PullRequestReviewStep[];
 
   @Column({
     name: 'provider_type',

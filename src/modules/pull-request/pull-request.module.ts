@@ -36,6 +36,12 @@ import { ReviewCancellationService } from './service/orchestration/ai-review/rev
 import { PullRequestReviewJobResult } from './entity/pull-request-review-job-result.entity';
 import { GithubPrReviewCommentService } from './service/github/github-pr-review-comment/github-pr-review-comment.service';
 import { PullRequestReviewResultsProcessor } from './processor/pull-request-review-resuls.processor';
+import { PullRequestReviewStep } from './entity/pull-request-review-step.entity';
+import { ReviewWorkflowService } from './service/orchestration/review-workflow/review-workflow.service';
+import { ReviewWorkflowEventService } from './service/orchestration/review-workflow/review-workflow-event.service';
+import { ReviewWorkflowQueryService } from './service/query/review-workflow-query/review-workflow-query.service';
+import { ReviewRunWorkflowController } from './controller/review-run-workflow/review-run-workflow.controller';
+import { PullRequestReviewStepRepository } from './repository/pull-request-review-step.repository';
 @Module({
   imports: [
     forwardRef(() => AiModule),
@@ -44,6 +50,7 @@ import { PullRequestReviewResultsProcessor } from './processor/pull-request-revi
       PullRequest,
       PullRequestReviewJob,
       PullRequestReviewJobResult,
+      PullRequestReviewStep,
       PullRequestFile,
       PullRequestFileSnapshot,
     ]),
@@ -81,8 +88,16 @@ import { PullRequestReviewResultsProcessor } from './processor/pull-request-revi
     ReviewCancellationService,
     GithubPrReviewCommentService,
     PullRequestReviewResultsProcessor,
+    ReviewWorkflowService,
+    ReviewWorkflowEventService,
+    ReviewWorkflowQueryService,
+    PullRequestReviewStepRepository,
   ],
-  controllers: [PullRequestQueryController, CodeParserController],
+  controllers: [
+    PullRequestQueryController,
+    CodeParserController,
+    ReviewRunWorkflowController,
+  ],
   exports: [PrWorkflowService, AiReviewService, PrToolsUtilityService],
 })
 export class PullRequestModule {}
