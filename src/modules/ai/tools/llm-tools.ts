@@ -2,65 +2,71 @@ import { tool } from 'ai';
 import { z } from 'zod';
 import { PrToolsUtilityService } from '../../pull-request/service/pr-tools-utility/pr-tools-utility.service';
 
+import { Injectable } from '@nestjs/common';
+import { AiToolContext } from '../dto/llm-tools.dto';
+
+@Injectable()
 export class AiTools {
-  constructor(private readonly pullRequestFileService: PrToolsUtilityService) {}
+  constructor(private readonly utilityService: PrToolsUtilityService) {}
 
-  getFileContentTool = tool({
-    description:
-      'Fetch the complete content of a repository file using its path.',
-    inputSchema: z.object({
-      filePath: z
-        .string()
-        .describe('Relative path of the file in the repository'),
-      headSha: z.string().describe('The head SHA of the pull request'),
-      installationId: z.string().describe('The GitHub App installation ID'),
-      repositoryFullName: z
-        .string()
-        .describe('The full name of the repository, e.g. owner/repo'),
-    }),
+  createTools(context: AiToolContext) {
+    return {
+      getFileContent: tool({
+        description: `Read the complete contents of a repository file.
 
-    execute: async ({
-      filePath,
-      headSha,
-      installationId,
-      repositoryFullName,
-    }) => {
-      const content = await this.pullRequestFileService.getFileForPullRequest(
-        filePath,
-        repositoryFullName,
-        installationId,
-        headSha,
-      );
+Use this whenever you need to inspect code that is not already present.
+Never guess the contents of a file.`,
 
-      return {
-        filePath,
-        content,
-      };
-    },
-  });
+        inputSchema: z.object({
+          filePath: z.string(),
+        }),
 
-  searchRepositoryTool = tool({
-    description:
-      'Search the repository for files, classes, methods, strings or symbols. Use this tool when you need to locate code before reading a file.',
+        execute: async ({ filePath }) => {
+          const content = await this.utilityService.getFileForPullRequest(
+            filePath,
+            context.repositoryFullName,
+            context.installationId,
+            context.headSha,
+          );
 
-    inputSchema: z.object({
-      query: z
-        .string()
-        .describe(
-          'The search query. Examples: UserService, validatePermission, JWT_SECRET',
-        ),
-      installationId: z.string(),
-      repositoryFullName: z.string(),
-      limit: z.number().min(1).max(10).default(5),
-    }),
+          return {
+            filePath,
+            content,
+          };
+        },
+      }),
 
-    execute: async ({ query, installationId, repositoryFullName, limit }) => {
-      return this.pullRequestFileService.searchRepository(
-        query,
-        repositoryFullName,
-        installationId,
-        limit,
-      );
-    },
-  });
+      searchRepository: tool({
+        description: `Search the repository for files matching a text query.
+Use this tool to locate files before reading them.`,
+
+        inputSchema: z.object({
+          query: z.string(),
+          limit: z.number().min(1).max(10).default(5),
+        }),
+
+        execute: ({ query, limit }) =>
+          this.utilityService.searchRepository(
+            query,
+            context.repositoryFullName,
+            context.installationId,
+            limit,
+          ),
+      }),
+
+      listChangedFiles: tool({
+        description: `List all files changed in the current pull request.
+Use this tool to understand which files were modified before requesting file contents.`,
+
+        inputSchema: z.object({}),
+
+        execute: () =>
+          this.utilityService.listChangedFiles(
+            context.repositoryFullName,
+            context.installationId,
+            context.pullRequestNumber,
+          ),
+      }),
+    };
+  }
 }

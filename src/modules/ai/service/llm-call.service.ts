@@ -47,10 +47,12 @@ export class LlmService {
         'llm.request': JSON.stringify(request),
       });
 
-      const toolSet: ToolSet = {
-        fileContentTool: this.toolUtilityService.getFileContentTool,
-        searchRepositoryTool: this.toolUtilityService.searchRepositoryTool,
-      };
+      const toolSet: ToolSet = this.toolUtilityService.createTools({
+        repositoryFullName: request.repositoryFullName ?? '',
+        installationId: request.installationId ?? '',
+        headSha: request.headBranchSha ?? '',
+        pullRequestNumber: request.pullRequestNumber ?? 0,
+      });
 
       const response = await this.retryService.execute(() =>
         adapter.generate(request, context, toolSet),

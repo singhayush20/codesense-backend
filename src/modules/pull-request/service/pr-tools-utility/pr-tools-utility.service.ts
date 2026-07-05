@@ -6,6 +6,8 @@ import { HttpService } from '@nestjs/axios';
 import {
   RepositorySearchResult,
   GithubCodeSearchResponse,
+  PullRequestChangedFile,
+  GithubPullRequestFilesResponse,
 } from '../../../ai/dto/llm-tools.dto';
 
 @Injectable()
@@ -83,14 +85,51 @@ export class PrToolsUtilityService {
         ),
       );
 
-      return response.data.items.map((item) => ({
-        filePath: item.path,
-        repository: item.repository.full_name,
-        score: item.score,
-        snippet: item.text_matches?.[0]?.fragment ?? null,
-      }));
+      return (
+        response.data.items?.map((item) => ({
+          name: item.name,
+          filePath: item.path,
+          repository: item.repository?.full_name,
+          score: item.score,
+          sha: item.sha,
+        })) ?? []
+      );
     } catch (error) {
       this.logger.error(`Repository search failed. Query=${query}`, error);
+
+      return [];
+    }
+  }
+
+  async listChangedFiles(
+    repositoryFullName: string,
+    installationId: string,
+    pullRequestNumber: number,
+  ): Promise<PullRequestChangedFile[]> {
+    try {
+      const token = await this.githubTokenService.getToken(installationId);
+
+      const response = await firstValueFrom(
+        this.httpService.get<GithubPullRequestFilesResponse>(
+          `https://api.github.com/repos/${repositoryFullName}/pulls/${pullRequestNumber}/files`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: 'application/vnd.github+json',
+            },
+          },
+        ),
+      );
+
+      return response.data.map((file) => ({
+        filePath: file.filename,
+        status: file.status,
+        additions: file.additions,
+        deletions: file.deletions,
+        changes: file.changes,
+      }));
+    } catch (error) {
+      this.logger.error('Unable to list changed files', error);
 
       return [];
     }
