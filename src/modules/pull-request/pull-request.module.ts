@@ -38,7 +38,7 @@ import { GithubPrReviewCommentService } from './service/github/github-pr-review-
 import { PullRequestReviewResultsProcessor } from './processor/pull-request-review-resuls.processor';
 @Module({
   imports: [
-    AiModule,
+    forwardRef(() => AiModule),
     LlmModule,
     TypeOrmModule.forFeature([
       PullRequest,
@@ -83,6 +83,6 @@ import { PullRequestReviewResultsProcessor } from './processor/pull-request-revi
     PullRequestReviewResultsProcessor,
   ],
   controllers: [PullRequestQueryController, CodeParserController],
-  exports: [PrWorkflowService, AiReviewService],
+  exports: [PrWorkflowService, AiReviewService, PrToolsUtilityService],
 })
 export class PullRequestModule {}
