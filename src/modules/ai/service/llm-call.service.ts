@@ -8,7 +8,7 @@ import { LlmObservabilityService } from './llm-observability.service';
 import { LlmRetryService } from './llm-retry.service';
 import { RequestContextService } from '../../request-context/service/request-context/request-context.service';
 import { z } from 'zod';
-import { AiTools } from '../tools/file-fetch-tool.service';
+import { AiTools } from '../tools/llm-tools';
 import { ToolSet } from 'ai';
 
 @Injectable()
@@ -49,6 +49,7 @@ export class LlmService {
 
       const toolSet: ToolSet = {
         fileContentTool: this.toolUtilityService.getFileContentTool,
+        searchRepositoryTool: this.toolUtilityService.searchRepositoryTool,
       };
 
       const response = await this.retryService.execute(() =>

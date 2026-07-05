@@ -38,4 +38,29 @@ export class AiTools {
       };
     },
   });
+
+  searchRepositoryTool = tool({
+    description:
+      'Search the repository for files, classes, methods, strings or symbols. Use this tool when you need to locate code before reading a file.',
+
+    inputSchema: z.object({
+      query: z
+        .string()
+        .describe(
+          'The search query. Examples: UserService, validatePermission, JWT_SECRET',
+        ),
+      installationId: z.string(),
+      repositoryFullName: z.string(),
+      limit: z.number().min(1).max(10).default(5),
+    }),
+
+    execute: async ({ query, installationId, repositoryFullName, limit }) => {
+      return this.pullRequestFileService.searchRepository(
+        query,
+        repositoryFullName,
+        installationId,
+        limit,
+      );
+    },
+  });
 }
