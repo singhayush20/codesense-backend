@@ -58,6 +58,7 @@ export class PullRequestReviewService {
           );
         }
 
+        // TODO: Remove this as this might not be needed.
         existingReviewJob = await manager.save(
           PullRequestReviewJob,
           manager.create(PullRequestReviewJob, {

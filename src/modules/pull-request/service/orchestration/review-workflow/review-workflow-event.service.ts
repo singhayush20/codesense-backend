@@ -8,18 +8,11 @@ import {
   takeUntil,
   timer,
 } from 'rxjs';
-import { ReviewWorkflowEventDto } from '../../../dto/review/review-workflow-event.dto';
+import {
+  ReviewWorkflowEventDto,
+  StepEventInput,
+} from '../../../dto/review/review-workflow-event.dto';
 import { ReviewWorkflowEventType } from '../../../enums/review-workflow-event-type.enum';
-import { ReviewWorkflowStep } from '../../../enums/review-workflow-step.enum';
-import { ReviewWorkflowStepStatus } from '../../../enums/review-workflow-step-status.enum';
-
-interface StepEventInput {
-  runId: string;
-  step: ReviewWorkflowStep;
-  status: ReviewWorkflowStepStatus;
-  durationMs?: number | null;
-  errorMessage?: string | null;
-}
 
 @Injectable()
 export class ReviewWorkflowEventService {

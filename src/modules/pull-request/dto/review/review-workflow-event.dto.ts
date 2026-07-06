@@ -11,3 +11,11 @@ export interface ReviewWorkflowEventDto {
   errorMessage?: string | null;
   timestamp: string;
 }
+
+export interface StepEventInput {
+  runId: string;
+  step: ReviewWorkflowStep;
+  status: ReviewWorkflowStepStatus;
+  durationMs?: number | null;
+  errorMessage?: string | null;
+}

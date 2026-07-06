@@ -2,7 +2,6 @@ import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { DataSource, EntityManager } from 'typeorm';
 import { AppException } from '../../../../../exception-handling/app-exception.exception';
 import { ExceptionCodes } from '../../../../../exception-handling/exception-codes';
-import { ProviderType } from '../../../../ai/enums/provider.type';
 import { REVIEW_WORKFLOW } from '../../../definition/review-workflow.definition';
 import { PullRequestReviewStep } from '../../../entity/pull-request-review-step.entity';
 import { PullRequestReviewJob } from '../../../entity/pull-request-review-job.entity';
@@ -11,22 +10,10 @@ import { PullRequestReviewStatus } from '../../../enums/pull-request-review-stat
 import { ReviewWorkflowStepStatus } from '../../../enums/review-workflow-step-status.enum';
 import { ReviewWorkflowStep } from '../../../enums/review-workflow-step.enum';
 import { ReviewWorkflowEventService } from './review-workflow-event.service';
-
-interface StartRunInput {
-  pullRequestId: string;
-  provider: ProviderType;
-  runId: string;
-  headSha: string;
-  baseSha: string;
-}
-
-interface WorkflowStepEvent {
-  runId: string;
-  step: ReviewWorkflowStep;
-  status: ReviewWorkflowStepStatus;
-  durationMs?: number | null;
-  errorMessage?: string | null;
-}
+import {
+  StartRunInput,
+  WorkflowStepEvent,
+} from '../../../dto/review/review-workflow-input.dto';
 
 @Injectable()
 export class ReviewWorkflowService {
