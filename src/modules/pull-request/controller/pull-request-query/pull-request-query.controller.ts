@@ -1,4 +1,13 @@
-import { Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  Sse,
+  UseGuards,
+} from '@nestjs/common';
+import { MessageEvent } from '@nestjs/common';
 import { PullRequestFileQueryService } from '../../service/query/pull-request-file-query/pull-request-file-query.service';
 import { PullRequestQueryService } from '../../service/query/pull-request-query/pull-request-query.service';
 import { PullRequestQueryRequestDto } from '../../dto/query/pull-request-query-request.dto';
@@ -7,6 +16,8 @@ import { JwtAuthGuard } from '../../../auth/guards/jwt.guard';
 import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { RoleTypes } from '../../../user/enums/role-types.enums';
 import { Roles } from '../../../auth/decorator/roles.decorator';
+import { Observable } from 'rxjs';
+import { ReviewWorkflowEventService } from '../../service/orchestration/review-workflow/review-workflow-event.service';
 import { PaginatedResponseDto } from '../../../../dtos/paginated-response.dto';
 import { PullRequestListItemDto } from '../../dto/query/pull-request-list-item.dto';
 import { PullRequestDetailsDto } from '../../dto/query/pull-request-details.dto';
@@ -21,6 +32,7 @@ export class PullRequestQueryController {
   constructor(
     private readonly pullRequestQueryService: PullRequestQueryService,
     private readonly pullRequestFileQueryService: PullRequestFileQueryService,
+    private readonly reviewWorkflowEventService: ReviewWorkflowEventService,
   ) {}
 
   @Get()
@@ -65,6 +77,16 @@ export class PullRequestQueryController {
     @Param('id') pullRequestId: string,
   ): Promise<ReviewResultsResponseDto[]> {
     return await this.pullRequestQueryService.getReviewsForPullRequest(
+      pullRequestId,
+    );
+  }
+
+  @Sse(':id/reviews/events')
+  @Roles(RoleTypes.ROLE_ADMIN, RoleTypes.ROLE_USER)
+  streamReviewEvents(
+    @Param('id') pullRequestId: string,
+  ): Observable<MessageEvent> {
+    return this.reviewWorkflowEventService.subscribeByPullRequestId(
       pullRequestId,
     );
   }

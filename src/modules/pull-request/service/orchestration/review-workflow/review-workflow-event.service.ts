@@ -21,6 +21,11 @@ export class ReviewWorkflowEventService {
     string,
     Subject<ReviewWorkflowEventDto>
   >();
+  private readonly runToPullRequestMap = new Map<string, string>();
+  private readonly pullRequestSubjects = new Map<
+    string,
+    Subject<ReviewWorkflowEventDto>
+  >();
 
   subscribe(runId: string): Observable<MessageEvent> {
     return new Observable<MessageEvent>((subscriber) => {
@@ -53,6 +58,58 @@ export class ReviewWorkflowEventService {
         }
       };
     });
+  }
+
+  subscribeByPullRequestId(pullRequestId: string): Observable<MessageEvent> {
+    return new Observable<MessageEvent>((subscriber) => {
+      const subject = this.getPullRequestSubject(pullRequestId);
+      const events = subject.asObservable().pipe(
+        map((event) => ({
+          type: event.type,
+          data: event,
+        })),
+      );
+
+      const heartbeat = interval(30000).pipe(
+        map(() => ({
+          type: 'HEARTBEAT',
+          data: {
+            pullRequestId,
+            timestamp: new Date().toISOString(),
+          },
+        })),
+      );
+
+      const subscription = merge(events, heartbeat)
+        .pipe(takeUntil(timer(30 * 60 * 1000)))
+        .subscribe(subscriber);
+
+      return () => {
+        subscription.unsubscribe();
+        if (!subject.observed) {
+          this.pullRequestSubjects.delete(pullRequestId);
+        }
+      };
+    });
+  }
+
+  registerRun(runId: string, pullRequestId: string): void {
+    this.runToPullRequestMap.set(runId, pullRequestId);
+  }
+
+  publishRunCreated(runId: string, pullRequestId: string): void {
+    try {
+      this.getPullRequestSubject(pullRequestId).next({
+        type: ReviewWorkflowEventType.RUN_CREATED,
+        runId,
+        pullRequestId,
+        timestamp: new Date().toISOString(),
+      });
+    } catch {
+      this.logger.warn(
+        `Failed to publish run created event. runId=${runId}, pullRequestId=${pullRequestId}`,
+      );
+    }
   }
 
   publishStepStarted(input: StepEventInput): void {
@@ -94,6 +151,20 @@ export class ReviewWorkflowEventService {
         errorMessage: input.errorMessage,
         timestamp: new Date().toISOString(),
       });
+
+      const pullRequestId = this.runToPullRequestMap.get(input.runId);
+      if (pullRequestId) {
+        this.getPullRequestSubject(pullRequestId).next({
+          type,
+          runId: input.runId,
+          pullRequestId,
+          step: input.step,
+          status: input.status,
+          durationMs: input.durationMs,
+          errorMessage: input.errorMessage,
+          timestamp: new Date().toISOString(),
+        });
+      }
     } catch (error) {
       this.logger.warn(
         `Failed to publish workflow event. runId=${input.runId}, type=${type}, error=${error instanceof Error ? error.message : String(error)}`,
@@ -108,6 +179,16 @@ export class ReviewWorkflowEventService {
         runId,
         timestamp: new Date().toISOString(),
       });
+
+      const pullRequestId = this.runToPullRequestMap.get(runId);
+      if (pullRequestId) {
+        this.getPullRequestSubject(pullRequestId).next({
+          type,
+          runId,
+          pullRequestId,
+          timestamp: new Date().toISOString(),
+        });
+      }
     } catch (error) {
       this.logger.warn(
         `Failed to publish workflow run event. runId=${runId}, type=${type}, error=${error instanceof Error ? error.message : String(error)}`,
@@ -121,6 +202,19 @@ export class ReviewWorkflowEventService {
     if (!subject || subject.closed) {
       subject = new Subject<ReviewWorkflowEventDto>();
       this.subjects.set(runId, subject);
+    }
+
+    return subject;
+  }
+
+  private getPullRequestSubject(
+    pullRequestId: string,
+  ): Subject<ReviewWorkflowEventDto> {
+    let subject = this.pullRequestSubjects.get(pullRequestId);
+
+    if (!subject || subject.closed) {
+      subject = new Subject<ReviewWorkflowEventDto>();
+      this.pullRequestSubjects.set(pullRequestId, subject);
     }
 
     return subject;

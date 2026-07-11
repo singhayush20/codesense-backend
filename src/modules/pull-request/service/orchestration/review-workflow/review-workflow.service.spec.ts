@@ -6,7 +6,6 @@ import { ReviewWorkflowStep } from '../../../enums/review-workflow-step.enum';
 import { ReviewWorkflowStepStatus } from '../../../enums/review-workflow-step-status.enum';
 import { PullRequestReviewStatus } from '../../../enums/pull-request-review-status.enum';
 import { ProviderType } from '../../../../ai/enums/provider.type';
-import { AppException } from '../../../../../exception-handling/app-exception.exception';
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/unbound-method */
 describe('ReviewWorkflowService', () => {
@@ -29,6 +28,8 @@ describe('ReviewWorkflowService', () => {
     publishRunFailed: jest.fn(),
     publishRunCancelled: jest.fn(),
     publishRunSuperseded: jest.fn(),
+    registerRun: jest.fn(),
+    publishRunCreated: jest.fn(),
   } as unknown as ReviewWorkflowEventService;
 
   let service: ReviewWorkflowService;
@@ -96,7 +97,7 @@ describe('ReviewWorkflowService', () => {
 
     await expect(
       service.completeStep('run-1', ReviewWorkflowStep.GENERATING_REVIEW),
-    ).rejects.toMatchObject<AppException>({
+    ).rejects.toMatchObject({
       code: expect.any(String),
       status: HttpStatus.CONFLICT,
     });

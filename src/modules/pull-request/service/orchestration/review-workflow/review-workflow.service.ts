@@ -96,6 +96,9 @@ export class ReviewWorkflowService {
       this.eventService.publishRunSuperseded(supersededRunId);
     }
 
+    this.eventService.registerRun(input.runId, input.pullRequestId);
+    this.eventService.publishRunCreated(input.runId, input.pullRequestId);
+
     this.logger.log(
       `Started review workflow. runId=${input.runId}, pullRequestId=${input.pullRequestId}`,
     );

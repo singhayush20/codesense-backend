@@ -6,4 +6,5 @@ export enum ReviewWorkflowEventType {
   RUN_FAILED = 'RUN_FAILED',
   RUN_CANCELLED = 'RUN_CANCELLED',
   RUN_SUPERSEDED = 'RUN_SUPERSEDED',
+  RUN_CREATED = 'RUN_CREATED',
 }

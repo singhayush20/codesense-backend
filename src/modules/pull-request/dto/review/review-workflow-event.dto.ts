@@ -5,6 +5,7 @@ import { ReviewWorkflowStepStatus } from '../../enums/review-workflow-step-statu
 export interface ReviewWorkflowEventDto {
   type: ReviewWorkflowEventType;
   runId: string;
+  pullRequestId?: string;
   step?: ReviewWorkflowStep;
   status?: ReviewWorkflowStepStatus;
   durationMs?: number | null;
