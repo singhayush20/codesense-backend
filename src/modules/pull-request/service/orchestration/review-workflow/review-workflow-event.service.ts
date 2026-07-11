@@ -2,6 +2,7 @@ import { Injectable, Logger, MessageEvent } from '@nestjs/common';
 import {
   Observable,
   Subject,
+  filter,
   interval,
   map,
   merge,
@@ -64,6 +65,7 @@ export class ReviewWorkflowEventService {
     return new Observable<MessageEvent>((subscriber) => {
       const subject = this.getPullRequestSubject(pullRequestId);
       const events = subject.asObservable().pipe(
+        filter((event) => !event.type.startsWith('STEP_')),
         map((event) => ({
           type: event.type,
           data: event,
