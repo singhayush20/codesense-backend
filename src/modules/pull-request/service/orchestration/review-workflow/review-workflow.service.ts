@@ -15,6 +15,7 @@ import {
   WorkflowStepEvent,
 } from '../../../dto/review/review-workflow-input.dto';
 
+// TODO: checkout redis pub-sub for event service to support multiple instances of the service
 @Injectable()
 export class ReviewWorkflowService {
   private readonly logger = new Logger(ReviewWorkflowService.name);
