@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GithubPrReviewCommentService } from '../../github/github-pr-review-comment/github-pr-review-comment.service';
 import { PullRequestReviewService } from '../../pull-request-review/pull-request-review.service';
+import { ReviewWorkflowService } from '../review-workflow/review-workflow.service';
 import { PrReviewResultService } from './pr-review-result.service';
 
 describe('PrReviewResultService', () => {
@@ -11,6 +12,14 @@ describe('PrReviewResultService', () => {
   };
   const githubPrReviewCommentService = {
     postReviewComments: jest.fn(),
+  };
+  const reviewWorkflowService = {
+    startStep: jest.fn(),
+    completeStep: jest.fn(),
+    failStep: jest.fn(),
+    completeRun: jest.fn(),
+    failRun: jest.fn(),
+    cancelStep: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -24,6 +33,10 @@ describe('PrReviewResultService', () => {
         {
           provide: GithubPrReviewCommentService,
           useValue: githubPrReviewCommentService,
+        },
+        {
+          provide: ReviewWorkflowService,
+          useValue: reviewWorkflowService,
         },
       ],
     }).compile();

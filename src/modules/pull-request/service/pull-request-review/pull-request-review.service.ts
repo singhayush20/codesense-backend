@@ -58,13 +58,14 @@ export class PullRequestReviewService {
           );
         }
 
+        // TODO: Remove this as this might not be needed.
         existingReviewJob = await manager.save(
           PullRequestReviewJob,
           manager.create(PullRequestReviewJob, {
             runId,
             pullRequest,
             providerType: provider,
-            status: PullRequestReviewStatus.SUCCESS,
+            status: PullRequestReviewStatus.IN_PROGRESS,
           }),
         );
       }
@@ -78,17 +79,13 @@ export class PullRequestReviewService {
 
       if (
         existingReviewJob.status === PullRequestReviewStatus.SUPERSEDED ||
-        existingReviewJob.status === PullRequestReviewStatus.CANCELLED
+        existingReviewJob.status === PullRequestReviewStatus.CANCELLED ||
+        existingReviewJob.status === PullRequestReviewStatus.FAILED
       ) {
         this.logger.debug(
           `Skipping save for non-active review job. runId=${runId}, status=${existingReviewJob.status}`,
         );
         return existingReviewJob;
-      }
-
-      if (existingReviewJob.status !== PullRequestReviewStatus.SUCCESS) {
-        existingReviewJob.status = PullRequestReviewStatus.SUCCESS;
-        await manager.save(PullRequestReviewJob, existingReviewJob);
       }
 
       const reviewResult = manager.create(PullRequestReviewJobResult, {
@@ -109,66 +106,6 @@ export class PullRequestReviewService {
       existingReviewJob.result = savedReviewResult;
 
       return existingReviewJob;
-    });
-  }
-
-  /**
-   * Atomically create a new in-progress review job and supersede any prior active run.
-   * Returns the new job plus any superseded run IDs so callers can cancel them.
-   */
-  async createInProgressReviewJob(
-    pullRequestId: string,
-    provider: ProviderType,
-    runId: string,
-    headSha: string,
-    baseSha: string,
-  ): Promise<{ reviewJob: PullRequestReviewJob; supersededRunIds: string[] }> {
-    return this.dataSource.transaction(async (manager) => {
-      const pullRequest = await manager.findOne(PullRequest, {
-        where: {
-          id: pullRequestId,
-        },
-      });
-
-      if (!pullRequest) {
-        throw new NotFoundException(`Pull request not found: ${pullRequestId}`);
-      }
-
-      const existingInProgressJobs = await manager
-        .createQueryBuilder(PullRequestReviewJob, 'review')
-        .innerJoin('review.pullRequest', 'pullRequest')
-        .where('pullRequest.id = :pullRequestId', { pullRequestId })
-        .andWhere('review.status = :status', {
-          status: PullRequestReviewStatus.IN_PROGRESS,
-        })
-        .getMany();
-
-      const supersededRunIds: string[] = [];
-
-      for (const existingJob of existingInProgressJobs) {
-        existingJob.status = PullRequestReviewStatus.SUPERSEDED;
-        await manager.save(PullRequestReviewJob, existingJob);
-        supersededRunIds.push(existingJob.runId);
-      }
-
-      const reviewJob = manager.create(PullRequestReviewJob, {
-        runId,
-        pullRequest,
-        providerType: provider,
-        status: PullRequestReviewStatus.IN_PROGRESS,
-        headSha,
-        baseSha,
-      });
-
-      const savedReviewJob = await manager.save(
-        PullRequestReviewJob,
-        reviewJob,
-      );
-
-      return {
-        reviewJob: savedReviewJob,
-        supersededRunIds,
-      };
     });
   }
 }
