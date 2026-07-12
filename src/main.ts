@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { HttpStatus, ValidationPipe, VersioningType } from '@nestjs/common';
+import { Logger } from 'nestjs-pino';
 import { GlobalExceptionFilter } from './exception-handling/global-exception-filter';
 import { AppException } from './exception-handling/app-exception.exception';
 import { ExceptionCodes } from './exception-handling/exception-codes';
@@ -11,9 +12,11 @@ import cookieParser from 'cookie-parser';
 import * as bodyParser from 'body-parser';
 import * as express from 'express';
 import './observability/telemetry';
+import { createStandaloneLogger } from './config/logger.config';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  app.useLogger(app.get(Logger));
 
   // Enable cookie parsing
   app.use(cookieParser());
@@ -70,7 +73,7 @@ async function bootstrap() {
     defaultVersion: '1',
   });
 
-  app.useGlobalFilters(new GlobalExceptionFilter());
+  app.useGlobalFilters(app.get(GlobalExceptionFilter));
 
   const config = new DocumentBuilder()
     .setTitle('CodeSense')
@@ -125,6 +128,6 @@ async function bootstrap() {
 }
 
 void bootstrap().catch((error: unknown) => {
-  console.error('Application failed to start', error);
+  createStandaloneLogger().error({ err: error }, 'Application failed to start');
   process.exit(1);
 });
