@@ -73,7 +73,7 @@ async function bootstrap() {
     defaultVersion: '1',
   });
 
-  app.useGlobalFilters(new GlobalExceptionFilter());
+  app.useGlobalFilters(app.get(GlobalExceptionFilter));
 
   const config = new DocumentBuilder()
     .setTitle('CodeSense')

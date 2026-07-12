@@ -4,14 +4,16 @@ import {
   ArgumentsHost,
   HttpException,
   HttpStatus,
+  Injectable,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { createStandaloneLogger } from '../config/logger.config';
-
-const logger = createStandaloneLogger();
+import { Logger } from 'nestjs-pino';
 
 @Catch()
+@Injectable()
 export class GlobalExceptionFilter implements ExceptionFilter {
+  constructor(private readonly logger: Logger) {}
+
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
@@ -39,7 +41,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       }
     }
 
-    logger.error({ err: exception, path: request.url }, 'Unhandled exception');
+    this.logger.error(
+      { err: exception, path: request.url },
+      'Unhandled exception',
+    );
 
     response.status(status).json({
       code,

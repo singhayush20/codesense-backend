@@ -20,6 +20,7 @@ import { randomUUID } from 'crypto';
 import { RequestContextModule } from './modules/request-context/request-context.module';
 import { LoggerModule } from 'nestjs-pino';
 import { createLoggerConfig } from './config/logger.config';
+import { GlobalExceptionFilter } from './exception-handling/global-exception-filter';
 
 @Module({
   imports: [
@@ -89,6 +90,6 @@ import { createLoggerConfig } from './config/logger.config';
     RequestContextModule,
   ],
   controllers: [AppController],
-  providers: [AppService, RequestContextService],
+  providers: [AppService, RequestContextService, GlobalExceptionFilter],
 })
 export class AppModule {}

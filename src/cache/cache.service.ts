@@ -1,13 +1,13 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { Logger } from 'nestjs-pino';
 import { RedisService } from './redis/redis.service';
 
 @Injectable()
 export class CacheService {
-  private readonly logger: Logger;
-
-  constructor(private readonly redisService: RedisService) {
-    this.logger = new Logger(CacheService.name);
-  }
+  constructor(
+    private readonly redisService: RedisService,
+    private readonly logger: Logger,
+  ) {}
 
   private get client() {
     return this.redisService.getClient();
@@ -16,24 +16,35 @@ export class CacheService {
   async get<T>(key: string): Promise<T | null> {
     const data = await this.client.get(key);
 
-    if (data) {
-      this.logger.debug(`[CACHE HIT] ${key}`);
-      return JSON.parse(data) as T;
+    if (!data) {
+      this.logger.debug({ key }, 'cache miss');
+      return null;
     }
 
-    this.logger.debug(`[CACHE MISS] ${key}`);
-    return null;
+    try {
+      const parsed = JSON.parse(data) as T;
+      this.logger.debug({ key }, 'cache hit');
+      return parsed;
+    } catch {
+      this.logger.error({ key }, 'cache parse error, removing corrupt entry');
+      await this.client.del(key);
+      return null;
+    }
   }
 
   async set(key: string, value: any, ttlSeconds?: number): Promise<void> {
     const serialized = JSON.stringify(value);
 
-    if (ttlSeconds) {
-      // add jitter to prevent stampede
-      const ttl = ttlSeconds + Math.floor(Math.random() * 30);
-      await this.client.set(key, serialized, 'EX', ttl);
-    } else {
-      await this.client.set(key, serialized);
+    try {
+      if (ttlSeconds) {
+        const ttl = ttlSeconds + Math.floor(Math.random() * 30);
+        await this.client.set(key, serialized, 'EX', ttl);
+      } else {
+        await this.client.set(key, serialized);
+      }
+    } catch (error: unknown) {
+      this.logger.error({ key, error }, 'cache set failed');
+      throw error;
     }
   }
 
