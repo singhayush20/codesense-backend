@@ -1,14 +1,19 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtUtil } from '../utils/github-jwt.utils';
 import { AppException } from '../../../exception-handling/app-exception.exception';
 import { ExceptionCodes } from '../../../exception-handling/exception-codes';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import fs from 'fs';
 import path from 'path';
 
 @Injectable()
 export class GithubAppAuthService {
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    @InjectPinoLogger(GithubAppAuthService.name)
+    private readonly logger: PinoLogger,
+  ) {
     const key = fs.readFileSync(
       path.resolve(process.cwd(), 'github-app.pem'),
       'utf-8',
@@ -16,7 +21,6 @@ export class GithubAppAuthService {
     this.githubAppKey = key;
   }
 
-  private readonly logger = new Logger(GithubAppAuthService.name);
   private readonly githubAppKey: string;
 
   generateAppJwt(): string {

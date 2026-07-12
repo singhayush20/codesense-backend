@@ -1,4 +1,5 @@
-import { Injectable, Logger, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpStatus } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import { GithubWebhookUtil } from '../../utils/github-webhook.utils';
 import { AxiosError } from 'axios';
@@ -19,8 +20,6 @@ import { GithubInstallationPayload } from '../../dtos/github-api/github-installa
 
 @Injectable()
 export class GithubWebhookService {
-  private readonly logger = new Logger(GithubWebhookService.name);
-
   constructor(
     private readonly dataSource: DataSource,
     private readonly config: ConfigService,
@@ -31,6 +30,8 @@ export class GithubWebhookService {
     private readonly installationRepo: Repository<GithubInstallation>,
     @InjectRepository(WebhookEvent)
     private readonly webhookEventRepo: Repository<WebhookEvent>,
+    @InjectPinoLogger(GithubWebhookService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async handleEvent(
@@ -39,7 +40,7 @@ export class GithubWebhookService {
     deliveryId: string,
     rawPayload: Buffer,
   ): Promise<void> {
-    this.logger.log(`Webhook received: ${event} - ${deliveryId}`);
+    this.logger.info(`Webhook received: ${event} - ${deliveryId}`);
 
     const key = `gh:webhook:${deliveryId}`;
     const existsInCache = await this.cacheService.exists(key);
@@ -87,7 +88,7 @@ export class GithubWebhookService {
       }
 
       const payload = JSON.parse(rawPayload.toString('utf8')) as JsonObject;
-      this.logger.log(
+      this.logger.info(
         `Webhook received | event=${event} | deliveryId=${deliveryId}`,
       );
 
@@ -150,7 +151,7 @@ export class GithubWebhookService {
       return;
     }
 
-    this.logger.log(
+    this.logger.info(
       `Enqueuing PR job for delivery ${payload.pull_request.number}`,
     );
 
@@ -217,7 +218,7 @@ export class GithubWebhookService {
       });
     });
 
-    this.logger.log(`Installation deleted & cleaned: ${installationId}`);
+    this.logger.info(`Installation deleted & cleaned: ${installationId}`);
   }
 
   private handleError(
@@ -227,7 +228,8 @@ export class GithubWebhookService {
   ): never {
     if (error instanceof AxiosError) {
       this.logger.error(
-        `GitHub API error | event=${event} | deliveryId=${deliveryId} | status=${error.response?.status} | data=${JSON.stringify(error.response?.data)}`,
+        { err: error },
+        `GitHub API error | deliveryId=${deliveryId} | status=${error.response?.status} | data=${JSON.stringify(error.response?.data)}`,
       );
       throw new AppException(
         ExceptionCodes.GITHUB_API_ERROR,
@@ -237,8 +239,8 @@ export class GithubWebhookService {
     }
 
     this.logger.error(
+      { err: error },
       `Webhook processing failed | event=${event} | deliveryId=${deliveryId}`,
-      error instanceof Error ? error.stack : undefined,
     );
 
     throw new AppException(

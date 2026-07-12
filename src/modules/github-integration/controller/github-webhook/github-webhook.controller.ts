@@ -5,18 +5,20 @@ import {
   HttpCode,
   HttpStatus,
   Req,
-  Logger,
 } from '@nestjs/common';
 import { GithubWebhookService } from '../../service/webhook/webhook.service';
 import { AppException } from '../../../../exception-handling/app-exception.exception';
 import { ExceptionCodes } from '../../../../exception-handling/exception-codes';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import * as githubWebhookPayloadDtos from '../../dtos/github-api/github-webhook-payload.dtos';
 
 @Controller('github-webhook')
 export class GithubWebhookController {
-  private readonly logger = new Logger(GithubWebhookController.name);
-
-  constructor(private readonly webhookService: GithubWebhookService) {}
+  constructor(
+    private readonly webhookService: GithubWebhookService,
+    @InjectPinoLogger(GithubWebhookController.name)
+    private readonly logger: PinoLogger,
+  ) {}
 
   @Post('action')
   @HttpCode(HttpStatus.OK)

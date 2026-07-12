@@ -1,6 +1,7 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable, HttpStatus, Logger } from '@nestjs/common';
+import { Injectable, HttpStatus } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 import { GithubAppAuthService } from './github-app-auth.service';
 import { CacheService } from '../../../cache/cache.service';
@@ -14,12 +15,12 @@ interface GithubInstallationTokenResponse {
 
 @Injectable()
 export class GithubInstallationTokenService {
-  private readonly logger = new Logger(GithubInstallationTokenService.name);
-
   constructor(
     private readonly authService: GithubAppAuthService,
     private readonly http: HttpService,
     private readonly cacheService: CacheService,
+    @InjectPinoLogger(GithubInstallationTokenService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async getToken(installationId: string): Promise<string> {

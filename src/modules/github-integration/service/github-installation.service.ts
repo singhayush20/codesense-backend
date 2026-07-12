@@ -1,4 +1,5 @@
-import { Injectable, HttpStatus, Logger } from '@nestjs/common';
+import { Injectable, HttpStatus } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -25,8 +26,6 @@ import { GithubAccessTokenResponse } from '../dtos/github-api/github-access-toke
 
 @Injectable()
 export class GithubInstallationService {
-  private readonly logger = new Logger(GithubInstallationService.name);
-
   constructor(
     private readonly http: HttpService,
     private readonly config: ConfigService,
@@ -42,6 +41,8 @@ export class GithubInstallationService {
 
     private readonly githubAuthService: GithubAppAuthService,
     private readonly cacheService: CacheService,
+    @InjectPinoLogger(GithubInstallationService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   // =========================
@@ -361,7 +362,7 @@ export class GithubInstallationService {
       );
     }
 
-    this.logger.error(`${context} | Unknown error`, error as any);
+    this.logger.error({ err: error }, `${context} | Unknown error`);
 
     throw new AppException(
       ExceptionCodes.GITHUB_API_ERROR,

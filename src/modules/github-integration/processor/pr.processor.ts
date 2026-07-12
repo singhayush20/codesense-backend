@@ -1,14 +1,16 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { GithubPullRequestEventPayload } from '../dtos/pr-handling/github-pr.dto';
 import { PrWorkflowService } from '../../pull-request/service/orchestration/pr-workflow/pr-workflow.service';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 @Processor('pr-processing')
 export class PrProcessor extends WorkerHost {
-  private readonly logger = new Logger(PrProcessor.name);
-
-  constructor(private readonly prWorkflowService: PrWorkflowService) {
+  constructor(
+    private readonly prWorkflowService: PrWorkflowService,
+    @InjectPinoLogger(PrProcessor.name)
+    private readonly logger: PinoLogger,
+  ) {
     super();
   }
 
@@ -18,7 +20,7 @@ export class PrProcessor extends WorkerHost {
     try {
       await this.prWorkflowService.processPullRequest(job.data.payload);
     } catch (error) {
-      this.logger.error('PR workflow failed', error);
+      this.logger.error({ err: error }, 'PR workflow failed');
       throw error;
     }
   }
