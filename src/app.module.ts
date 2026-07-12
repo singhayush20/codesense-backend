@@ -31,7 +31,7 @@ import { GlobalExceptionFilter } from './exception-handling/global-exception-fil
     ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: `.env.${process.env.NODE_ENV || 'dev'}`,
+      envFilePath: `.env.${process.env.ENVIRONMENT || 'dev'}`,
       load: [configuration],
       validationSchema: configValidationSchema,
       validationOptions: {

@@ -28,7 +28,7 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
       forbidUnknownValues: true,
       stopAtFirstError: false,
-      disableErrorMessages: process.env.NODE_ENV === 'production',
+      disableErrorMessages: process.env.ENVIRONMENT === 'production',
       exceptionFactory: (errors: ValidationError[]) => {
         const extractMessages = (
           validationErrors: ValidationError[],
@@ -125,6 +125,24 @@ async function bootstrap() {
   app.use(express.json());
 
   await app.listen(process.env.PORT ?? 3000);
+
+  createStandaloneLogger().info(
+    'Application is running on: ' +
+      ((await app.getUrl()) +
+        ' | Swagger: ' +
+        (await app.getUrl()) +
+        '/api/docs' +
+        ' | Database: ' +
+        process.env.DB_HOST +
+        ':' +
+        process.env.DB_PORT +
+        '/' +
+        process.env.DB_NAME +
+        '| Environment: ' +
+        process.env.ENVIRONMENT +
+        ' | Redis: ' +
+        process.env.REDIS_URL),
+  );
 }
 
 void bootstrap().catch((error: unknown) => {

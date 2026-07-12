@@ -47,19 +47,6 @@ export class RefactorGithubAccountAndAddInstallation1777794102690 implements Mig
             ALTER TABLE "github_accounts" DROP COLUMN "installationId"
         `);
     await queryRunner.query(`
-            ALTER TABLE "github_accounts" DROP COLUMN "status"
-        `);
-    await queryRunner.query(`
-            DROP TYPE "public"."github_account_status_enum"
-        `);
-    await queryRunner.query(`
-            ALTER TABLE "github_accounts" DROP COLUMN "disconnected_at"
-        `);
-    await queryRunner.query(`
-            ALTER TABLE "user_repo_selection"
-            ADD "isActive" boolean NOT NULL DEFAULT true
-        `);
-    await queryRunner.query(`
             ALTER TABLE "github_repositories"
             ADD "githubRepoId" bigint NOT NULL
         `);
@@ -82,9 +69,6 @@ export class RefactorGithubAccountAndAddInstallation1777794102690 implements Mig
             ALTER TABLE "llm_providers"
             ALTER COLUMN "public_id"
             SET DEFAULT gen_random_uuid()
-        `);
-    await queryRunner.query(`
-            CREATE INDEX "idx_user_repo_active" ON "user_repo_selection" ("user_id", "repository_id", "isActive")
         `);
     await queryRunner.query(`
             CREATE UNIQUE INDEX "IDX_122ce08e74dad62d9eaa0b2f06" ON "github_repositories" ("githubRepoId", "installation_id")
@@ -122,9 +106,6 @@ export class RefactorGithubAccountAndAddInstallation1777794102690 implements Mig
             DROP INDEX "public"."IDX_122ce08e74dad62d9eaa0b2f06"
         `);
     await queryRunner.query(`
-            DROP INDEX "public"."idx_user_repo_active"
-        `);
-    await queryRunner.query(`
             ALTER TABLE "llm_providers"
             ALTER COLUMN "public_id" DROP DEFAULT
         `);
@@ -148,17 +129,6 @@ export class RefactorGithubAccountAndAddInstallation1777794102690 implements Mig
         `);
     await queryRunner.query(`
             ALTER TABLE "user_repo_selection" DROP COLUMN "isActive"
-        `);
-    await queryRunner.query(`
-            ALTER TABLE "github_accounts"
-            ADD "disconnected_at" TIMESTAMP
-        `);
-    await queryRunner.query(`
-            CREATE TYPE "public"."github_account_status_enum" AS ENUM('ACTIVE', 'DISCONNECTED')
-        `);
-    await queryRunner.query(`
-            ALTER TABLE "github_accounts"
-            ADD "status" "public"."github_account_status_enum" NOT NULL DEFAULT 'ACTIVE'
         `);
     await queryRunner.query(`
             ALTER TABLE "github_accounts"

@@ -1,15 +1,14 @@
 import Joi from 'joi';
 
 export const configValidationSchema = Joi.object({
-  ENVIRONMENT: Joi.string().valid('dev', 'prod').required(),
+  ENVIRONMENT: Joi.string().valid('dev', 'prod', 'test').required(),
   PORT: Joi.number().default(3000),
   DB_HOST: Joi.string().required(),
   DB_PORT: Joi.number().default(5432),
   DB_USERNAME: Joi.string().required(),
   DB_PASSWORD: Joi.string().required(),
   DB_NAME: Joi.string().required(),
-  REDIS_HOST: Joi.string().required(),
-  REDIS_PORT: Joi.number().default(6379),
+  REDIS_URL: Joi.string().uri().required(),
   JWT_SECRET_KEY: Joi.string().min(10).required(),
   GOOGLE_CLIENT_ID: Joi.string().required(),
   GOOGLE_CLIENT_SECRET: Joi.string().required(),
