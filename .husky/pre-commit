@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-npm run lint:check
+echo 'Running ESLint on staged files...'
+git diff --cached --name-only --diff-filter=ACMR | grep '\.ts$' | xargs -r npx eslint

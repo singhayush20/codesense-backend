@@ -4,6 +4,7 @@ import { HttpStatus, ValidationPipe, VersioningType } from '@nestjs/common';
 import { GlobalExceptionFilter } from './exception-handling/global-exception-filter';
 import { AppException } from './exception-handling/app-exception.exception';
 import { ExceptionCodes } from './exception-handling/exception-codes';
+import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationError } from 'class-validator';
 import cookieParser from 'cookie-parser';
@@ -85,6 +86,27 @@ async function bootstrap() {
     )
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
+  const configService = app.get(ConfigService);
+  const swaggerUser = configService.get<string>('swagger.username');
+  const swaggerPassword = configService.get<string>('swagger.password');
+  if (swaggerUser && swaggerPassword) {
+    app.use(
+      '/api/docs',
+      (
+        req: express.Request,
+        res: express.Response,
+        next: express.NextFunction,
+      ) => {
+        const auth = req.headers.authorization;
+        const expected = Buffer.from(
+          `${swaggerUser}:${swaggerPassword}`,
+        ).toString('base64');
+        if (auth === `Basic ${expected}`) return next();
+        res.set('WWW-Authenticate', 'Basic realm="Swagger Docs"');
+        res.status(401).send('Unauthorized');
+      },
+    );
+  }
   SwaggerModule.setup('api/docs', app, documentFactory);
 
   app.setGlobalPrefix('api');
