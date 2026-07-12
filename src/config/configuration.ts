@@ -49,6 +49,10 @@ const configuration = () => {
       accessTokenExpiresInSeconds: 3600, // 1 hour in seconds
       refreshTokenExpiresInSeconds: 7 * 24 * 60 * 60, // 7 days in seconds
     },
+    swagger: {
+      username: process.env.SWAGGER_USERNAME,
+      password: process.env.SWAGGER_PASSWORD,
+    },
     github: {
       appName: process.env.GITHUB_APP_NAME,
       privateKey: process.env.GITHUB_APP_PRIVATE_KEY,
