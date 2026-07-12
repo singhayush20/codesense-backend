@@ -3,12 +3,12 @@ import { Params } from 'nestjs-pino';
 import { trace, context } from '@opentelemetry/api';
 import pino from 'pino';
 
-const isDev = process.env.ENVIRONMENT !== 'prod';
+const isDev = () => process.env.ENVIRONMENT !== 'prod';
 
 export const createStandaloneLogger = () =>
   pino({
-    level: isDev ? 'debug' : 'info',
-    transport: isDev
+    level: isDev() ? 'debug' : 'info',
+    transport: isDev()
       ? { target: 'pino-pretty', options: { colorize: true, singleLine: true } }
       : undefined,
     formatters: {
