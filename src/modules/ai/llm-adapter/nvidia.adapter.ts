@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { generateText, Output, ToolSet } from 'ai';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { LlmExecutionContext } from '../dto/execution-context.dto';
@@ -10,12 +10,14 @@ import { AiSdkMessageMapper } from '../mapper/ai-message.mapper';
 import { withTimeout } from '../util/llm-request-timeout.util';
 import { LlmProviderAdapter } from './llm.adapter';
 import { NvidiaErrorMapper } from '../errors/nvidia-error.mapper';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { z } from 'zod';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 
 @Injectable()
 export class NvidiaAdapter implements LlmProviderAdapter {
-  private readonly logger = new Logger(NvidiaAdapter.name);
+  @InjectPinoLogger(NvidiaAdapter.name)
+  private readonly logger: PinoLogger;
   private static readonly authHeaderPrefix = 'Bearer ';
   private static readonly nvidiaBaseUrl = 'https://integrate.api.nvidia.com/v1';
   private static readonly nvidiaNim = 'nim';

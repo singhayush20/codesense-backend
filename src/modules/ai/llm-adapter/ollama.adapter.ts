@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { generateText, Output, ToolSet } from 'ai';
 import { createOllama } from 'ai-sdk-ollama';
 import { LlmExecutionContext } from '../dto/execution-context.dto';
@@ -10,12 +10,14 @@ import { ProviderType } from '../enums/provider.type';
 import { AiSdkMessageMapper } from '../mapper/ai-message.mapper';
 import { withTimeout } from '../util/llm-request-timeout.util';
 import { OllamaErrorMapper } from '../errors/ollama-error.mapper';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { z } from 'zod';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 
 @Injectable()
 export class OllamaAdapter implements LlmProviderAdapter {
-  private readonly logger = new Logger(OllamaAdapter.name);
+  @InjectPinoLogger(OllamaAdapter.name)
+  private readonly logger: PinoLogger;
 
   readonly provider = ProviderType.OLLAMA;
 

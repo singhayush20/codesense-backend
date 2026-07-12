@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { generateText, Output, ToolSet } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { LlmExecutionContext } from '../dto/execution-context.dto';
@@ -10,12 +10,14 @@ import { ProviderType } from '../enums/provider.type';
 import { AiSdkMessageMapper } from '../mapper/ai-message.mapper';
 import { withTimeout } from '../util/llm-request-timeout.util';
 import { GeminiErrorMapper } from '../errors/gemini-error.mapper';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { z } from 'zod';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 
 @Injectable()
 export class GeminiAdapter implements LlmProviderAdapter {
-  private readonly logger = new Logger(GeminiAdapter.name);
+  @InjectPinoLogger(GeminiAdapter.name)
+  private readonly logger: PinoLogger;
 
   readonly provider = ProviderType.GEMINI;
 

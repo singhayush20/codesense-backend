@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import pRetry from 'p-retry';
 import {
   LlmAuthenticationError,
@@ -8,7 +9,8 @@ import {
 
 @Injectable()
 export class LlmRetryService {
-  private readonly logger = new Logger(LlmRetryService.name);
+  @InjectPinoLogger(LlmRetryService.name)
+  private readonly logger: PinoLogger;
 
   async execute<T>(operation: () => Promise<T>): Promise<T> {
     return pRetry(operation, {
