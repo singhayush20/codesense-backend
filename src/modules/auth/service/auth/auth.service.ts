@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import axios from 'axios';
@@ -11,17 +11,19 @@ import { User } from '../../../user/entity/user.entity';
 import { UserService } from '../../../user/service/user.service';
 import { GoogleUserInfoResponse } from '../../dto/google-user-info-response.dto';
 import { GoogleTokenResponse } from '../../dto/google-token-response.dto';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 @Injectable()
 export class AuthService {
   private static readonly BEARER = 'Bearer';
-  private readonly logger = new Logger(AuthService.name);
 
   constructor(
     private readonly jwtService: JwtService,
     private readonly refreshTokenService: RefreshTokenService,
     private readonly config: ConfigService,
     private readonly userService: UserService,
+    @InjectPinoLogger(AuthService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async exchangeCodeForToken(code: string): Promise<AuthTokenResponseDto> {
