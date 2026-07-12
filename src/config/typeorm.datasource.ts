@@ -2,7 +2,7 @@ import * as dotenv from 'dotenv';
 import { DataSource } from 'typeorm';
 
 dotenv.config({
-  path: `.env.${process.env.NODE_ENV || 'dev'}`,
+  path: `.env.${process.env.ENVIRONMENT || 'dev'}`,
 });
 
 export const AppDataSource = new DataSource({

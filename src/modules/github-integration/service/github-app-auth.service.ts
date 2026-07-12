@@ -4,8 +4,6 @@ import { JwtUtil } from '../utils/github-jwt.utils';
 import { AppException } from '../../../exception-handling/app-exception.exception';
 import { ExceptionCodes } from '../../../exception-handling/exception-codes';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import fs from 'fs';
-import path from 'path';
 
 @Injectable()
 export class GithubAppAuthService {
@@ -14,10 +12,17 @@ export class GithubAppAuthService {
     @InjectPinoLogger(GithubAppAuthService.name)
     private readonly logger: PinoLogger,
   ) {
-    const key = fs.readFileSync(
-      path.resolve(process.cwd(), 'github-app.pem'),
-      'utf-8',
-    );
+    const key = configService.get<string>('github.privateKey');
+
+    if (!key) {
+      this.logger.error('GitHub App credentials are not properly configured.');
+      throw new AppException(
+        ExceptionCodes.GITHUB_APP_CREDENTIALS_NOT_CONFIGURED,
+        'GitHub App credentials are not properly configured.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+
     this.githubAppKey = key;
   }
 

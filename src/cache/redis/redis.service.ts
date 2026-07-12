@@ -12,9 +12,12 @@ export class RedisService implements OnModuleDestroy {
     @InjectPinoLogger(RedisService.name)
     private readonly logger: PinoLogger,
   ) {
-    this.client = new Redis({
-      host: configService.get<string>('cache.redis.host'),
-      port: configService.get<number>('cache.redis.port'),
+    const redisUrl = configService.get<string>('cache.redis.url') ?? '';
+    if (!redisUrl) {
+      this.logger.error('Redis url is invalid: ' + redisUrl);
+    }
+
+    this.client = new Redis(redisUrl, {
       maxRetriesPerRequest: 3,
       enableReadyCheck: true,
       retryStrategy: (times) => {
@@ -28,7 +31,11 @@ export class RedisService implements OnModuleDestroy {
       this.logger.info('redis connected');
     });
 
-    this.client.on('error', (err) => {
+    this.client.on('ready', () => {
+      this.logger.info('redis ready');
+    });
+
+    this.client.on('error', (err: Error) => {
       this.logger.error({ err }, 'redis error');
     });
 

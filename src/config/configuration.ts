@@ -1,5 +1,5 @@
 const configuration = () => {
-  const isProduction = process.env.NODE_ENV === 'production';
+  const isProduction = process.env.ENVIRONMENT === 'production';
 
   return {
     app: {
@@ -16,8 +16,7 @@ const configuration = () => {
     },
     cache: {
       redis: {
-        host: process.env.REDIS_HOST ?? 'localhost',
-        port: parseInt(process.env.REDIS_PORT ?? '6379', 10),
+        url: process.env.REDIS_URL ?? '',
       },
     },
     security: {

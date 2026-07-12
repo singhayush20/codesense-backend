@@ -14,7 +14,7 @@ const sdk = new NodeSDK({
   resource: resourceFromAttributes({
     'service.name': 'codesense-backend',
     'service.version': '1.0.0',
-    'deployment.environment': process.env.NODE_ENV ?? 'development',
+    'deployment.environment': process.env.ENVIRONMENT ?? 'development',
   }),
 });
 
