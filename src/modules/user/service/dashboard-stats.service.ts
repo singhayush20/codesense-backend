@@ -15,6 +15,7 @@ import { PullRequestReviewStep } from '../../pull-request/entity/pull-request-re
 import { PullRequestReviewStatus } from '../../pull-request/enums/pull-request-review-status.enum';
 import { PullRequest } from '../../pull-request/entity/pull-request.entity';
 import { LLMProvider } from '../../llm/entity/llm-provider.entity';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 const DASHBOARD_CACHE_TTL = 300;
 
@@ -36,16 +37,23 @@ export class DashboardStatsService {
     @InjectRepository(PullRequestReviewStep)
     private readonly reviewStepRepo: Repository<PullRequestReviewStep>,
     private readonly cacheService: CacheService,
+    @InjectPinoLogger(DashboardStatsService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async getStats(userId: string): Promise<DashboardStatsResponseDto> {
+    this.logger.debug({ userId }, 'Fetching dashboard stats');
+
     const cacheKey = `dashboard:stats:${userId}`;
 
     const cached =
       await this.cacheService.get<DashboardStatsResponseDto>(cacheKey);
     if (cached) {
+      this.logger.debug({ userId }, 'Dashboard stats cache hit');
       return cached;
     }
+
+    this.logger.debug({ userId }, 'Dashboard stats cache miss, computing');
 
     const repoIdRows = await this.selectionRepo.find({
       where: { user: { userId } },
@@ -56,6 +64,10 @@ export class DashboardStatsService {
     const repoIds = repoIdRows.map((s) => s.repository.id);
 
     if (repoIds.length === 0) {
+      this.logger.debug(
+        { userId },
+        'No repositories selected, returning empty stats',
+      );
       const empty = this.buildEmptyStats();
       await this.cacheService.set(cacheKey, empty, DASHBOARD_CACHE_TTL);
       return empty;
@@ -186,6 +198,11 @@ export class DashboardStatsService {
     };
 
     await this.cacheService.set(cacheKey, stats, DASHBOARD_CACHE_TTL);
+
+    this.logger.debug(
+      { userId, totalRepos, totalPRs },
+      'Dashboard stats computed and cached',
+    );
 
     return stats;
   }

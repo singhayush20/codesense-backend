@@ -42,7 +42,8 @@ export const createLoggerConfig = (configService: ConfigService): Params => {
         },
       },
       serializers: {
-        req: (req: { method: string; url: string }) => ({
+        req: (req: { id: string; method: string; url: string }) => ({
+          id: req.id,
           method: req.method,
           url: req.url,
         }),

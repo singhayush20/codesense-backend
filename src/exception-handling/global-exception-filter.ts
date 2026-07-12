@@ -7,12 +7,15 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { Logger } from 'nestjs-pino';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 @Catch()
 @Injectable()
 export class GlobalExceptionFilter implements ExceptionFilter {
-  constructor(private readonly logger: Logger) {}
+  constructor(
+    @InjectPinoLogger(GlobalExceptionFilter.name)
+    private readonly logger: PinoLogger,
+  ) {}
 
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
@@ -41,8 +44,21 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       }
     }
 
+    const req = request as Request & {
+      id?: string;
+      user?: { userId?: string };
+    };
+
     this.logger.error(
-      { err: exception, path: request.url },
+      {
+        err: exception,
+        req: {
+          id: req.id,
+          method: req.method,
+          url: req.url,
+        },
+        userId: req.user?.userId ?? null,
+      },
       'Unhandled exception',
     );
 

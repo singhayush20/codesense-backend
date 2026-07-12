@@ -1,5 +1,5 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
-import { Logger } from 'nestjs-pino';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 
@@ -9,7 +9,8 @@ export class RedisService implements OnModuleDestroy {
 
   constructor(
     private readonly configService: ConfigService,
-    private readonly logger: Logger,
+    @InjectPinoLogger(RedisService.name)
+    private readonly logger: PinoLogger,
   ) {
     this.client = new Redis({
       host: configService.get<string>('cache.redis.host'),
@@ -24,7 +25,7 @@ export class RedisService implements OnModuleDestroy {
     });
 
     this.client.on('connect', () => {
-      this.logger.log('redis connected');
+      this.logger.info('redis connected');
     });
 
     this.client.on('error', (err) => {
@@ -42,6 +43,6 @@ export class RedisService implements OnModuleDestroy {
 
   async onModuleDestroy() {
     await this.client.quit();
-    this.logger.log('redis client quit');
+    this.logger.info('redis client quit');
   }
 }

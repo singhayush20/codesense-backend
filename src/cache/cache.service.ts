@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { Logger } from 'nestjs-pino';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { RedisService } from './redis/redis.service';
 
 @Injectable()
 export class CacheService {
   constructor(
     private readonly redisService: RedisService,
-    private readonly logger: Logger,
+    @InjectPinoLogger(CacheService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   private get client() {
