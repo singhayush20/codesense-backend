@@ -33,7 +33,6 @@ export class RedisService implements OnModuleDestroy {
 
     this.client.on('ready', () => {
       this.logger.info('redis ready');
-      void this.runHealthCheck();
     });
 
     this.client.on('error', (err: Error) => {
@@ -43,23 +42,6 @@ export class RedisService implements OnModuleDestroy {
     this.client.on('close', () => {
       this.logger.warn('redis connection closed');
     });
-  }
-
-  private async runHealthCheck(): Promise<void> {
-    try {
-      await this.client.set('codesense:health', 'hello');
-
-      const value = await this.client.get('codesense:health');
-
-      this.logger.info({ value }, 'Redis write/read test successful');
-
-      const keys = await this.client.keys('*');
-
-      this.logger.info({ keys }, 'Redis keys');
-    } catch (err: unknown) {
-      const error = err instanceof Error ? err : new Error(String(err));
-      this.logger.error({ err: error }, 'Redis health check failed');
-    }
   }
 
   getClient(): Redis {
