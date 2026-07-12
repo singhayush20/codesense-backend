@@ -6,6 +6,9 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { createStandaloneLogger } from '../config/logger.config';
+
+const logger = createStandaloneLogger();
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -36,7 +39,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       }
     }
 
-    console.error('Exception caught:', exception);
+    logger.error({ err: exception, path: request.url }, 'Unhandled exception');
 
     response.status(status).json({
       code,
