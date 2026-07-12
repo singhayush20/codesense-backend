@@ -1,5 +1,6 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 import { PullRequestReviewJob } from '../../entity/pull-request-review-job.entity';
 import { PullRequest } from '../../entity/pull-request.entity';
@@ -11,8 +12,6 @@ import { PullRequestReviewStatus } from '../../enums/pull-request-review-status.
 
 @Injectable()
 export class PullRequestReviewService {
-  private readonly logger = new Logger(PullRequestReviewService.name);
-
   /**
    * The service uses DataSource directly because these operations require
    * explicit transaction management for atomic review job state updates.
@@ -20,7 +19,11 @@ export class PullRequestReviewService {
    * Using a Transactional EntityManager here ensures that superseding
    * existing in-progress jobs and creating the new job happen together.
    */
-  constructor(private readonly dataSource: DataSource) {}
+  constructor(
+    private readonly dataSource: DataSource,
+    @InjectPinoLogger(PullRequestReviewService.name)
+    private readonly logger: PinoLogger,
+  ) {}
 
   /**
    * Persist a completed review result only if the review job is still active.

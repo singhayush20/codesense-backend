@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PullRequestLockService } from '../../sync/pull-request-lock/pull-request-lock.service';
 import { PullRequestSyncService } from '../../sync/pull-request-sync/pull-request-sync.service';
 import { PrValidationService } from '../../validation/pr-validation/pr-validation.service';
@@ -7,11 +7,10 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { GithubPullRequestEventPayload } from '../../../../github-integration/dtos/pr-handling/github-pr.dto';
 import { PrAnalyzerDto } from '../../../dto/queue-payload/pr-analyzer-payload.dto';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 @Injectable()
 export class PrWorkflowService {
-  private readonly logger = new Logger(PrWorkflowService.name);
-
   constructor(
     private readonly pullRequestLockService: PullRequestLockService,
     private readonly pullRequestSyncService: PullRequestSyncService,
@@ -19,6 +18,8 @@ export class PrWorkflowService {
     private readonly prValidationService: PrValidationService,
     @InjectQueue('code-review')
     private readonly aiReviewQueue: Queue,
+    @InjectPinoLogger(PrWorkflowService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async processPullRequest(job: GithubPullRequestEventPayload): Promise<void> {
@@ -77,7 +78,7 @@ export class PrWorkflowService {
         );
         return;
       }
-      this.logger.log({
+      this.logger.info({
         message: 'PR sync completed',
         pullRequestId: pullRequest.id,
         repositoryId,
@@ -93,8 +94,8 @@ export class PrWorkflowService {
       );
     } catch (e) {
       this.logger.error(
+        { err: e },
         `Error processing PR workflow for repository ${repositoryId} and PR number ${prNumber}`,
-        e,
       );
     } finally {
       await this.pullRequestLockService.releaseLock(lockKey);
@@ -110,7 +111,7 @@ export class PrWorkflowService {
   ): Promise<void> {
     // TODO: enque ai review based on the pr state - check for the possible states
     if (state !== 'open') {
-      this.logger.log(`PR state is ${state}, skipping ai review`);
+      this.logger.info(`PR state is ${state}, skipping ai review`);
       return;
     }
     const payload: PrAnalyzerDto = {
@@ -141,8 +142,8 @@ export class PrWorkflowService {
       );
     } catch (e) {
       this.logger.error(
+        { err: e },
         `Failed to enqueue AI review for pullRequestId: ${pullRequestId}, repositoryId: ${repositoryId}`,
-        e,
       );
     }
   }

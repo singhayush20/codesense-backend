@@ -1,12 +1,13 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { GithubSelectionService } from '../../../../github-integration/service/github-selection.service';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 @Injectable()
 export class PrValidationService {
-  private readonly logger = new Logger(PrValidationService.name);
-
   constructor(
     private readonly githubSelectionService: GithubSelectionService,
+    @InjectPinoLogger(PrValidationService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async validatePullRequestRepoSelection(

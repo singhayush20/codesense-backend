@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { GithubFileContentResponse } from '../../dto/files/github-file-content-response.dto';
 import { GithubInstallationTokenService } from '../../../github-integration/service/github-installation-token.service';
 import { firstValueFrom } from 'rxjs';
@@ -9,14 +9,15 @@ import {
   PullRequestChangedFile,
   GithubPullRequestFilesResponse,
 } from '../../../ai/dto/llm-tools.dto';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 @Injectable()
 export class PrToolsUtilityService {
-  private readonly logger = new Logger(PrToolsUtilityService.name);
-
   constructor(
     private readonly githubTokenService: GithubInstallationTokenService,
     private readonly httpService: HttpService,
+    @InjectPinoLogger(PrToolsUtilityService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async getFileForPullRequest(
@@ -55,7 +56,7 @@ export class PrToolsUtilityService {
 
       return Buffer.from(content, 'base64').toString('utf8');
     } catch (error) {
-      this.logger.error(`Error fetching file: ${filePath}`, error);
+      this.logger.error({ err: error }, `Error fetching file: ${filePath}`);
       return '';
     }
   }
@@ -95,7 +96,7 @@ export class PrToolsUtilityService {
         })) ?? []
       );
     } catch (error) {
-      this.logger.error(`Repository search failed. Query=${query}`, error);
+      this.logger.error({ err: error }, `Repository search failed. Query=${query}`);
 
       return [];
     }
@@ -146,7 +147,7 @@ export class PrToolsUtilityService {
         page++;
       }
     } catch (error) {
-      this.logger.error('Unable to list changed files', error);
+      this.logger.error({ err: error }, 'Unable to list changed files');
 
       return [];
     }

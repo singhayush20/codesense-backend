@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { GithubInstallationTokenService } from '../../../../github-integration/service/github-installation-token.service';
 import { HttpService } from '@nestjs/axios';
 import { GithubRepository } from '../../../../github-integration/entity/github-repo.entity';
@@ -9,14 +9,15 @@ import { ExceptionCodes } from '../../../../../exception-handling/exception-code
 import { AxiosError } from 'axios';
 import { GithubPullRequestFileResponse } from '../../../dto/pull-request/github-pull-request-file-response.dto';
 import { GithubExistingReviewComment } from '../../../dto/review/pr-review-comment.dto';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 @Injectable()
 export class GithubPrApiService {
-  private logger = new Logger(GithubPrApiService.name);
-
   constructor(
     private readonly httpService: HttpService,
     private readonly githubInstallationTokenService: GithubInstallationTokenService,
+    @InjectPinoLogger(GithubPrApiService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async fetchPullRequest(

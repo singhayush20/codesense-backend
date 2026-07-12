@@ -1,4 +1,5 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { DataSource, EntityManager } from 'typeorm';
 import { AppException } from '../../../../../exception-handling/app-exception.exception';
 import { ExceptionCodes } from '../../../../../exception-handling/exception-codes';
@@ -18,11 +19,11 @@ import {
 // TODO: checkout redis pub-sub for event service to support multiple instances of the service
 @Injectable()
 export class ReviewWorkflowService {
-  private readonly logger = new Logger(ReviewWorkflowService.name);
-
   constructor(
     private readonly dataSource: DataSource,
     private readonly eventService: ReviewWorkflowEventService,
+    @InjectPinoLogger(ReviewWorkflowService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async startRun(input: StartRunInput): Promise<{
@@ -99,7 +100,7 @@ export class ReviewWorkflowService {
     this.eventService.registerRun(input.runId, input.pullRequestId);
     this.eventService.publishRunCreated(input.runId, input.pullRequestId);
 
-    this.logger.log(
+    this.logger.info(
       `Started review workflow. runId=${input.runId}, pullRequestId=${input.pullRequestId}`,
     );
 

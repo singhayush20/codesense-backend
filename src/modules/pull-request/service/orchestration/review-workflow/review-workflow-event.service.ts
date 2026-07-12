@@ -1,4 +1,5 @@
-import { Injectable, Logger, MessageEvent } from '@nestjs/common';
+import { Injectable, MessageEvent } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   Observable,
   Subject,
@@ -17,7 +18,11 @@ import { ReviewWorkflowEventType } from '../../../enums/review-workflow-event-ty
 
 @Injectable()
 export class ReviewWorkflowEventService {
-  private readonly logger = new Logger(ReviewWorkflowEventService.name);
+  constructor(
+    @InjectPinoLogger(ReviewWorkflowEventService.name)
+    private readonly logger: PinoLogger,
+  ) {}
+
   private readonly subjects = new Map<
     string,
     Subject<ReviewWorkflowEventDto>

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { LlmResponseDto } from '../../../../ai/dto/llm-response.dto';
 import { ProviderType } from '../../../../ai/enums/provider.type';
 import { GithubPrReviewCommentService } from '../../github/github-pr-review-comment/github-pr-review-comment.service';
@@ -9,12 +10,12 @@ import { ReviewWorkflowStep } from '../../../enums/review-workflow-step.enum';
 
 @Injectable()
 export class PrReviewResultService {
-  private readonly logger = new Logger(PrReviewResultService.name);
-
   constructor(
     private readonly pullRequestReviewService: PullRequestReviewService,
     private readonly githubPrReviewCommentService: GithubPrReviewCommentService,
     private readonly reviewWorkflowService: ReviewWorkflowService,
+    @InjectPinoLogger(PrReviewResultService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async handlePrReviewResult(
@@ -47,7 +48,7 @@ export class PrReviewResultService {
         pullRequestReviewJob.status !== PullRequestReviewStatus.IN_PROGRESS ||
         !pullRequestReviewJob.result
       ) {
-        this.logger.log(
+        this.logger.info(
           `Skipping comment posting for review run ${runId} with status ${pullRequestReviewJob.status}`,
         );
         await this.reviewWorkflowService.cancelStep(

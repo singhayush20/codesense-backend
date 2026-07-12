@@ -1,14 +1,16 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { ReviewResultsPayloadDto } from '../dto/review/review-results-payload.dto';
 import { PrReviewResultService } from '../service/orchestration/pr-review-result/pr-review-result.service';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 @Processor('pull-request-review-results')
 export class PullRequestReviewResultsProcessor extends WorkerHost {
-  private readonly logger = new Logger(PullRequestReviewResultsProcessor.name);
-
-  constructor(private readonly prReviewResultService: PrReviewResultService) {
+  constructor(
+    private readonly prReviewResultService: PrReviewResultService,
+    @InjectPinoLogger(PullRequestReviewResultsProcessor.name)
+    private readonly logger: PinoLogger,
+  ) {
     super();
   }
 
@@ -19,7 +21,7 @@ export class PullRequestReviewResultsProcessor extends WorkerHost {
     const runId = job.data.runId;
     const provider = job.data.provider;
 
-    this.logger.log(
+    this.logger.info(
       `Processing pr review results for repo: ${repositoryId}, pr: ${pullRequestId}, jobId: ${job.id}`,
     );
 

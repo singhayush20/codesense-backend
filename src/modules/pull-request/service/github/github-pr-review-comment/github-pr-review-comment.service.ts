@@ -1,7 +1,8 @@
 import { HttpService } from '@nestjs/axios';
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { AxiosError } from 'axios';
 import { firstValueFrom } from 'rxjs';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 import { AppException } from '../../../../../exception-handling/app-exception.exception';
 import { ExceptionCodes } from '../../../../../exception-handling/exception-codes';
@@ -25,13 +26,13 @@ interface ReviewCommentBuildContext {
 
 @Injectable()
 export class GithubPrReviewCommentService {
-  private readonly logger = new Logger(GithubPrReviewCommentService.name);
-
   constructor(
     private readonly httpService: HttpService,
     private readonly githubInstallationTokenService: GithubInstallationTokenService,
     private readonly pullRequestQueryService: PullRequestQueryService,
     private readonly githubPrApiService: GithubPrApiService,
+    @InjectPinoLogger(GithubPrReviewCommentService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async postReviewComments(

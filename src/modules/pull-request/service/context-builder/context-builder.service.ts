@@ -1,10 +1,14 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PullRequestFile } from '../../entity/pull-request-file.entity';
 import { StructuredHunk } from '../../dto/review/pr-review-context.dto';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 @Injectable()
 export class PrContextBuilderService {
-  private readonly logger = new Logger(PrContextBuilderService.name);
+  constructor(
+    @InjectPinoLogger(PrContextBuilderService.name)
+    private readonly logger: PinoLogger,
+  ) {}
 
   // Define files that shouldn't waste LLM resources
   private readonly ignoredExtensions = [

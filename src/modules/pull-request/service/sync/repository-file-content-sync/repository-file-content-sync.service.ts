@@ -1,5 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 import { Repository } from 'typeorm';
 
@@ -23,8 +24,6 @@ import { PrFileState } from '../../../enums/pr-file-state.enum';
 
 @Injectable()
 export class RepositoryFileContentSyncService {
-  private readonly logger = new Logger(RepositoryFileContentSyncService.name);
-
   private readonly CONCURRENCY = 5;
 
   private readonly MAX_FILES = 50;
@@ -36,6 +35,9 @@ export class RepositoryFileContentSyncService {
 
     @InjectRepository(PullRequestFileSnapshot)
     private readonly snapshotRepository: Repository<PullRequestFileSnapshot>,
+
+    @InjectPinoLogger(RepositoryFileContentSyncService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async syncSnapshots(
@@ -103,7 +105,7 @@ export class RepositoryFileContentSyncService {
 
     await this.snapshotRepository.save(validSnapshots);
 
-    this.logger.log({
+    this.logger.info({
       message: 'Pull request file snapshots synced',
 
       pullRequestId: pullRequest.id,

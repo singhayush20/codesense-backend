@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { GithubPrApiService } from '../../github/github-pr-api/github-pr-api.service';
 import { PullRequestFileSyncService } from '../pull-request-file-sync/pull-request-file-sync.service';
 import { DataSource, EntityManager } from 'typeorm';
@@ -7,16 +7,17 @@ import { PullRequest } from '../../../entity/pull-request.entity';
 import { GithubPullRequestResponse } from '../../../dto/pull-request/github-pull-request-response.dto';
 import { PullRequestMapper } from '../../../mapper/pull-request.mapper';
 import { RepositoryFileContentSyncService } from '../repository-file-content-sync/repository-file-content-sync.service';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 @Injectable()
 export class PullRequestSyncService {
-  private readonly logger = new Logger(PullRequestSyncService.name);
-
   constructor(
     private readonly githubPrApiService: GithubPrApiService,
     private readonly pullRequestFileSyncService: PullRequestFileSyncService,
     private readonly dataSource: DataSource,
     private readonly repositoryFileContentSyncService: RepositoryFileContentSyncService,
+    @InjectPinoLogger(PullRequestSyncService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async syncPullRequest(

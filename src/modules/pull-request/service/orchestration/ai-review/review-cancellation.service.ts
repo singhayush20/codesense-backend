@@ -1,10 +1,10 @@
 import {
   Injectable,
-  Logger,
   OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
 import { RedisService } from '../../../../../cache/redis/redis.service';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 export const PULL_REQUEST_REVIEW_CANCELLATION_CHANNEL =
   'pr-review-cancellation';
@@ -19,8 +19,6 @@ export const PULL_REQUEST_REVIEW_CANCELLATION_CHANNEL =
 export class ReviewCancellationService
   implements OnModuleInit, OnModuleDestroy
 {
-  private readonly logger = new Logger(ReviewCancellationService.name);
-
   /**
    * Local registry of active review run abort controllers.
    * This is process-local because AbortSignal cannot be shared across processes.
@@ -28,7 +26,11 @@ export class ReviewCancellationService
   private readonly subscribers = new Map<string, AbortController>();
   private subscriberClient?: ReturnType<RedisService['getClient']>;
 
-  constructor(private readonly redisService: RedisService) {}
+  constructor(
+    private readonly redisService: RedisService,
+    @InjectPinoLogger(ReviewCancellationService.name)
+    private readonly logger: PinoLogger,
+  ) {}
 
   async onModuleDestroy(): Promise<void> {
     if (this.subscriberClient) {
@@ -51,14 +53,14 @@ export class ReviewCancellationService
         const payload = JSON.parse(message) as { runId: string };
         const controller = this.subscribers.get(payload.runId);
         if (controller) {
-          this.logger.log(`Cancelling local review run ${payload.runId}`);
+          this.logger.info(`Cancelling local review run ${payload.runId}`);
           controller.abort();
           this.subscribers.delete(payload.runId);
         }
       } catch (error) {
         this.logger.error(
+          { err: error },
           `Failed to process cancellation message: ${message}`,
-          error as Error,
         );
       }
     });

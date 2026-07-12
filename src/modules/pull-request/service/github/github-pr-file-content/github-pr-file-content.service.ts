@@ -1,18 +1,19 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { GithubInstallationTokenService } from '../../../../github-integration/service/github-installation-token.service';
 import { GithubRepository } from '../../../../github-integration/entity/github-repo.entity';
 import { GithubFileContentResponse } from '../../../dto/files/github-file-content-response.dto';
 import { firstValueFrom } from 'rxjs';
 import { AxiosError } from 'axios';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 @Injectable()
 export class GithubPrFileContentService {
-  private readonly logger = new Logger(GithubPrFileContentService.name);
-
   constructor(
     private readonly httpService: HttpService,
     private readonly githubTokenService: GithubInstallationTokenService,
+    @InjectPinoLogger(GithubPrFileContentService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async fetchFileContent(

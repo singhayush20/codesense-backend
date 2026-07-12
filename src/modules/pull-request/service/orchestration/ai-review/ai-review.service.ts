@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { PrAnalyzerDto } from '../../../dto/queue-payload/pr-analyzer-payload.dto';
 import { LlmService } from '../../../../ai/service/llm-call.service';
 import { PrCodeParsingService } from '../pr-code-parsing/pr-code-parsing.service';
@@ -31,7 +32,6 @@ import { ReviewWorkflowStep } from '../../../enums/review-workflow-step.enum';
 
 @Injectable()
 export class AiReviewService {
-  private readonly logger = new Logger(AiReviewService.name);
   private readonly MAX_FILES_PER_BATCH = 3;
 
   constructor(
@@ -44,6 +44,8 @@ export class AiReviewService {
     private readonly reviewWorkflowService: ReviewWorkflowService,
     @InjectQueue('pull-request-review-results')
     private readonly pullRequestReviewQueue: Queue,
+    @InjectPinoLogger(AiReviewService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async handleAiReview(prPayload: PrAnalyzerDto): Promise<LlmResponseDto> {
@@ -55,7 +57,7 @@ export class AiReviewService {
 
     const runId = `pr-review:${pullRequestId}:${Date.now()}`;
 
-    this.logger.log(
+    this.logger.info(
       `Handling ai review for PR: ${pullRequestId}, repositoryId: ${githubRepositoryId}`,
     );
 
@@ -120,7 +122,7 @@ export class AiReviewService {
     });
 
     for (const supersededRunId of supersededRunIds) {
-      this.logger.log(
+      this.logger.info(
         `Superseding earlier review run ${supersededRunId} for PR ${pullRequestId}`,
       );
       await this.reviewCancellationService.publishCancellation(supersededRunId);
@@ -152,7 +154,7 @@ export class AiReviewService {
         );
 
       if (!fileContext.files || fileContext.files.length === 0) {
-        this.logger.log(
+        this.logger.info(
           `No applicable code modifications found for review in PR ${pullRequestId}`,
         );
         await this.reviewWorkflowService.cancelRun(
@@ -173,7 +175,7 @@ export class AiReviewService {
         this.MAX_FILES_PER_BATCH,
       );
 
-      this.logger.log(
+      this.logger.info(
         `PR ${pullRequestId} split into ${fileBatches.length} review execution batches.`,
       );
 
@@ -182,7 +184,7 @@ export class AiReviewService {
         ReviewWorkflowStep.GENERATING_REVIEW,
         async () => {
           const reviewPromises = fileBatches.map((batchFiles, index) => {
-            this.logger.log(
+            this.logger.info(
               `Initiating review for batch #${index + 1} with ${batchFiles.length} files for PR ${pullRequestId}.`,
             );
 
@@ -264,7 +266,7 @@ export class AiReviewService {
         result,
       };
 
-      this.logger.log(
+      this.logger.info(
         `Queueing pull request review result for PR ${pullRequestId}, runId=${runId}`,
       );
 
@@ -283,7 +285,7 @@ export class AiReviewService {
         },
       );
 
-      this.logger.log(
+      this.logger.info(
         `Queued pull request review result job ${queuedJob.id} for PR ${pullRequestId}`,
       );
 
@@ -307,7 +309,7 @@ export class AiReviewService {
       chunks.push(files.slice(i, i + size));
     }
 
-    this.logger.log(
+    this.logger.info(
       `Splitting PR files into ${chunks.length} review execution batches.`,
     );
     return chunks;
@@ -384,6 +386,7 @@ ${JSON.stringify(files, null, 2)}
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(
+        { err: error },
         `Critical parsing error encountered on batch processing step #${batchId}: ${errorMessage}`,
       );
 
