@@ -28,7 +28,7 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
       forbidUnknownValues: true,
       stopAtFirstError: false,
-      disableErrorMessages: process.env.ENVIRONMENT === 'production',
+      disableErrorMessages: process.env.ENVIRONMENT === 'prod',
       exceptionFactory: (errors: ValidationError[]) => {
         const extractMessages = (
           validationErrors: ValidationError[],
