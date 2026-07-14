@@ -1,5 +1,5 @@
 const configuration = () => {
-  const isProduction = process.env.ENVIRONMENT === 'production';
+  const isProduction = process.env.ENVIRONMENT === 'prod';
 
   return {
     app: {
@@ -35,7 +35,7 @@ const configuration = () => {
       },
     },
     cookies: {
-      domain: isProduction ? '.yourdomain.com' : 'localhost',
+      domain: process.env.COOKIE_DOMAIN,
       secure: isProduction,
       sameSite: 'lax' as const,
       path: '/',
