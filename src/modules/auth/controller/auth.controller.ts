@@ -87,7 +87,6 @@ export class AuthController {
       secure: cookieConfig.secure,
       sameSite: cookieConfig.sameSite as 'lax' | 'strict' | 'none',
       path: cookieConfig.path,
-      domain: cookieConfig.domain,
     };
 
     response.cookie('codesense_auth_token', tokens.accessToken, {
@@ -106,12 +105,9 @@ export class AuthController {
       'cookies',
     ) as AppConfig['cookies'];
 
-    const options = {
+    response.clearCookie('codesense_auth_token', { path: cookieConfig.path });
+    response.clearCookie('codesense_refresh_token', {
       path: cookieConfig.path,
-      domain: cookieConfig.domain,
-    };
-
-    response.clearCookie('codesense_auth_token', options);
-    response.clearCookie('codesense_refresh_token', options);
+    });
   }
 }
