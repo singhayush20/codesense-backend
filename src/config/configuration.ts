@@ -35,7 +35,6 @@ const configuration = () => {
       },
     },
     cookies: {
-      domain: process.env.COOKIE_DOMAIN,
       secure: isProduction,
       sameSite: 'lax' as const,
       path: '/',
