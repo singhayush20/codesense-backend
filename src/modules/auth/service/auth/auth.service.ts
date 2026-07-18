@@ -43,6 +43,8 @@ export class AuthService {
         },
       );
 
+      this.logger.debug('Token response from google: %o', tokenResponse.data);
+
       const idToken = tokenResponse?.data?.id_token;
       const googleAccessToken = tokenResponse?.data?.access_token;
 
@@ -65,6 +67,8 @@ export class AuthService {
       );
 
       const userInfo = userInfoResponse?.data;
+
+      this.logger.debug('User info from google: %o', userInfo);
 
       if (!userInfo || !userInfo.email) {
         throw new AppException(
@@ -105,6 +109,11 @@ export class AuthService {
         randomUUID(),
       );
 
+      this.logger.debug(
+        'Issued refresh token: %o',
+        refreshToken.refreshTokenIssue,
+      );
+
       return new AuthTokenResponseDto(
         accessToken,
         refreshToken.refreshTokenIssue.token,
@@ -113,6 +122,7 @@ export class AuthService {
         refreshToken.refreshTokenIssue.expiresAt,
       );
     } catch (error) {
+      this.logger.error('Google OAuth login failed | error=%o', error);
       if (axios.isAxiosError(error)) {
         throw new AppException(
           ExceptionCodes.GOOGLE_OAUTH_LOGIN_FAILED,

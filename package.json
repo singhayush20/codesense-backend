@@ -12,6 +12,7 @@
     "start:dev": "cross-env ENVIRONMENT=dev nest start",
     "start:debug": "cross-env ENVIRONMENT=dev nest start --debug",
     "start:prod": "cross-env ENVIRONMENT=prod node dist/main.js",
+    "start:local": "cross-env ENVIRONMENT=local node dist/main.js",
     "start:test": "cross-env ENVIRONMENT=test nest start --debug",
     "start:dev:full": "npm run migration:run && npm run start:dev",
     "start:debug:full": "npm run migration:run && npm run start:debug",
