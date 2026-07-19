@@ -1,3 +1,4 @@
+import './observability/telemetry';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { HttpStatus, ValidationPipe, VersioningType } from '@nestjs/common';
@@ -11,7 +12,6 @@ import { ValidationError } from 'class-validator';
 import cookieParser from 'cookie-parser';
 import * as bodyParser from 'body-parser';
 import * as express from 'express';
-import './observability/telemetry';
 import { createStandaloneLogger } from './config/logger.config';
 
 async function bootstrap() {
